@@ -40,6 +40,7 @@ type Config struct {
 			Interval int  `yaml:"interval"`
 		}
 		UseSSOAddress bool `yaml:"use-sso-address"`
+		FastStart bool `yaml:"fast-start"`
 	} `yaml:"account"`
 
 	Heartbeat struct {

@@ -74,6 +74,9 @@ func main() {
 	// 通过-c 参数替换 配置文件路径
 	config.DefaultConfigFile = *c
 	conf = config.Get()
+	if conf.Account.FastStart {
+		isFastStart = true
+	}
 	if *debug {
 		conf.Output.Debug = true
 	}
