@@ -11,7 +11,9 @@ require (
 	github.com/Microsoft/go-winio v0.5.0
 	github.com/Mrs4s/MiraiGo v0.0.0-20210916113136-0238b2382b82
 	github.com/dustin/go-humanize v1.0.0
+	github.com/fzls/logger v1.0.1
 	github.com/gabriel-vasile/mimetype v1.3.1
+	github.com/gookit/color v1.4.2
 	github.com/gorilla/websocket v1.4.2
 	github.com/guonaihong/gout v0.2.4
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
@@ -46,6 +48,10 @@ require (
 	github.com/tidwall/match v1.0.3 // indirect
 	github.com/tidwall/pretty v1.1.0 // indirect
 	github.com/willf/bitset v1.2.0 // indirect
+	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778 // indirect
+	go.uber.org/atomic v1.6.0 // indirect
+	go.uber.org/multierr v1.5.0 // indirect
+	go.uber.org/zap v1.15.0 // indirect
 	golang.org/x/net v0.0.0-20210505024714-0287a6fb4125 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 // indirect
