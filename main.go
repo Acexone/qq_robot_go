@@ -23,6 +23,7 @@ import (
 	"github.com/Mrs4s/go-cqhttp/global/config"
 	"github.com/Mrs4s/go-cqhttp/global/terminal"
 	"github.com/Mrs4s/go-cqhttp/global/update"
+	"github.com/Mrs4s/go-cqhttp/qq_robot"
 	"github.com/Mrs4s/go-cqhttp/server"
 
 	"github.com/Mrs4s/MiraiGo/binary"
@@ -377,6 +378,7 @@ func main() {
 	coolq.RemoveReplyAt = conf.Message.RemoveReplyAt
 	coolq.ExtraReplyData = conf.Message.ExtraReplyData
 	coolq.SkipMimeScan = conf.Message.SkipMimeScan
+
 	for _, m := range conf.Servers {
 		if h, ok := m["http"]; ok {
 			hc := new(config.HTTPServer)
@@ -421,6 +423,11 @@ func main() {
 	}
 	log.Info("资源初始化完成, 开始处理信息.")
 	log.Info("アトリは、高性能ですから!")
+
+	log.Info("启动本地的机器人处理程序，用于直接收发消息和自动回复")
+	robot := qq_robot.NewQQRobot(bot)
+	robot.RegisterHandlers()
+	robot.Demo()
 
 	go checkUpdate()
 
