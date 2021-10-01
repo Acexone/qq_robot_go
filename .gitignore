@@ -3,6 +3,7 @@ vendor/
 .vscode
 config.hjson
 config.yml
+config.toml
 session.token
 device.json
 data/

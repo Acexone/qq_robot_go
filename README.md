@@ -6,4 +6,5 @@
 请参考 [go-cqhttp的文档](https://docs.go-cqhttp.org/)
 
 ## 配置自动回复逻辑
-请打开config.toml，按照注释和现有例子，自行调整配置
+复制qq_robot/default_config.toml到qq_robot.exe所在目录，并重命名为config.toml
+然后打开qq_robot/config.go和config.toml，按照注释，自行调整配置，并添加各种规则
