@@ -8,3 +8,5 @@ session.token
 device.json
 data/
 logs/
+
+*.exe
