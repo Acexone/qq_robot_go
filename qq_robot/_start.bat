@@ -4,4 +4,4 @@
 CHCP 65001
 
 echo 启动机器人
-start "qq_robot" C:\Windows\System32\cmd.exe /k "D:\_codes\Python\dnf_calc\robot\qq_robot.exe"
+start "qq_robot" C:\Windows\System32\cmd.exe /k "D:\_codes\go\qq_robot_go\qq_robot.exe"
