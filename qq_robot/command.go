@@ -89,7 +89,8 @@ func (r *QQRobot) processCommand(commandStr string, m *message.GroupMessage) (er
 	} else if match = CommandRegex_Music.FindStringSubmatch(commandStr); len(match) == len(CommandRegex_Music.SubexpNames()) {
 		// full_match|musicName
 		musicName := match[1]
-		musicElem, err := r.makeMusicShareElement(musicName)
+
+		musicElem, err := r.makeMusicShareElement(musicName, message.QQMusic)
 		if err != nil {
 			return fmt.Errorf("没有找到歌曲：%v", musicName), "", nil
 		}
