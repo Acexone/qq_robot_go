@@ -344,6 +344,12 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 		logger.Info("【ExcludedAdmin】", nowStr, config.Name, p(m))
 		return nil
 	}
+	for _, robotQQ := range r.Config.Robot.IgnoreRobotQQs {
+		if robotQQ == senderUin {
+			logger.Info("【ExcludedRobotQQ】", nowStr, config.Name, p(m))
+			return nil
+		}
+	}
 
 	messageApplyCount := r.RuleTypeToMessageIdToRuleApplyCount[config.Type]
 	if messageApplyCount == nil {

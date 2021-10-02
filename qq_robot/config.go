@@ -28,6 +28,7 @@ type NotifyConfig struct {
 }
 
 type RobotConfig struct {
+	IgnoreRobotQQs                     []int64      `toml:"ignore_robot_qqs"`                       // 机器人的qq号列表，这些号的消息将被忽略，避免多个机器人同时在群里不停循环回复
 	Timeout                            int64        `toml:"timeout"`                                // http请求超时
 	Debug                              bool         `toml:"debug"`                                  // 是否是调试模式
 	OnStart                            NotifyConfig `toml:"on_start"`                               // 机器人上线时的操作
