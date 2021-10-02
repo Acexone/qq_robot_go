@@ -1,1 +1,1 @@
-go build -o qq_robot.exe .
+go build -v -o qq_robot.exe .
