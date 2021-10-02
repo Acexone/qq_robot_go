@@ -426,7 +426,7 @@ func main() {
 	log.Info("アトリは、高性能ですから!")
 
 	log.Info("启动本地的机器人处理程序，用于直接收发消息和自动回复")
-	robot := qq_robot.NewQQRobot(bot)
+	robot := qq_robot.NewQQRobot(bot, "config.toml")
 	robot.RegisterHandlers()
 	robot.Start()
 	defer robot.Stop()

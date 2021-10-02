@@ -51,8 +51,8 @@ type QQRobot struct {
 	quitFunc context.CancelFunc
 }
 
-func NewQQRobot(cqRobot *coolq.CQBot) *QQRobot {
-	config := LoadConfig()
+func NewQQRobot(cqRobot *coolq.CQBot, configPath string) *QQRobot {
+	config := LoadConfig(configPath)
 
 	r := &QQRobot{
 		cqBot: cqRobot,

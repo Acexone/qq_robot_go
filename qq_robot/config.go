@@ -176,10 +176,10 @@ type Config struct {
 	NotifyUpdate     NotifyUpdateConfig `toml:"notify_update"`
 }
 
-func LoadConfig() Config {
+func LoadConfig(configPath string) Config {
 	// 读取配置
 	var config Config
-	_, err := toml.DecodeFile("config.toml", &config)
+	_, err := toml.DecodeFile(configPath, &config)
 	if err != nil {
 		logger.Fatalf("load toml file fail, err=%v", err)
 	}
