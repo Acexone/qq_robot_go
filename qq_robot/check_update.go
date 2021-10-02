@@ -107,8 +107,8 @@ var VersionNone = "v0.0.0"
 
 // github的镜像站
 var GITHUB_MIRROR_SITES = []string{
-	"github.com.cnpmjs.org",
 	"hub.fastgit.org",
+	"github.com.cnpmjs.org",
 }
 
 func (r *QQRobot) getLatestGitVersion(gitChangelogPage string) (latestVersion string, updateMessage string) {
