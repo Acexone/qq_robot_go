@@ -86,6 +86,16 @@ func (r *QQRobot) processCommand(commandStr string, m *message.GroupMessage) (er
 		}
 
 		json.Unmarshal(out, &msg)
+	} else if match = CommandRegex_Music.FindStringSubmatch(commandStr); len(match) == len(CommandRegex_Music.SubexpNames()) {
+		// full_match|musicName
+		musicName := match[1]
+		musicElem, err := r.makeMusicShareElement(musicName)
+		if err != nil {
+			return fmt.Errorf("没有找到歌曲：%v", musicName), "", nil
+		}
+
+		msg = fmt.Sprintf("请欣赏歌曲：%v", musicName)
+		extraReplies = append(extraReplies, musicElem)
 	} else {
 		return fmt.Errorf("没有找到该指令哦"), "", nil
 	}
