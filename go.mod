@@ -17,6 +17,7 @@ require (
 	github.com/gookit/color v1.4.2
 	github.com/gorilla/websocket v1.4.2
 	github.com/guonaihong/gout v0.2.4
+	github.com/hashicorp/golang-lru v0.5.4
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/pkg/errors v0.9.1

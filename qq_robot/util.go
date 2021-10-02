@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"path"
 	"runtime"
 	"strings"
@@ -48,7 +49,18 @@ hasCacheFile:
 	return &coolq.LocalImageElement{File: cacheFile}, nil
 }
 
-func (r *QQRobot) ocr(groupImageElement *message.GroupImageElement) string {
+func (r *QQRobot) ocr(groupImageElement *message.GroupImageElement) (ocrResultString string) {
+	image_md5 := fmt.Sprintf("%x", groupImageElement.Md5)
+
+	cached, ok := r.ocrCache.Get(image_md5)
+	if ok {
+		return cached.(string)
+	}
+
+	defer func() {
+		r.ocrCache.Add(image_md5, ocrResultString)
+	}()
+	
 	ocrResult, err := r.cqBot.Client.ImageOcr(groupImageElement)
 	if err != nil {
 		logger.Errorf("ocr出错了，image=%+v，err=%v", groupImageElement, err)

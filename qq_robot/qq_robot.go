@@ -16,6 +16,7 @@ import (
 	"github.com/Mrs4s/MiraiGo/message"
 	"github.com/Mrs4s/go-cqhttp/coolq"
 	"github.com/gookit/color"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 type MessageKey struct {
@@ -45,6 +46,8 @@ type QQRobot struct {
 
 	HttpClient http.Client
 
+	ocrCache *lru.ARCCache
+
 	CheckUpdateVersionMap map[string]string // 配置的检查更新名称=>最近的版本号，如"DNF蚊子腿小助手更新"=>"v4.2.2"
 
 	quitCtx  context.Context
@@ -64,6 +67,7 @@ func NewQQRobot(cqRobot *coolq.CQBot, configPath string) *QQRobot {
 		HttpClient:                                   http.Client{Timeout: time.Duration(config.Robot.Timeout) * time.Second},
 		CheckUpdateVersionMap:                        map[string]string{},
 	}
+	r.ocrCache, _ = lru.NewARC(1024)
 	for _, config := range config.Rules {
 		r.Rules = append(r.Rules, NewRule(config))
 	}
