@@ -113,10 +113,11 @@ var GITHUB_MIRROR_SITES = []string{
 
 func (r *QQRobot) getLatestGitVersion(gitChangelogPage string) (latestVersion string, updateMessage string) {
 	var urls []string
-	urls = append(urls, gitChangelogPage)
+	// 先尝试国内镜像，最后尝试直接访问
 	for _, mirrorSite := range GITHUB_MIRROR_SITES {
 		urls = append(urls, strings.ReplaceAll(gitChangelogPage, "github.com", mirrorSite))
 	}
+	urls = append(urls, gitChangelogPage)
 
 	for _, url := range urls {
 		latestVersion, updateMessage = r._getLatestGitVersion(url)
