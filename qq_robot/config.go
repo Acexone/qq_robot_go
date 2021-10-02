@@ -187,7 +187,7 @@ func LoadConfig(configPath string) Config {
 		logger.Fatalf("load toml file fail, err=%v", err)
 	}
 	config.Init()
-	// logger.Debugf("%#v", config)
+	logger.Debugf("%#v", config)
 
 	return config
 }

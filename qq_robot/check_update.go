@@ -132,7 +132,7 @@ func (r *QQRobot) getLatestGitVersion(gitChangelogPage string) (latestVersion st
 func (r *QQRobot) _getLatestGitVersion(gitChangelogPage string) (string, string) {
 	resp, err := r.HttpClient.Get(gitChangelogPage)
 	if err != nil {
-		logger.Errorf("getLatestGitVersion gitChangelogPage=%v err=%v", gitChangelogPage, err)
+		logger.Debugf("getLatestGitVersion gitChangelogPage=%v err=%v", gitChangelogPage, err)
 		return VersionNone, ""
 	}
 	defer resp.Body.Close()
@@ -140,7 +140,7 @@ func (r *QQRobot) _getLatestGitVersion(gitChangelogPage string) (string, string)
 	// 获取网页内容
 	bytesData, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		logger.Errorf("getLatestGitVersion gitChangelogPage=%v err=%v", gitChangelogPage, err)
+		logger.Debugf("getLatestGitVersion gitChangelogPage=%v err=%v", gitChangelogPage, err)
 		return VersionNone, ""
 	}
 
@@ -149,7 +149,7 @@ func (r *QQRobot) _getLatestGitVersion(gitChangelogPage string) (string, string)
 	// 解析版本信息
 	matches := regGitVersion.FindAllStringSubmatch(htmlText, -1)
 	if len(matches) == 0 {
-		logger.Errorf("getLatestGitVersion gitChangelogPage=%v can not find any match, html text=%v", gitChangelogPage, err, htmlText)
+		logger.Debugf("getLatestGitVersion gitChangelogPage=%v can not find any match, html text=%v", gitChangelogPage, err, htmlText)
 		return VersionNone, ""
 	}
 

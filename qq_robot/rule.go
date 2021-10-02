@@ -48,7 +48,7 @@ func (r *Rule) UpdateFoodPage(foodSiteUrl string) {
 		if _, fetched := fetchedPage[foodPage]; !fetched {
 			fetchedPage[foodPage] = struct{}{}
 			r.SiteToFoodPage[foodSiteUrl] = foodPage
-			logger.Debugf("rule=%v UpdateFoodPage to %v", r.Config.Name, foodPage)
+			logger.Infof("rule=%v UpdateFoodPage to %v", r.Config.Name, foodPage)
 			return
 		}
 	}

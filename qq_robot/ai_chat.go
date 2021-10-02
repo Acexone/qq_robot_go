@@ -40,7 +40,7 @@ func (r *QQRobot) aiChat(targetQQ int64, chatText string) (responseText string) 
 
 	response, err := r.aiClient.TextProcess(request)
 	if err != nil {
-		logger.Debugf("aiChat(qq=%v, text=%v) err=%v", targetQQ, chatText, err)
+		logger.Errorf("aiChat(qq=%v, text=%v) err=%v", targetQQ, chatText, err)
 		return
 	}
 

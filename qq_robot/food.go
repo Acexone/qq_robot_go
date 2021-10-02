@@ -169,7 +169,7 @@ func (r *QQRobot) getOneCachedFoodImage(rule *Rule) FoodImage {
 		foodImage = fi
 		break
 	}
-	logger.Debugf("%v select the %v th food from %v foods, food=%v, 发完这个，库存食物图片还剩%v",
+	logger.Infof("%v select the %v th food from %v foods, food=%v, 发完这个，库存食物图片还剩%v",
 		r.currentTime(), takeNthFood+1, len(rule.CachedFoodImages), foodImage, len(rule.CachedFoodImages)-1)
 	return foodImage
 }
