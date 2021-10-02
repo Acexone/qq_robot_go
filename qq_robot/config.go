@@ -84,7 +84,7 @@ var (
 	CommandRegex_RuleNameList = regexp.MustCompile(`RuleNameList`)
 	CommandRegex_BuyCard      = regexp.MustCompile(`\s*我想要给(?P<QQ>\d+)买一张(?P<CardIndex>[1-3]-[1-4])`)
 	CommandRegex_QueryCard    = regexp.MustCompile(`\s*给我康康现在还有哪些卡`)
-	CommandRegex_Music        = regexp.MustCompile(`.*点歌\s+(?P<MusicName>.+)`)
+	CommandRegex_Music        = regexp.MustCompile(`.*(点歌|听歌|点首|来首|想听|要听)\s*(?P<MusicName>.+)`)
 )
 
 type RuleConfig struct {
