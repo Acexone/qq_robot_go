@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+
+	"github.com/BurntSushi/toml"
 )
 
 const TencentAiApi = "https://api.ai.qq.com/fcgi-bin/nlp/nlp_textchat"
@@ -26,6 +28,7 @@ type NotifyConfig struct {
 }
 
 type RobotConfig struct {
+	Timeout                            int64        `toml:"timeout"`                                // http请求超时
 	Debug                              bool         `toml:"debug"`                                  // 是否是调试模式
 	OnStart                            NotifyConfig `toml:"on_start"`                               // 机器人上线时的操作
 	OnStop                             NotifyConfig `toml:"on_stop"`                                // 机器人下线时的操作，参数：$work_time$=本次工作时长
@@ -69,7 +72,6 @@ const (
 	ActionType_Guide             ActionType = "guide"
 	ActionType_Command           ActionType = "command"
 	ActionType_Food              ActionType = "food"
-	ActionType_Restart           ActionType = "restart"
 	ActionType_AiChat            ActionType = "ai_chat"
 	ActionType_SendUpdateMessage ActionType = "send_update_message"
 	ActionType_Repeater          ActionType = "repeater"
@@ -172,6 +174,19 @@ type Config struct {
 	GroupTypeConfigs []GroupTypeConfig  `toml:"rule_type_configs"`
 	Misc             MiscConfig         `toml:"misc"`
 	NotifyUpdate     NotifyUpdateConfig `toml:"notify_update"`
+}
+
+func LoadConfig() Config {
+	// 读取配置
+	var config Config
+	_, err := toml.DecodeFile("config.toml", &config)
+	if err != nil {
+		logger.Fatalf("load toml file fail, err=%v", err)
+	}
+	config.Init()
+	// logger.Debugf("%#v", config)
+
+	return config
 }
 
 func (c *Config) Init() {

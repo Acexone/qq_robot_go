@@ -428,7 +428,8 @@ func main() {
 	log.Info("启动本地的机器人处理程序，用于直接收发消息和自动回复")
 	robot := qq_robot.NewQQRobot(bot)
 	robot.RegisterHandlers()
-	robot.Demo()
+	robot.Start()
+	defer robot.Stop()
 
 	go checkUpdate()
 

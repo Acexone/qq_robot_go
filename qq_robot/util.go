@@ -3,9 +3,13 @@ package qq_robot
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
 	"path"
 	"runtime"
+	"strings"
+	"time"
 
+	"github.com/Mrs4s/MiraiGo/client"
 	"github.com/Mrs4s/MiraiGo/message"
 	"github.com/Mrs4s/go-cqhttp/coolq"
 	"github.com/Mrs4s/go-cqhttp/global"
@@ -42,4 +46,79 @@ func (r *QQRobot) _makeLocalImage(imageUrl string) (message.IMessageElement, err
 	}
 hasCacheFile:
 	return &coolq.LocalImageElement{File: cacheFile}, nil
+}
+
+func (r *QQRobot) ocr(groupImageElement *message.GroupImageElement) string {
+	ocrResult, err := r.cqBot.Client.ImageOcr(groupImageElement)
+	if err != nil {
+		logger.Errorf("ocr出错了，image=%+v，err=%v", groupImageElement, err)
+		return ""
+	}
+
+	resultBuffer := strings.Builder{}
+	for _, textDetection := range ocrResult.Texts {
+		resultBuffer.WriteString(textDetection.Text)
+	}
+	return resultBuffer.String()
+}
+
+func (r *QQRobot) currentTime() string {
+	return r.formatTime(time.Now())
+}
+
+func (r *QQRobot) formatTime(t time.Time) string {
+	return t.Format("2006-01-02 15:04:05.999")
+}
+
+func getCurrentPeriodName() string {
+	hour := time.Now().Hour()
+	if hour == 23 || 0 <= hour && hour < 5 {
+		return "深夜"
+	} else if 5 <= hour && hour < 11 {
+		return "早上"
+	} else if 11 <= hour && hour < 13 {
+		return "中午"
+	} else if 13 <= hour && hour < 17 {
+		return "下午"
+	} else {
+		return "晚上"
+	}
+}
+
+// 是否是管理员
+func isMemberAdmin(permission client.MemberPermission) bool {
+	return permission == client.Owner || permission == client.Administrator
+}
+
+// 单条消息发送的大小有限制，所以需要分成多段来发
+const maxMessageJsonSize = 400
+
+func splitPlainMessage(content string) []message.IMessageElement {
+	if len(content) <= maxMessageJsonSize {
+		return []message.IMessageElement{message.NewText(content)}
+	}
+
+	var splittedMessage []message.IMessageElement
+
+	var part string
+	remainingText := content
+	for len(remainingText) != 0 {
+		partSize := 0
+		for byteIdx, runeValue := range remainingText {
+			if partSize+byteIdx > maxMessageJsonSize {
+				break
+			}
+			partSize += len(string(runeValue))
+		}
+
+		part, remainingText = remainingText[:partSize], remainingText[partSize:]
+		splittedMessage = append(splittedMessage, message.NewText(part))
+	}
+
+	return splittedMessage
+}
+
+func p(v interface{}) string {
+	bytes, _ := json.Marshal(v)
+	return string(bytes)
 }
