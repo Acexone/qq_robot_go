@@ -17,6 +17,7 @@ import (
 	"github.com/Mrs4s/go-cqhttp/coolq"
 	"github.com/gookit/color"
 	lru "github.com/hashicorp/golang-lru"
+	tbp "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tbp/v20190627"
 )
 
 type MessageKey struct {
@@ -45,6 +46,7 @@ type QQRobot struct {
 	GroupToRuleNameToLastSuccessTriggerTimestamp map[int64]map[string]int64        // group => rulename => 上次在cd外成功触发的时间戳
 
 	HttpClient http.Client
+	aiClient   *tbp.Client
 
 	ocrCache *lru.ARCCache
 
@@ -67,6 +69,9 @@ func NewQQRobot(cqRobot *coolq.CQBot, configPath string) *QQRobot {
 		HttpClient:                                   http.Client{Timeout: time.Duration(config.Robot.Timeout) * time.Second},
 		CheckUpdateVersionMap:                        map[string]string{},
 	}
+
+	r.initAiChat()
+
 	r.ocrCache, _ = lru.NewARC(1024)
 	for _, config := range config.Rules {
 		r.Rules = append(r.Rules, NewRule(config))

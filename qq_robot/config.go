@@ -8,7 +8,7 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-const TencentAiApi = "https://api.ai.qq.com/fcgi-bin/nlp/nlp_textchat"
+const TencentAiChatApi = "tbp.tencentcloudapi.com"
 
 const (
 	TemplateArgs_WorkTime          = "$work_time$"           // 本次工作时长
@@ -34,8 +34,9 @@ type RobotConfig struct {
 	OnStop                             NotifyConfig `toml:"on_stop"`                                // 机器人下线时的操作，参数：$work_time$=本次工作时长
 	MaxRetryTimes                      int          `toml:"max_retry_times"`                        // 单条消息处理失败后，最多重试次数
 	MaxContinueEmptyLines              int          `toml:"max_continue_empty_lines"`               // 最大允许的连续空行数目，为0则不限制
-	TencentAiAppId                     string       `toml:"tencent_ai_app_id"`                      // 腾讯ai开放平台的应用ID
+	TencentAiAppId                     string       `toml:"tencent_ai_app_id"`                      // 腾讯ai开放平台的应用ID，具体可见 https://console.cloud.tencent.com/tbp/bots
 	TencentAiAppKey                    string       `toml:"tencent_ai_app_key"`                     // 腾讯ai开放平台的应用秘钥
+	TencentAiBotId                     string       `toml:"tencent_ai_bot_id"`                      // 腾讯ai开放平台的机器人BotId
 	ChatAnswerNotFoundMessage          string       `toml:"chat_answer_not_found_message"`          // 聊天结果未找到时的提示语
 	PersonalMessageNotSupportedMessage string       `toml:"personal_message_not_supported_message"` // 不支持私聊时的提示语 # 本QQ是机器人，基本不会登录该QQ人工查看消息，如果有事，请私聊大号~
 	PersonalMessageNotSupportedImage   string       `toml:"personal_message_not_supported_image"`   // 不支持私聊时的图片

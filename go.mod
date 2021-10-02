@@ -25,6 +25,8 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
 	github.com/syndtr/goleveldb v1.0.0
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.264
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tbp v1.0.264
 	github.com/tidwall/gjson v1.8.1
 	github.com/tuotoo/qrcode v0.0.0-20190222102259-ac9c44189bf2
 	github.com/wdvxdr1123/go-silk v0.0.0-20210316130616-d47b553def60

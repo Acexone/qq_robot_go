@@ -133,6 +133,10 @@ github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5Cc
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/syndtr/goleveldb v1.0.0 h1:fBdIW9lB4Iz0n9khmH8w27SJ3QEJ7+IgjPEwGSZiFdE=
 github.com/syndtr/goleveldb v1.0.0/go.mod h1:ZVVdQEZoIme9iO1Ch2Jdy24qqXrMMOU6lpPAyBWyWuQ=
+github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.264 h1:USf7I8ohzoqCwAcCHz5rz0hD57mmNXZgrLfxFLx1WmA=
+github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.264/go.mod h1:7sCQWVkxcsR38nffDW057DRGk8mUjK1Ing/EFOK8s8Y=
+github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tbp v1.0.264 h1:kGT41c6hLBFfiTjacWDpq62ePSnx1/9+MXrpMZII2Uk=
+github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tbp v1.0.264/go.mod h1:m27bboRL7amS9hl10+/OD8J3sIp0xyeu3kKrEYEpsvY=
 github.com/tidwall/gjson v1.8.1 h1:8j5EE9Hrh3l9Od1OIEDAb7IpezNA20UdRngNAj5N0WU=
 github.com/tidwall/gjson v1.8.1/go.mod h1:5/xDoumyyDNerp2U36lyolv46b3uF/9Bu6OfyQ9GImk=
 github.com/tidwall/match v1.0.3 h1:FQUVvBImDutD8wJLN6c5eMzWtjgONK9MwIBCOrUJKeE=
