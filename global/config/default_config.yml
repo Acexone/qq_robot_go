@@ -14,7 +14,7 @@ account: # 账号相关
   # 注意, 此设置可能导致在海外服务器上连接情况更差
   use-sso-address: true
 
-  fast-start: false # 是否快速启动
+  fast-start: true # 是否快速启动
 
 heartbeat:
   # 心跳频率, 单位秒
