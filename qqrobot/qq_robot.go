@@ -630,66 +630,96 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 }
 
 func (r *QQRobot) getForwardMessagesList(m *message.GroupMessage, forRepeat bool) []*message.SendingMessage {
+	if len(m.Elements) == 0 {
+		return nil
+	}
+
+	messages := append([]message.IMessageElement{}, m.Elements...)
+	if !forRepeat {
+		// 如果是转发的消息，增加一个转发信息分片元素
+		messages = append(messages, message.NewText(fmt.Sprintf(""+
+			"\n"+
+			"------------------------------\n"+
+			"转发自 群[%v:%v] QQ[%v:%v] 时间[%v]",
+			m.GroupName, m.GroupCode,
+			m.Sender.Nickname, m.Sender.Uin,
+			r.currentTime(),
+		)))
+	}
+
+	// 预先将所有连续的文本消息合并为到一起，方便后续统一切割
+	mergeContinuousTextMessages := message.NewSendingMessage()
+
+	textBuffer := strings.Builder{}
+	lastIsText := false
+	for _, msg := range messages {
+		if msgVal, ok := msg.(*message.TextElement); ok {
+			// 遇到文本元素先存放起来，方便将连续的文本元素合并
+			textBuffer.WriteString(msgVal.Content)
+			lastIsText = true
+			continue
+		}
+
+		// 如果之前的是文本元素（可能是多个合并起来的），则在这里将其实际放入消息中
+		if lastIsText {
+			mergeContinuousTextMessages.Append(message.NewText(textBuffer.String()))
+			textBuffer.Reset()
+		}
+		lastIsText = false
+
+		// 非文本元素则直接处理
+		mergeContinuousTextMessages.Append(msg)
+	}
+	// 处理最后几个元素是文本的情况
+	if textBuffer.Len() != 0 {
+		mergeContinuousTextMessages.Append(message.NewText(textBuffer.String()))
+		textBuffer.Reset()
+	}
+
+	// 将原有消息的各个元素先尝试处理，如过长的文本消息按需分割为多个元素
+	messageParts := message.NewSendingMessage()
+	for _, msg := range mergeContinuousTextMessages.Elements {
+		switch msgVal := msg.(type) {
+		case *message.TextElement:
+			messageParts.Elements = append(messageParts.Elements, splitPlainMessage(msgVal.Content)...)
+		case *message.GroupImageElement:
+			r.tryAppendImageByURL(messageParts, msgVal.Url)
+		case *message.AtElement:
+			if msgVal.Target != 0 {
+				messageParts.Append(message.NewText(fmt.Sprintf("@%v(%v)", msgVal.Display, msgVal.Target)))
+			} else {
+				messageParts.Append(message.NewText("@全体成员(转发)"))
+			}
+		case *message.FaceElement, *message.LightAppElement:
+			messageParts.Append(msg)
+		default:
+			jsonBytes, _ := json.Marshal(msg)
+			messageParts.Elements = append(messageParts.Elements, splitPlainMessage(fmt.Sprintf("%v\n", string(jsonBytes)))...)
+		}
+	}
+
+	// 根据大小分为多个消息进行发送
 	var forwardMessagesList []*message.SendingMessage
 
-	messages := m.Elements
-
-	if len(messages) != 0 {
-		// 将原有消息的各个元素先尝试处理，如过长的文本消息按需分割为多个元素
-		messageParts := message.NewSendingMessage()
-		for _, msg := range messages {
-			switch msgVal := msg.(type) {
-			case *message.TextElement:
-				messageParts.Elements = append(messageParts.Elements, splitPlainMessage(msgVal.Content)...)
-			case *message.GroupImageElement:
-				r.tryAppendImageByURL(messageParts, msgVal.Url)
-			case *message.AtElement:
-				if msgVal.Target != 0 {
-					messageParts.Append(message.NewText(fmt.Sprintf("@%v(%v)", msgVal.Display, msgVal.Target)))
-				} else {
-					messageParts.Append(message.NewText("@全体成员(转发)"))
-				}
-			case *message.FaceElement, *message.LightAppElement:
-				messageParts.Append(msg)
-			default:
-				jsonBytes, _ := json.Marshal(msg)
-				messageParts.Elements = append(messageParts.Elements, splitPlainMessage(fmt.Sprintf("%v\n", string(jsonBytes)))...)
-			}
-		}
-
-		if !forRepeat {
-			// 如果是转发的消息，增加一个转发信息分片元素
-			messageParts.Append(message.NewText(fmt.Sprintf(""+
-				"\n"+
-				"------------------------------\n"+
-				"转发自 群[%v:%v] QQ[%v:%v] 时间[%v]",
-				m.GroupName, m.GroupCode,
-				m.Sender.Nickname, m.Sender.Uin,
-				r.currentTime(),
-			)))
-		}
-
-		// 根据大小分为多个消息进行发送
-		forwardMessages := message.NewSendingMessage()
-		msgSize := 0
-		for _, part := range messageParts.Elements {
-			jsonBytes, _ := json.Marshal(part)
-			// 若当前分消息加上新的元素后大小会超限，且已经有元素（确保不会无限循环），则开始切分为新的一个元素
-			if msgSize+len(jsonBytes) > maxMessageJSONSize && len(forwardMessages.Elements) > 0 {
-				forwardMessagesList = append(forwardMessagesList, forwardMessages)
-
-				forwardMessages = message.NewSendingMessage()
-				msgSize = 0
-			}
-
-			// 加上新的元素
-			forwardMessages.Append(part)
-			msgSize += len(jsonBytes)
-		}
-		// 将最后一个分片加上
-		if len(forwardMessages.Elements) != 0 {
+	forwardMessages := message.NewSendingMessage()
+	msgSize := 0
+	for _, part := range messageParts.Elements {
+		estimateSize := message.EstimateLength([]message.IMessageElement{part})
+		// 若当前分消息加上新的元素后大小会超限，且已经有元素（确保不会无限循环），则开始切分为新的一个元素
+		if msgSize+estimateSize > maxMessageSize && len(forwardMessages.Elements) > 0 {
 			forwardMessagesList = append(forwardMessagesList, forwardMessages)
+
+			forwardMessages = message.NewSendingMessage()
+			msgSize = 0
 		}
+
+		// 加上新的元素
+		forwardMessages.Append(part)
+		msgSize += estimateSize
+	}
+	// 将最后一个分片加上
+	if len(forwardMessages.Elements) != 0 {
+		forwardMessagesList = append(forwardMessagesList, forwardMessages)
 	}
 
 	return forwardMessagesList

@@ -105,10 +105,10 @@ func isMemberAdmin(permission client.MemberPermission) bool {
 }
 
 // 单条消息发送的大小有限制，所以需要分成多段来发
-const maxMessageJSONSize = 400
+const maxMessageSize = 5000
 
 func splitPlainMessage(content string) []message.IMessageElement {
-	if len(content) <= maxMessageJSONSize {
+	if len(content) <= maxMessageSize {
 		return []message.IMessageElement{message.NewText(content)}
 	}
 
@@ -118,11 +118,12 @@ func splitPlainMessage(content string) []message.IMessageElement {
 	remainingText := content
 	for len(remainingText) != 0 {
 		partSize := 0
-		for byteIdx, runeValue := range remainingText {
-			if partSize+byteIdx > maxMessageJSONSize {
+		for _, runeValue := range remainingText {
+			runeSize := len(string(runeValue))
+			if partSize+runeSize > maxMessageSize {
 				break
 			}
-			partSize += len(string(runeValue))
+			partSize += runeSize
 		}
 
 		part, remainingText = remainingText[:partSize], remainingText[partSize:]
