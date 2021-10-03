@@ -2,7 +2,6 @@ package qqrobot
 
 import (
 	"fmt"
-	"net/url"
 	"reflect"
 	"testing"
 
@@ -94,20 +93,5 @@ func Test_version_less(t *testing.T) {
 				t.Errorf("version_less(%v, %v) = %v, want %v", tt.version_left, tt.version_right, got, tt.want)
 			}
 		})
-	}
-}
-
-func TestMakeSign(t *testing.T) {
-	params := url.Values{}
-	params.Set("app_id", "2159831370")
-	params.Set("time_stamp", "1605690895")
-	params.Set("nonce_str", "0.21999282737760117")
-	params.Set("session", "123456789")
-	params.Set("question", "月球是什么？")
-	appKey := "cHQ286kZhNKlpwbj"
-
-	want := "562D5D6303E61FB9EE590CB20AC29218"
-	if got := MakeSign(params, appKey); got != want {
-		t.Errorf("MakeSign() = %v, want %v", got, want)
 	}
 }
