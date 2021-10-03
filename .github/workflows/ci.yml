@@ -50,7 +50,7 @@ jobs:
           export BINARY_NAME="$BINARY_PREFIX$GOOS_$GOARCH$BINARY_SUFFIX"
           export CGO_ENABLED=0
 
-          if [ $GOOS = "windows" ]; then
+          if [ $GOOS = "windows" ] && [ $GOARCH = "amd64" ]; then
             GOOS=linux GOARCH=amd64 go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest
             go generate .
           fi
