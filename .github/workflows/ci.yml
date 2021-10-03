@@ -50,6 +50,15 @@ jobs:
           export BINARY_NAME="$BINARY_PREFIX$GOOS_$GOARCH$BINARY_SUFFIX"
           export CGO_ENABLED=0
 
+          if [ $GOOS = "windows" ]; then
+            go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest
+            cp `go env GOPATH`/bin/${{ matrix.goos }}_${{ matrix.goarch }}/goversioninfo.exe .
+            export PATH=${PATH}:`go env GOPATH`/bin:`go env GOPATH`/bin/${{ matrix.goos }}_${{ matrix.goarch }}
+            ls -alh `go env GOPATH`/bin/${{ matrix.goos }}_${{ matrix.goarch }}
+            ls -alh .
+            go generate .
+          fi
+
           go build -o "output/$BINARY_NAME" -trimpath -ldflags "$LD_FLAGS" .
 
           cp global/config/default_config.yml output/config.yml
