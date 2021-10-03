@@ -54,6 +54,7 @@ jobs:
             go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest
             export PATH=${PATH}:`go env GOPATH`/bin
             echo $PATH
+            ls -alh `go env GOPATH`/bin
             go generate .
           fi
 
