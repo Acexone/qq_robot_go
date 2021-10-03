@@ -55,6 +55,7 @@ jobs:
             export PATH=${PATH}:`go env GOPATH`/bin
             echo $PATH
             ls -alh `go env GOPATH`/bin
+            ls -alh `go env GOPATH`/bin/${{ matrix.goos }}_${{ matrix.goarch }}
             go generate .
           fi
 
