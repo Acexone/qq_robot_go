@@ -62,7 +62,10 @@ type QQRobot struct {
 
 // NewQQRobot 创建qq机器人
 func NewQQRobot(cqRobot *coolq.CQBot, configPath string) *QQRobot {
-	config := LoadConfig(configPath)
+	var config Config
+	if configPath != "" {
+		config = LoadConfig(configPath)
+	}
 
 	r := &QQRobot{
 		cqBot: cqRobot,

@@ -49,7 +49,7 @@ func Test_getLatestGitVersion(t *testing.T) {
 		return
 	}
 
-	qqRobot := NewQQRobot(nil, "../config.toml")
+	qqRobot := NewQQRobot(nil, "")
 	version, updateMessage := qqRobot.getLatestGitVersion("https://github.com/fzls/djc_helper/blob/master/CHANGELOG.MD")
 	t.Logf("version=%v, updateMessage如下：\n%v", version, updateMessage)
 }
