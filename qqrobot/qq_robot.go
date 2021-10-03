@@ -655,6 +655,7 @@ func (r *QQRobot) getForwardMessagesList(m *message.GroupMessage, forRepeat bool
 	return forwardMessagesList
 }
 
+// splitLongMessage 将过长的消息分割为若干个适合发送的消息
 func (r *QQRobot) splitLongMessage(sendingMessage *message.SendingMessage) []*message.SendingMessage {
 	// 合并连续文本消息
 	sendingMessage = r.mergeContinuousTextMessages(sendingMessage)
@@ -670,10 +671,33 @@ func (r *QQRobot) splitLongMessage(sendingMessage *message.SendingMessage) []*me
 
 // mergeContinuousTextMessages 预先将所有连续的文本消息合并为到一起，方便后续统一切割
 func (r *QQRobot) mergeContinuousTextMessages(sendingMessage *message.SendingMessage) *message.SendingMessage {
+	// 检查下是否有连续的文本消息，若没有，则可以直接返回
+	lastIsText := false
+	hasContinuousText := false
+	for _, msg := range sendingMessage.Elements {
+		if _, ok := msg.(*message.TextElement); ok {
+			if lastIsText {
+				// 有连续的文本消息，需要进行处理
+				hasContinuousText = true
+				break
+			}
+
+			// 遇到文本元素先存放起来，方便将连续的文本元素合并
+			lastIsText = true
+			continue
+		} else {
+			lastIsText = false
+		}
+	}
+	if !hasContinuousText {
+		return sendingMessage
+	}
+
+	// 存在连续的文本消息，需要进行合并处理
 	mergeContinuousTextMessages := message.NewSendingMessage()
 
 	textBuffer := strings.Builder{}
-	lastIsText := false
+	lastIsText = false
 	for _, msg := range sendingMessage.Elements {
 		if msgVal, ok := msg.(*message.TextElement); ok {
 			// 遇到文本元素先存放起来，方便将连续的文本元素合并
@@ -752,7 +776,7 @@ func (r *QQRobot) splitMessages(sendingMessage *message.SendingMessage) []*messa
 	if len(messagePart.Elements) != 0 {
 		splitMessages = append(splitMessages, messagePart)
 	}
-	
+
 	return splitMessages
 }
 
