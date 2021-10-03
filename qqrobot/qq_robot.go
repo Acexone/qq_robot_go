@@ -634,43 +634,32 @@ func (r *QQRobot) getForwardMessagesList(m *message.GroupMessage, forRepeat bool
 
 	messages := m.Elements
 
-	for len(messages) != 0 {
-		forwardMessages := message.NewSendingMessage()
-		leftMessages := message.NewSendingMessage()
-
-		msgSize := 0
+	if len(messages) != 0 {
+		// 将原有消息的各个元素先尝试处理，如过长的文本消息按需分割为多个元素
+		messageParts := message.NewSendingMessage()
 		for _, msg := range messages {
 			switch msgVal := msg.(type) {
 			case *message.TextElement:
-				forwardMessages.Elements = append(forwardMessages.Elements, splitPlainMessage(msgVal.Content)...)
+				messageParts.Elements = append(messageParts.Elements, splitPlainMessage(msgVal.Content)...)
 			case *message.GroupImageElement:
-				r.tryAppendImageByURL(forwardMessages, msgVal.Url)
+				r.tryAppendImageByURL(messageParts, msgVal.Url)
 			case *message.AtElement:
 				if msgVal.Target != 0 {
-					forwardMessages.Append(message.NewText(fmt.Sprintf("@%v(%v)", msgVal.Display, msgVal.Target)))
+					messageParts.Append(message.NewText(fmt.Sprintf("@%v(%v)", msgVal.Display, msgVal.Target)))
 				} else {
-					forwardMessages.Append(message.NewText("@全体成员(转发)"))
+					messageParts.Append(message.NewText("@全体成员(转发)"))
 				}
 			case *message.FaceElement, *message.LightAppElement:
-				forwardMessages.Append(msg)
+				messageParts.Append(msg)
 			default:
 				jsonBytes, _ := json.Marshal(msg)
-				forwardMessages.Elements = append(forwardMessages.Elements, splitPlainMessage(fmt.Sprintf("%v\n", string(jsonBytes)))...)
-			}
-
-			// 如果加了该消息后会超出单个消息大小，则先放入待定队列
-			jsonBytes, _ := json.Marshal(forwardMessages.Elements[len(forwardMessages.Elements)-1])
-			msgSize += len(jsonBytes)
-			// 需要确保每次至少转发一条消息
-			if len(forwardMessages.Elements) > 1 && msgSize > maxMessageJSONSize {
-				forwardMessages.Elements = forwardMessages.Elements[:len(forwardMessages.Elements)-1]
-				msgSize -= len(jsonBytes)
-				leftMessages.Append(msg)
+				messageParts.Elements = append(messageParts.Elements, splitPlainMessage(fmt.Sprintf("%v\n", string(jsonBytes)))...)
 			}
 		}
 
 		if !forRepeat {
-			forwardMessages.Append(message.NewText(fmt.Sprintf(""+
+			// 如果是转发的消息，增加一个转发信息分片元素
+			messageParts.Append(message.NewText(fmt.Sprintf(""+
 				"\n"+
 				"------------------------------\n"+
 				"转发自 群[%v:%v] QQ[%v:%v] 时间[%v]",
@@ -680,8 +669,27 @@ func (r *QQRobot) getForwardMessagesList(m *message.GroupMessage, forRepeat bool
 			)))
 		}
 
-		forwardMessagesList = append(forwardMessagesList, forwardMessages)
-		messages = leftMessages.Elements
+		// 根据大小分为多个消息进行发送
+		forwardMessages := message.NewSendingMessage()
+		msgSize := 0
+		for _, part := range messageParts.Elements {
+			jsonBytes, _ := json.Marshal(part)
+			// 若当前分消息加上新的元素后大小会超限，且已经有元素（确保不会无限循环），则开始切分为新的一个元素
+			if msgSize+len(jsonBytes) > maxMessageJSONSize && len(forwardMessages.Elements) > 0 {
+				forwardMessagesList = append(forwardMessagesList, forwardMessages)
+
+				forwardMessages = message.NewSendingMessage()
+				msgSize = 0
+			}
+
+			// 加上新的元素
+			forwardMessages.Append(part)
+			msgSize += len(jsonBytes)
+		}
+		// 将最后一个分片加上
+		if len(forwardMessages.Elements) != 0 {
+			forwardMessagesList = append(forwardMessagesList, forwardMessages)
+		}
 	}
 
 	return forwardMessagesList
