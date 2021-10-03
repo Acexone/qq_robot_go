@@ -634,10 +634,13 @@ func (r *QQRobot) getForwardMessagesList(m *message.GroupMessage, forRepeat bool
 		return nil
 	}
 
-	messages := append([]message.IMessageElement{}, m.Elements...)
+	// 转换为消息类型，方便处理
+	messages := message.NewSendingMessage()
+	messages.Elements = append([]message.IMessageElement{}, m.Elements...)
+
 	if !forRepeat {
 		// 如果是转发的消息，增加一个转发信息分片元素
-		messages = append(messages, message.NewText(fmt.Sprintf(""+
+		messages.Append(message.NewText(fmt.Sprintf(""+
 			"\n"+
 			"------------------------------\n"+
 			"转发自 群[%v:%v] QQ[%v:%v] 时间[%v]",
@@ -647,12 +650,23 @@ func (r *QQRobot) getForwardMessagesList(m *message.GroupMessage, forRepeat bool
 		)))
 	}
 
-	// 预先将所有连续的文本消息合并为到一起，方便后续统一切割
+	// 合并连续文本消息
+	messages = r.mergeContinuousTextMessages(messages)
+	// 分割过长元素
+	messages = r.splitElements(messages)
+	// 将元素分为多组，确保各组不超过单条消息的上限
+	forwardMessagesList := r.splitMessages(messages)
+
+	return forwardMessagesList
+}
+
+// mergeContinuousTextMessages 预先将所有连续的文本消息合并为到一起，方便后续统一切割
+func (r *QQRobot) mergeContinuousTextMessages(messages *message.SendingMessage) *message.SendingMessage {
 	mergeContinuousTextMessages := message.NewSendingMessage()
 
 	textBuffer := strings.Builder{}
 	lastIsText := false
-	for _, msg := range messages {
+	for _, msg := range messages.Elements {
 		if msgVal, ok := msg.(*message.TextElement); ok {
 			// 遇到文本元素先存放起来，方便将连续的文本元素合并
 			textBuffer.WriteString(msgVal.Content)
@@ -676,9 +690,13 @@ func (r *QQRobot) getForwardMessagesList(m *message.GroupMessage, forRepeat bool
 		textBuffer.Reset()
 	}
 
-	// 将原有消息的各个元素先尝试处理，如过长的文本消息按需分割为多个元素
+	return mergeContinuousTextMessages
+}
+
+// splitElements 将原有消息的各个元素先尝试处理，如过长的文本消息按需分割为多个元素
+func (r *QQRobot) splitElements(messages *message.SendingMessage) *message.SendingMessage {
 	messageParts := message.NewSendingMessage()
-	for _, msg := range mergeContinuousTextMessages.Elements {
+	for _, msg := range messages.Elements {
 		switch msgVal := msg.(type) {
 		case *message.TextElement:
 			messageParts.Elements = append(messageParts.Elements, splitPlainMessage(msgVal.Content)...)
@@ -697,13 +715,16 @@ func (r *QQRobot) getForwardMessagesList(m *message.GroupMessage, forRepeat bool
 			messageParts.Elements = append(messageParts.Elements, splitPlainMessage(fmt.Sprintf("%v\n", string(jsonBytes)))...)
 		}
 	}
+	return messageParts
+}
 
-	// 根据大小分为多个消息进行发送
+// splitMessages 根据大小分为多个消息进行发送
+func (r *QQRobot) splitMessages(messages *message.SendingMessage) []*message.SendingMessage {
 	var forwardMessagesList []*message.SendingMessage
 
 	forwardMessages := message.NewSendingMessage()
 	msgSize := 0
-	for _, part := range messageParts.Elements {
+	for _, part := range messages.Elements {
 		estimateSize := message.EstimateLength([]message.IMessageElement{part})
 		// 若当前分消息加上新的元素后大小会超限，且已经有元素（确保不会无限循环），则开始切分为新的一个元素
 		if msgSize+estimateSize > maxMessageSize && len(forwardMessages.Elements) > 0 {
@@ -721,7 +742,6 @@ func (r *QQRobot) getForwardMessagesList(m *message.GroupMessage, forRepeat bool
 	if len(forwardMessages.Elements) != 0 {
 		forwardMessagesList = append(forwardMessagesList, forwardMessages)
 	}
-
 	return forwardMessagesList
 }
 
