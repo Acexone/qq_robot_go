@@ -1,4 +1,4 @@
-package qq_robot
+package qqrobot
 
 import (
 	"math/rand"
@@ -7,16 +7,19 @@ import (
 
 // 2020/06/01 2:42 by fzls
 
-var MAX_FOOD_PAGE_MAP = map[string]int64{
+// MaxFoodPageMap 美食网站与其最大页数
+var MaxFoodPageMap = map[string]int64{
 	"www.xinshipu.com":     30,
 	"home.meishichina.com": 40,
 }
 
+// FoodImage 美食图片
 type FoodImage struct {
 	Name string
-	Url  string
+	URL  string
 }
 
+// Rule 规则，附带一些缓存数据
 type Rule struct {
 	Config            RuleConfig
 	ProcessedMessages map[int64]struct{}
@@ -26,34 +29,36 @@ type Rule struct {
 	SentFoodImages    map[string]struct{}           // 目前已发送过的食物的图片url的集合
 }
 
-func (r *Rule) UpdateFoodPage(foodSiteUrl string) {
-	if r.SiteToFetchedPage[foodSiteUrl] == nil {
-		r.SiteToFetchedPage[foodSiteUrl] = map[int64]struct{}{}
+// UpdateFoodPage 更新食物页数
+func (r *Rule) UpdateFoodPage(foodSiteURL string) {
+	if r.SiteToFetchedPage[foodSiteURL] == nil {
+		r.SiteToFetchedPage[foodSiteURL] = map[int64]struct{}{}
 	}
-	fetchedPage := r.SiteToFetchedPage[foodSiteUrl]
+	fetchedPage := r.SiteToFetchedPage[foodSiteURL]
 
-	var MAX_FOOD_PAGE int64 = 30
-	for site, maxFoodPage := range MAX_FOOD_PAGE_MAP {
-		if strings.Contains(foodSiteUrl, site) {
-			MAX_FOOD_PAGE = maxFoodPage
+	var MaxFoodPage int64 = 30
+	for site, maxFoodPage := range MaxFoodPageMap {
+		if strings.Contains(foodSiteURL, site) {
+			MaxFoodPage = maxFoodPage
 		}
 	}
 
-	if len(fetchedPage) == int(MAX_FOOD_PAGE) {
+	if len(fetchedPage) == int(MaxFoodPage) {
 		return
 	}
 
 	for {
-		foodPage := 1 + rand.Int63n(MAX_FOOD_PAGE)
+		foodPage := 1 + rand.Int63n(MaxFoodPage)
 		if _, fetched := fetchedPage[foodPage]; !fetched {
 			fetchedPage[foodPage] = struct{}{}
-			r.SiteToFoodPage[foodSiteUrl] = foodPage
+			r.SiteToFoodPage[foodSiteURL] = foodPage
 			logger.Infof("rule=%v UpdateFoodPage to %v", r.Config.Name, foodPage)
 			return
 		}
 	}
 }
 
+// NewRule 创建新的规则
 func NewRule(config RuleConfig) *Rule {
 	return &Rule{
 		Config:            config,

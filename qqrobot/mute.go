@@ -1,4 +1,4 @@
-package qq_robot
+package qqrobot
 
 import (
 	"regexp"
@@ -10,12 +10,12 @@ import (
 
 // 2021/10/02 5:23 by fzls
 
-// 最大禁言30天
-const MAX_MUTE_TIME = 30 * 60 * 60 * 24
+// MaxMuteTime 最大禁言30天
+const MaxMuteTime = 30 * 60 * 60 * 24
 
 func truncatMuteTime(muteTime int64) int64 {
-	if muteTime > MAX_MUTE_TIME {
-		return MAX_MUTE_TIME
+	if muteTime > MaxMuteTime {
+		return MaxMuteTime
 	}
 
 	return muteTime

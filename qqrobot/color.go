@@ -1,4 +1,4 @@
-package qq_robot
+package qqrobot
 
 import "github.com/gookit/color"
 

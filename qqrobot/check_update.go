@@ -1,4 +1,4 @@
-package qq_robot
+package qqrobot
 
 import (
 	"fmt"
@@ -19,7 +19,7 @@ func (r *QQRobot) checkUpdates() {
 	for _, rule := range r.Config.NotifyUpdate.Rules {
 		lastVersion := r.CheckUpdateVersionMap[rule.Name]
 		latestVersion, updateMessage := r.getLatestGitVersion(rule.GitChangelogPage)
-		if version_less(lastVersion, latestVersion) {
+		if versionLess(lastVersion, latestVersion) {
 			// 版本有更新
 			r.CheckUpdateVersionMap[rule.Name] = latestVersion
 
@@ -29,24 +29,24 @@ func (r *QQRobot) checkUpdates() {
 			}
 			replies := r.makeNotifyUpdatesReplies(rule, latestVersion, updateMessage)
 			nowStr := r.currentTime()
-			for _, groupId := range rule.NotifyGroups {
-				rspId := r.cqBot.SendGroupMessage(groupId, replies)
-				if rspId == -1 {
-					logger.Errorf("【%v Failed】 %v groupId=%v replies=%v err=%v", rule.Name, nowStr, groupId, replies, rspId)
+			for _, groupID := range rule.NotifyGroups {
+				rspID := r.cqBot.SendGroupMessage(groupID, replies)
+				if rspID == -1 {
+					logger.Errorf("【%v Failed】 %v groupID=%v replies=%v err=%v", rule.Name, nowStr, groupID, replies, rspID)
 					continue
 				}
-				logger.Infof("【%v】 %v groupId=%v replies=%v", rule.Name, nowStr, groupId, replies)
+				logger.Infof("【%v】 %v groupID=%v replies=%v", rule.Name, nowStr, groupID, replies)
 			}
 			logger.Infof("check update %v, from %v to %v", rule.Name, lastVersion, latestVersion)
 		}
 	}
 }
 
-func (r *QQRobot) manualTriggerUpdateMessage(groupId int64) (replies *message.SendingMessage) {
+func (r *QQRobot) manualTriggerUpdateMessage(groupID int64) (replies *message.SendingMessage) {
 	for _, rule := range r.Config.NotifyUpdate.Rules {
 		inRange := false
 		for _, group := range rule.NotifyGroups {
-			if groupId == group {
+			if groupID == group {
 				inRange = true
 				break
 			}
@@ -77,12 +77,12 @@ func (r *QQRobot) makeNotifyUpdatesReplies(rule NotifyUpdateRule, latestVersion 
 	for _, atOnTrigger := range rule.AtQQsOnTrigger {
 		replies.Append(message.NewAt(atOnTrigger))
 	}
-	msg := strings.ReplaceAll(rule.Message, TemplateArgs_GitVersion, latestVersion)
-	msg = strings.ReplaceAll(msg, TemplateArgs_UpdateMessage, updateMessage)
+	msg := strings.ReplaceAll(rule.Message, templateargsGitversion, latestVersion)
+	msg = strings.ReplaceAll(msg, templateargsUpdatemessage, updateMessage)
 	replies.Append(message.NewText(msg))
 	// 如配置了图片url，则额外发送图片
-	if rule.ImageUrl != "" {
-		r.tryAppendImageByUrl(replies, rule.ImageUrl)
+	if rule.ImageURL != "" {
+		r.tryAppendImageByURL(replies, rule.ImageURL)
 	}
 	return replies
 }
@@ -103,18 +103,19 @@ var regGitVersion = regexp.MustCompile(`([vV][0-9.]+)(\s+\d+\.\d+\.\d+)`)
 var regUpdateInfo = regexp.MustCompile(`(更新公告</h1>)\s*<ol>((\s|\S)+?)</ol>`)
 var regUpdateMessages = regexp.MustCompile("<li>(.+?)</li>")
 
+// VersionNone 默认版本号
 var VersionNone = "v0.0.0"
 
-// github的镜像站
-var GITHUB_MIRROR_SITES = []string{
+// GithubMirrorSites github的镜像站
+var GithubMirrorSites = []string{
 	"hub.fastgit.org",
 	"github.com.cnpmjs.org",
 }
 
 func (r *QQRobot) getLatestGitVersion(gitChangelogPage string) (latestVersion string, updateMessage string) {
-	var urls []string
+	urls := make([]string, 0, len(GithubMirrorSites)+1)
 	// 先尝试国内镜像，最后尝试直接访问
-	for _, mirrorSite := range GITHUB_MIRROR_SITES {
+	for _, mirrorSite := range GithubMirrorSites {
 		urls = append(urls, strings.ReplaceAll(gitChangelogPage, "github.com", mirrorSite))
 	}
 	urls = append(urls, gitChangelogPage)
@@ -130,7 +131,7 @@ func (r *QQRobot) getLatestGitVersion(gitChangelogPage string) (latestVersion st
 }
 
 func (r *QQRobot) _getLatestGitVersion(gitChangelogPage string) (string, string) {
-	resp, err := r.HttpClient.Get(gitChangelogPage)
+	resp, err := r.httpClient.Get(gitChangelogPage)
 	if err != nil {
 		logger.Debugf("getLatestGitVersion gitChangelogPage=%v err=%v", gitChangelogPage, err)
 		return VersionNone, ""
@@ -153,13 +154,13 @@ func (r *QQRobot) _getLatestGitVersion(gitChangelogPage string) (string, string)
 		return VersionNone, ""
 	}
 
-	var versions []string
+	versions := make([]string, 0, len(matches))
 	for _, match := range matches {
 		versions = append(versions, match[1])
 	}
 
 	sort.Slice(versions, func(i, j int) bool {
-		return !version_less(versions[i], versions[j])
+		return !versionLess(versions[i], versions[j])
 	})
 
 	// 解析更新信息
@@ -178,32 +179,34 @@ func (r *QQRobot) _getLatestGitVersion(gitChangelogPage string) (string, string)
 	return versions[0], updateMessage
 }
 
-func version_less(version_left, version_right string) bool {
-	return version_less_int_list(version_to_version_int_list(version_left), version_to_version_int_list(version_right))
+func versionLess(versionLeft, versionRight string) bool {
+	return versionLessIntList(versionToVersionIntList(versionLeft), versionToVersionIntList(versionRight))
 }
 
-func version_less_int_list(version_int_list_left, version_int_list_right []int64) bool {
-	length := len(version_int_list_left)
-	if len(version_int_list_right) < length {
-		length = len(version_int_list_right)
+func versionLessIntList(versionIntListLeft, versionIntListRight []int64) bool {
+	length := len(versionIntListLeft)
+	if len(versionIntListRight) < length {
+		length = len(versionIntListRight)
 	}
 	for idx := 0; idx < length; idx++ {
-		if version_int_list_left[idx] != version_int_list_right[idx] {
-			return version_int_list_left[idx] < version_int_list_right[idx]
+		if versionIntListLeft[idx] != versionIntListRight[idx] {
+			return versionIntListLeft[idx] < versionIntListRight[idx]
 		}
 	}
 
-	return len(version_int_list_left) < len(version_int_list_right)
+	return len(versionIntListLeft) < len(versionIntListRight)
 }
 
 // v3.2.2 => [3, 2, 2], 3.2.2 => [3, 2, 2]
-func version_to_version_int_list(version string) []int64 {
+func versionToVersionIntList(version string) []int64 {
 	// 移除v
 	if version[0] == 'v' {
 		version = version[1:]
 	}
-	var versionIntList []int64
-	for _, subVersion := range strings.Split(version, ".") {
+
+	subVersionList := strings.Split(version, ".")
+	versionIntList := make([]int64, 0, len(subVersionList))
+	for _, subVersion := range subVersionList {
 		subVersionInt, _ := strconv.ParseInt(subVersion, 10, 64)
 		versionIntList = append(versionIntList, subVersionInt)
 	}

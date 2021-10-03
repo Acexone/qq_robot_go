@@ -1,4 +1,4 @@
-package qq_robot
+package qqrobot
 
 import (
 	"context"
@@ -14,26 +14,30 @@ import (
 
 	"github.com/Mrs4s/MiraiGo/client"
 	"github.com/Mrs4s/MiraiGo/message"
-	"github.com/Mrs4s/go-cqhttp/coolq"
 	"github.com/gookit/color"
 	lru "github.com/hashicorp/golang-lru"
+	"github.com/pkg/errors"
 	tbp "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tbp/v20190627"
+
+	"github.com/Mrs4s/go-cqhttp/coolq"
 )
 
+// MessageKey 消息key
 type MessageKey struct {
-	MessageId int64
+	MessageID int64
 	SenderQQ  int64
-	GroupId   int64
+	GroupID   int64
 }
 
-func makeMessageKey(messageId, senderQQ, groupId int64) MessageKey {
+func makeMessageKey(messageID, senderQQ, groupID int64) MessageKey {
 	return MessageKey{
-		MessageId: messageId,
+		MessageID: messageID,
 		SenderQQ:  senderQQ,
-		GroupId:   groupId,
+		GroupID:   groupID,
 	}
 }
 
+// QQRobot qq机器人
 type QQRobot struct {
 	cqBot *coolq.CQBot
 
@@ -41,11 +45,11 @@ type QQRobot struct {
 	StartTime time.Time
 
 	Rules                                        []*Rule
-	RuleTypeToMessageIdToRuleApplyCount          map[RuleType]map[MessageKey]int32 // 消息类型 => 消息Key => 该消息被当前类型规则处理的次数
+	RuleTypeToMessageIDToRuleApplyCount          map[RuleType]map[MessageKey]int32 // 消息类型 => 消息Key => 该消息被当前类型规则处理的次数
 	GroupToMemberToTriggerRuleTimes              map[int64]map[int64][]int64       // group => qq => list of 触发规则的时间戳
 	GroupToRuleNameToLastSuccessTriggerTimestamp map[int64]map[string]int64        // group => rulename => 上次在cd外成功触发的时间戳
 
-	HttpClient http.Client
+	httpClient http.Client
 	aiClient   *tbp.Client
 
 	ocrCache *lru.ARCCache
@@ -56,6 +60,7 @@ type QQRobot struct {
 	quitFunc context.CancelFunc
 }
 
+// NewQQRobot 创建qq机器人
 func NewQQRobot(cqRobot *coolq.CQBot, configPath string) *QQRobot {
 	config := LoadConfig(configPath)
 
@@ -63,10 +68,10 @@ func NewQQRobot(cqRobot *coolq.CQBot, configPath string) *QQRobot {
 		cqBot: cqRobot,
 
 		Config:                                       config,
-		RuleTypeToMessageIdToRuleApplyCount:          map[RuleType]map[MessageKey]int32{},
+		RuleTypeToMessageIDToRuleApplyCount:          map[RuleType]map[MessageKey]int32{},
 		GroupToMemberToTriggerRuleTimes:              map[int64]map[int64][]int64{},
 		GroupToRuleNameToLastSuccessTriggerTimestamp: map[int64]map[string]int64{},
-		HttpClient:                                   http.Client{Timeout: time.Duration(config.Robot.Timeout) * time.Second},
+		httpClient:                                   http.Client{Timeout: time.Duration(config.Robot.Timeout) * time.Second},
 		CheckUpdateVersionMap:                        map[string]string{},
 	}
 
@@ -78,6 +83,8 @@ func NewQQRobot(cqRobot *coolq.CQBot, configPath string) *QQRobot {
 	}
 	return r
 }
+
+// Start 开始运行
 func (r *QQRobot) Start() {
 	r.StartTime = time.Now()
 	r.quitCtx, r.quitFunc = context.WithCancel(context.Background())
@@ -86,6 +93,7 @@ func (r *QQRobot) Start() {
 	go r.ticker()
 }
 
+// Stop 停止运行
 func (r *QQRobot) Stop() {
 	r.notify(r.Config.Robot.OnStop)
 	r.quitFunc()
@@ -94,7 +102,7 @@ func (r *QQRobot) Stop() {
 func (r *QQRobot) notify(cfg NotifyConfig) {
 	msgTemplate := cfg.Message
 	if cfg.Name == "机器人下线" {
-		msgTemplate = strings.ReplaceAll(msgTemplate, TemplateArgs_WorkTime, time.Since(r.StartTime).String())
+		msgTemplate = strings.ReplaceAll(msgTemplate, templateargsWorktime, time.Since(r.StartTime).String())
 	}
 	if r.Config.Robot.Debug {
 		logger.Debug("debug mode, do not notify", cfg.Name, cfg.NotifyGroups, msgTemplate)
@@ -103,17 +111,17 @@ func (r *QQRobot) notify(cfg NotifyConfig) {
 	msg := message.NewSendingMessage()
 	msg.Append(message.NewText(msgTemplate))
 	nowStr := r.currentTime()
-	for _, groupId := range cfg.NotifyGroups {
-		if r.cqBot.Client.FindGroup(groupId) == nil {
+	for _, groupID := range cfg.NotifyGroups {
+		if r.cqBot.Client.FindGroup(groupID) == nil {
 			// 不在该群里，跳过
 			continue
 		}
-		retCode := r.cqBot.SendGroupMessage(groupId, msg)
+		retCode := r.cqBot.SendGroupMessage(groupID, msg)
 		if retCode == -1 {
-			logger.Errorf("【%v Failed】 %v groupId=%v message=%v err=%v", cfg.Name, nowStr, groupId, msg, retCode)
+			logger.Errorf("【%v Failed】 %v groupID=%v message=%v err=%v", cfg.Name, nowStr, groupID, msg, retCode)
 			return
 		}
-		logger.Infof("【%v】 %v groupId=%v message=%v", cfg.Name, nowStr, groupId, msg)
+		logger.Infof("【%v】 %v groupID=%v message=%v", cfg.Name, nowStr, groupID, msg)
 	}
 	logger.Infof("robot on %v finished", cfg.Name)
 }
@@ -139,35 +147,37 @@ func (r *QQRobot) ticker() {
 	}
 }
 
+// RegisterHandlers 注册事件处理函数
 func (r *QQRobot) RegisterHandlers() {
 	// TODO: re: 添加其他事件的处理 @2021-10-02 05:35:37
 
 	r.cqBot.Client.OnGroupMessage(r.OnGroupMessage)
 	r.cqBot.Client.OnPrivateMessage(r.OnPrivateMessage)
-	//r.cqBot.Client.OnSelfPrivateMessage(rprivateMessageEvent)
-	//r.cqBot.Client.OnSelfGroupMessage(rgroupMessageEvent)
+	// r.cqBot.Client.OnSelfPrivateMessage(rprivateMessageEvent)
+	// r.cqBot.Client.OnSelfGroupMessage(rgroupMessageEvent)
 	r.cqBot.Client.OnTempMessage(r.OnTempMessage)
-	//r.cqBot.Client.OnGroupMuted(rgroupMutedEvent)
-	//r.cqBot.Client.OnGroupMessageRecalled(rgroupRecallEvent)
-	//r.cqBot.Client.OnGroupNotify(rgroupNotifyEvent)
-	//r.cqBot.Client.OnFriendNotify(rfriendNotifyEvent)
-	//r.cqBot.Client.OnMemberSpecialTitleUpdated(rmemberTitleUpdatedEvent)
-	//r.cqBot.Client.OnFriendMessageRecalled(rfriendRecallEvent)
-	//r.cqBot.Client.OnReceivedOfflineFile(rofflineFileEvent)
-	//r.cqBot.Client.OnJoinGroup(rjoinGroupEvent)
-	//r.cqBot.Client.OnLeaveGroup(rleaveGroupEvent)
+	// r.cqBot.Client.OnGroupMuted(rgroupMutedEvent)
+	// r.cqBot.Client.OnGroupMessageRecalled(rgroupRecallEvent)
+	// r.cqBot.Client.OnGroupNotify(rgroupNotifyEvent)
+	// r.cqBot.Client.OnFriendNotify(rfriendNotifyEvent)
+	// r.cqBot.Client.OnMemberSpecialTitleUpdated(rmemberTitleUpdatedEvent)
+	// r.cqBot.Client.OnFriendMessageRecalled(rfriendRecallEvent)
+	// r.cqBot.Client.OnReceivedOfflineFile(rofflineFileEvent)
+	// r.cqBot.Client.OnJoinGroup(rjoinGroupEvent)
+	// r.cqBot.Client.OnLeaveGroup(rleaveGroupEvent)
 	r.cqBot.Client.OnGroupMemberJoined(r.OnGroupMemberJoined)
-	//r.cqBot.Client.OnGroupMemberLeaved(rmemberLeaveEvent)
-	//r.cqBot.Client.OnGroupMemberPermissionChanged(rmemberPermissionChangedEvent)
-	//r.cqBot.Client.OnGroupMemberCardUpdated(rmemberCardUpdatedEvent)
-	//r.cqBot.Client.OnNewFriendRequest(rfriendRequestEvent)
-	//r.cqBot.Client.OnNewFriendAdded(rfriendAddedEvent)
-	//r.cqBot.Client.OnGroupInvited(rgroupInvitedEvent)
-	//r.cqBot.Client.OnUserWantJoinGroup(rgroupJoinReqEvent)
-	//r.cqBot.Client.OnOtherClientStatusChanged(rotherClientStatusChangedEvent)
-	//r.cqBot.Client.OnGroupDigest(rgroupEssenceMsg)
+	// r.cqBot.Client.OnGroupMemberLeaved(rmemberLeaveEvent)
+	// r.cqBot.Client.OnGroupMemberPermissionChanged(rmemberPermissionChangedEvent)
+	// r.cqBot.Client.OnGroupMemberCardUpdated(rmemberCardUpdatedEvent)
+	// r.cqBot.Client.OnNewFriendRequest(rfriendRequestEvent)
+	// r.cqBot.Client.OnNewFriendAdded(rfriendAddedEvent)
+	// r.cqBot.Client.OnGroupInvited(rgroupInvitedEvent)
+	// r.cqBot.Client.OnUserWantJoinGroup(rgroupJoinReqEvent)
+	// r.cqBot.Client.OnOtherClientStatusChanged(rotherClientStatusChangedEvent)
+	// r.cqBot.Client.OnGroupDigest(rgroupEssenceMsg)
 }
 
+// OnGroupMessage 处理群消息
 func (r *QQRobot) OnGroupMessage(client *client.QQClient, m *message.GroupMessage) {
 	for _, rule := range r.Rules {
 		if err := r.applyGroupRule(m, rule); err != nil {
@@ -176,6 +186,7 @@ func (r *QQRobot) OnGroupMessage(client *client.QQClient, m *message.GroupMessag
 	}
 }
 
+// OnGroupMemberJoined 处理加群
 func (r *QQRobot) OnGroupMemberJoined(client *client.QQClient, m *client.MemberJoinGroupEvent) {
 	for _, rule := range r.Rules {
 		if err := r.onMemberJoin(m, rule); err != nil {
@@ -184,10 +195,12 @@ func (r *QQRobot) OnGroupMemberJoined(client *client.QQClient, m *client.MemberJ
 	}
 }
 
+// OnPrivateMessage 处理私聊
 func (r *QQRobot) OnPrivateMessage(client *client.QQClient, m *message.PrivateMessage) {
 	r.onPrivateOrTempMessage(m.Sender.Uin, 0, 0, m)
 }
 
+// OnTempMessage 处理临时消息
 func (r *QQRobot) OnTempMessage(client *client.QQClient, m *client.TempMessageEvent) {
 	r.onPrivateOrTempMessage(0, m.Message.GroupCode, m.Message.Sender.Uin, m)
 }
@@ -197,17 +210,17 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 	nowStr := r.currentTime()
 	nowUnix := time.Now().Unix()
 
-	groupId := m.GroupCode
+	groupID := m.GroupCode
 	senderUin := m.Sender.Uin
 	senderName := m.Sender.Nickname
 
-	senderInfo, err := r.cqBot.Client.GetMemberInfo(groupId, senderUin)
+	senderInfo, err := r.cqBot.Client.GetMemberInfo(groupID, senderUin)
 	isAdmin := false
 	if err == nil {
 		isAdmin = isMemberAdmin(senderInfo.Permission)
 	}
 
-	if _, ok := config.GroupIds[groupId]; !ok {
+	if _, ok := config.GroupIds[groupID]; !ok {
 		return nil
 	}
 
@@ -257,11 +270,11 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 			}
 		}
 	}
-	if config.TriggerRuleCount != 0 && config.TriggerRuleDuration != 0 && r.GroupToMemberToTriggerRuleTimes[groupId] != nil {
+	if config.TriggerRuleCount != 0 && config.TriggerRuleDuration != 0 && r.GroupToMemberToTriggerRuleTimes[groupID] != nil {
 		// 计算是否这个QQ在滥用机器人功能
 		var triggerCount int64
 		checkStartTime := time.Now().Unix() - config.TriggerRuleDuration
-		triggerTimes := r.GroupToMemberToTriggerRuleTimes[groupId][senderUin]
+		triggerTimes := r.GroupToMemberToTriggerRuleTimes[groupID][senderUin]
 		startIdx := sort.Search(len(triggerTimes), func(i int) bool {
 			return triggerTimes[i] >= checkStartTime
 		})
@@ -334,8 +347,8 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 	}
 
 	// 判断是否是排除的用户列表
-	for _, exclude_qq := range config.ExcludeQQs {
-		if exclude_qq == senderUin {
+	for _, excludeQQ := range config.ExcludeQQs {
+		if excludeQQ == senderUin {
 			logger.Info("【ExcludedQQ】", nowStr, config.Name, p(m))
 			return nil
 		}
@@ -351,10 +364,10 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 		}
 	}
 
-	messageApplyCount := r.RuleTypeToMessageIdToRuleApplyCount[config.Type]
+	messageApplyCount := r.RuleTypeToMessageIDToRuleApplyCount[config.Type]
 	if messageApplyCount == nil {
 		messageApplyCount = map[MessageKey]int32{}
-		r.RuleTypeToMessageIdToRuleApplyCount[config.Type] = messageApplyCount
+		r.RuleTypeToMessageIDToRuleApplyCount[config.Type] = messageApplyCount
 	}
 	ruleTypeConfig := RuleTypeConfig{}
 	for _, cfg := range r.Config.RuleTypeConfigs {
@@ -363,38 +376,38 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 			break
 		}
 	}
-	messageKey := makeMessageKey(source, senderUin, groupId)
-	if ruleTypeConfig.MaxApplyCount != RuleTypeMaxApplyCount_Infinite && messageApplyCount[messageKey] >= ruleTypeConfig.MaxApplyCount {
+	messageKey := makeMessageKey(source, senderUin, groupID)
+	if ruleTypeConfig.MaxApplyCount != RuleTypeMaxApplyCountInfinite && messageApplyCount[messageKey] >= ruleTypeConfig.MaxApplyCount {
 		return nil
 	}
 
 	guideContent := config.GuideContent
 	// 判断是否在cd内触发了规则
-	if config.CD != 0 && r.GroupToRuleNameToLastSuccessTriggerTimestamp[groupId] != nil {
-		lastTriggerTime := r.GroupToRuleNameToLastSuccessTriggerTimestamp[groupId][config.Name]
+	if config.CD != 0 && r.GroupToRuleNameToLastSuccessTriggerTimestamp[groupID] != nil {
+		lastTriggerTime := r.GroupToRuleNameToLastSuccessTriggerTimestamp[groupID][config.Name]
 		if nowUnix < lastTriggerTime+config.CD {
 			if len(config.GuideContentInCD) == 0 {
 				// 未设置cd内回复内容，则视为未触发
 				logger.Info("【InCD】", nowStr, config.Name, p(m))
 				return nil
-			} else {
-				// 替换回复内容为cd回复内容
-				guideContent = strings.ReplaceAll(config.GuideContentInCD, TemplateArgs_CD, strconv.FormatInt(config.CD, 10))
 			}
+
+			// 替换回复内容为cd回复内容
+			guideContent = strings.ReplaceAll(config.GuideContentInCD, templateargsCd, strconv.FormatInt(config.CD, 10))
 		}
 	}
 
 	// 记录这个QQ触发规则的时间戳
-	if r.GroupToMemberToTriggerRuleTimes[groupId] == nil {
-		r.GroupToMemberToTriggerRuleTimes[groupId] = map[int64][]int64{}
+	if r.GroupToMemberToTriggerRuleTimes[groupID] == nil {
+		r.GroupToMemberToTriggerRuleTimes[groupID] = map[int64][]int64{}
 	}
-	r.GroupToMemberToTriggerRuleTimes[groupId][senderUin] = append(r.GroupToMemberToTriggerRuleTimes[groupId][senderUin], time.Now().Unix())
+	r.GroupToMemberToTriggerRuleTimes[groupID][senderUin] = append(r.GroupToMemberToTriggerRuleTimes[groupID][senderUin], time.Now().Unix())
 
 	// 记录这个规则触发的时间戳
-	if r.GroupToRuleNameToLastSuccessTriggerTimestamp[groupId] == nil {
-		r.GroupToRuleNameToLastSuccessTriggerTimestamp[groupId] = map[string]int64{}
+	if r.GroupToRuleNameToLastSuccessTriggerTimestamp[groupID] == nil {
+		r.GroupToRuleNameToLastSuccessTriggerTimestamp[groupID] = map[string]int64{}
 	}
-	r.GroupToRuleNameToLastSuccessTriggerTimestamp[groupId][config.Name] = nowUnix
+	r.GroupToRuleNameToLastSuccessTriggerTimestamp[groupID][config.Name] = nowUnix
 
 	// ok
 
@@ -423,17 +436,17 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 	}
 
 	switch config.Action {
-	case ActionType_Guide:
-		guideContent = strings.ReplaceAll(guideContent, TemplateArgs_MuteTime, strconv.FormatInt(muteTime, 10))
+	case actionTypeGuide:
+		guideContent = strings.ReplaceAll(guideContent, templateargsMutetime, strconv.FormatInt(muteTime, 10))
 		if config.GitChangelogPage != "" {
 			latestVersion, updateMessage := r.getLatestGitVersion(config.GitChangelogPage)
-			guideContent = strings.ReplaceAll(guideContent, TemplateArgs_GitVersion, latestVersion)
-			guideContent = strings.ReplaceAll(guideContent, TemplateArgs_UpdateMessage, updateMessage)
+			guideContent = strings.ReplaceAll(guideContent, templateargsGitversion, latestVersion)
+			guideContent = strings.ReplaceAll(guideContent, templateargsUpdatemessage, updateMessage)
 		}
 		if len(guideContent) != 0 {
 			replies.Append(message.NewText(guideContent))
 		}
-	case ActionType_Command:
+	case actionTypeCommand:
 		for _, msg := range m.Elements {
 			msgVal, ok := msg.(*message.TextElement)
 			if !ok {
@@ -443,7 +456,7 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 			for _, keywordRegex := range config.KeywordRegexes {
 				if keywordRegex.MatchString(msgVal.Content) {
 					commandStr := keywordRegex.ReplaceAllString(msgVal.Content, "")
-					err, msg, extraReplies := r.processCommand(commandStr, m)
+					msg, extraReplies, err := r.processCommand(commandStr, m)
 					if err != nil {
 						replies.Append(message.NewText(guideContent))
 						replies.Elements = append(replies.Elements, extraReplies...)
@@ -459,14 +472,14 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 				}
 			}
 		}
-	case ActionType_Food:
+	case actionTypeFood:
 		extraReplies, err := r.createFoodMessage(rule)
 		replies.Elements = append(replies.Elements, extraReplies.Elements...)
 		if err != nil {
 			logger.Errorf("createFoodMessage, rule=%v err=%v", config.Name, err)
 			replies.Append(message.NewText(guideContent))
 		}
-	case ActionType_AiChat:
+	case actiontypeAichat:
 		var chatText string
 		for _, msg := range m.Elements {
 			if msgVal, ok := msg.(*message.TextElement); ok {
@@ -481,10 +494,10 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 		if reply != "" {
 			replies.Append(message.NewText(reply))
 		}
-	case ActionType_SendUpdateMessage:
+	case actiontypeSendupdatemessage:
 		if isAdmin {
 			// 手动触发更新通知
-			if res := r.manualTriggerUpdateMessage(groupId); res != nil {
+			if res := r.manualTriggerUpdateMessage(groupID); res != nil {
 				replies.Elements = append(replies.Elements, res.Elements...)
 			} else {
 				replies.Append(message.NewText("当前群组没有配置检查更新哦~"))
@@ -492,7 +505,7 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 		} else {
 			replies.Append(message.NewText("只有管理员可以执行这个指令哦~不要调皮<_<"))
 		}
-	case ActionType_Repeater:
+	case actiontypeRepeater:
 		if isAdmin {
 			// 复读内容到指定的群组
 			// 移除首行（首行设定为关键词）
@@ -515,12 +528,12 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 				}
 
 				for _, repeatToGroup := range config.RepeatToGroups {
-					forwardRspId := r.cqBot.SendGroupMessage(repeatToGroup, repeatMessages)
-					if forwardRspId == -1 {
-						logger.Error(fmt.Sprintf("【RepeatToGroup(%v) Failed】", repeatToGroup), nowStr, config.Name, repeatMessages, forwardRspId)
+					forwardRspID := r.cqBot.SendGroupMessage(repeatToGroup, repeatMessages)
+					if forwardRspID == -1 {
+						logger.Error(fmt.Sprintf("【RepeatToGroup(%v) Failed】", repeatToGroup), nowStr, config.Name, repeatMessages, forwardRspID)
 						continue
 					}
-					logger.Info(fmt.Sprintf("【RepeatToGroup(%v)】", repeatToGroup), nowStr, config.Name, repeatMessages, forwardRspId)
+					logger.Info(fmt.Sprintf("【RepeatToGroup(%v)】", repeatToGroup), nowStr, config.Name, repeatMessages, forwardRspID)
 				}
 			}
 		} else {
@@ -536,18 +549,18 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 	}
 
 	// 如配置了图片url，则额外发送图片
-	imageUrl := config.ImageUrl
+	imageURL := config.ImageURL
 	if len(config.RandomImageUrls) != 0 {
 		randIdx := rand.Intn(len(config.RandomImageUrls))
-		imageUrl = config.RandomImageUrls[randIdx]
+		imageURL = config.RandomImageUrls[randIdx]
 	}
-	if imageUrl != "" {
-		r.tryAppendImageByUrl(replies, imageUrl)
+	if imageURL != "" {
+		r.tryAppendImageByURL(replies, imageURL)
 	}
 
 	if maybeKilledWrongPerson {
 		replies.Append(message.NewText("似乎前面有人代替你被误杀了。但是，正义的铁拳虽然会乱锤，却不会错过正确的人。宁可错杀三千，不可放过一人！（手动眼部红光特效）"))
-		r.tryAppendImageByUrl(replies, "https://s3.ax1x.com/2021/03/17/66NRi9.gif")
+		r.tryAppendImageByURL(replies, "https://s3.ax1x.com/2021/03/17/66NRi9.gif")
 	}
 
 	if len(replies.Elements) != 0 {
@@ -556,16 +569,16 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 		// 补充reply信息
 		replies.Elements = append([]message.IMessageElement{message.NewReply(m)}, replies.Elements...)
 
-		rspId := r.cqBot.SendGroupMessage(groupId, replies)
-		if rspId == -1 {
-			logger.Error("【ReplyFail】", nowStr, config.Name, keyWord, p(m), rspId)
+		rspID := r.cqBot.SendGroupMessage(groupID, replies)
+		if rspID == -1 {
+			logger.Error("【ReplyFail】", nowStr, config.Name, keyWord, p(m), rspID)
 			return err
 		}
-		logger.Info(color.Style{color.Bold, color.Green}.Renderln("【OK】", nowStr, config.Name, keyWord, p(m), source, replies, rspId))
+		logger.Info(color.Style{color.Bold, color.Green}.Renderln("【OK】", nowStr, config.Name, keyWord, p(m), source, replies, rspID))
 	}
 
 	if config.RevokeMessage {
-		err := r.cqBot.Client.RecallGroupMessage(groupId, m.Id, m.InternalId)
+		err := r.cqBot.Client.RecallGroupMessage(groupID, m.Id, m.InternalId)
 		if err != nil {
 			logger.Error("【RevokeMessage Fail】", nowStr, config.Name, p(m), err)
 		} else {
@@ -589,20 +602,20 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 	if needForward := len(config.ForwardToQQs) != 0 || len(config.ForwardToGroups) != 0; needForward {
 		for _, forwardMessages := range r.getForwardMessagesList(m, false) {
 			for _, forwardToQQ := range config.ForwardToQQs {
-				forwardRspId := r.cqBot.SendPrivateMessage(forwardToQQ, 0, forwardMessages)
-				if forwardRspId == -1 {
-					logger.Error(fmt.Sprintf("【ForwardToQQ(%v) Failed】", forwardToQQ), nowStr, config.Name, forwardMessages, forwardRspId)
+				forwardRspID := r.cqBot.SendPrivateMessage(forwardToQQ, 0, forwardMessages)
+				if forwardRspID == -1 {
+					logger.Error(fmt.Sprintf("【ForwardToQQ(%v) Failed】", forwardToQQ), nowStr, config.Name, forwardMessages, forwardRspID)
 					continue
 				}
-				logger.Info(fmt.Sprintf("【ForwardToQQ(%v)】", forwardToQQ), nowStr, config.Name, forwardMessages, forwardRspId)
+				logger.Info(fmt.Sprintf("【ForwardToQQ(%v)】", forwardToQQ), nowStr, config.Name, forwardMessages, forwardRspID)
 			}
 			for _, forwardToGroup := range config.ForwardToGroups {
-				forwardRspId := r.cqBot.SendGroupMessage(forwardToGroup, forwardMessages)
-				if forwardRspId == -1 {
-					logger.Error(fmt.Sprintf("【ForwardToGroup(%v) Failed】", forwardToGroup), nowStr, config.Name, forwardMessages, forwardRspId)
+				forwardRspID := r.cqBot.SendGroupMessage(forwardToGroup, forwardMessages)
+				if forwardRspID == -1 {
+					logger.Error(fmt.Sprintf("【ForwardToGroup(%v) Failed】", forwardToGroup), nowStr, config.Name, forwardMessages, forwardRspID)
 					continue
 				}
-				logger.Info(fmt.Sprintf("【ForwardToGroup(%v)】", forwardToGroup), nowStr, config.Name, forwardMessages, forwardRspId)
+				logger.Info(fmt.Sprintf("【ForwardToGroup(%v)】", forwardToGroup), nowStr, config.Name, forwardMessages, forwardRspID)
 			}
 		}
 	}
@@ -628,7 +641,7 @@ func (r *QQRobot) getForwardMessagesList(m *message.GroupMessage, forRepeat bool
 			case *message.TextElement:
 				forwardMessages.Elements = append(forwardMessages.Elements, splitPlainMessage(msgVal.Content)...)
 			case *message.GroupImageElement:
-				r.tryAppendImageByUrl(forwardMessages, msgVal.Url)
+				r.tryAppendImageByURL(forwardMessages, msgVal.Url)
 			case *message.AtElement:
 				if msgVal.Target != 0 {
 					forwardMessages.Append(message.NewText(fmt.Sprintf("@%v(%v)", msgVal.Display, msgVal.Target)))
@@ -646,7 +659,7 @@ func (r *QQRobot) getForwardMessagesList(m *message.GroupMessage, forRepeat bool
 			jsonBytes, _ := json.Marshal(forwardMessages.Elements[len(forwardMessages.Elements)-1])
 			msgSize += len(jsonBytes)
 			// 需要确保每次至少转发一条消息
-			if len(forwardMessages.Elements) > 1 && msgSize > maxMessageJsonSize {
+			if len(forwardMessages.Elements) > 1 && msgSize > maxMessageJSONSize {
 				forwardMessages.Elements = forwardMessages.Elements[:len(forwardMessages.Elements)-1]
 				msgSize -= len(jsonBytes)
 				leftMessages.Append(msg)
@@ -675,10 +688,10 @@ func (r *QQRobot) onMemberJoin(m *client.MemberJoinGroupEvent, rule *Rule) error
 	config := rule.Config
 	nowStr := r.currentTime()
 
-	groupId := m.Group.Code
+	groupID := m.Group.Code
 	newMemberUin := m.Member.Uin
 
-	if _, ok := config.GroupIds[groupId]; !ok {
+	if _, ok := config.GroupIds[groupID]; !ok {
 		return nil
 	}
 
@@ -699,17 +712,17 @@ func (r *QQRobot) onMemberJoin(m *client.MemberJoinGroupEvent, rule *Rule) error
 	replies.Append(message.NewText(config.GuideContent))
 
 	// 如配置了图片url，则额外发送图片
-	if config.ImageUrl != "" {
-		r.tryAppendImageByUrl(replies, config.ImageUrl)
+	if config.ImageURL != "" {
+		r.tryAppendImageByURL(replies, config.ImageURL)
 	}
 
 	if len(replies.Elements) != 0 {
-		rspId := r.cqBot.SendGroupMessage(groupId, replies)
-		if rspId == -1 {
-			logger.Error("【ReplyFail】", nowStr, p(m), rspId)
-			return fmt.Errorf("reply fail, rspId=%v", rspId)
+		rspID := r.cqBot.SendGroupMessage(groupID, replies)
+		if rspID == -1 {
+			logger.Error("【ReplyFail】", nowStr, p(m), rspID)
+			return errors.Errorf("reply fail, rspID=%v", rspID)
 		}
-		logger.Info("【OK】", nowStr, p(m.Group), 0, (replies), rspId)
+		logger.Info("【OK】", nowStr, p(m.Group), 0, (replies), rspID)
 	}
 
 	if muteTime := config.MuteTime; muteTime != 0 {
@@ -724,7 +737,7 @@ func (r *QQRobot) onMemberJoin(m *client.MemberJoinGroupEvent, rule *Rule) error
 	return nil
 }
 
-func (r *QQRobot) onPrivateOrTempMessage(senderFriendUin int64, tempGroupId int64, tempUin int64, m interface{}) {
+func (r *QQRobot) onPrivateOrTempMessage(senderFriendUin int64, tempGroupID int64, tempUin int64, m interface{}) {
 	// 回复消息
 	replies := message.NewSendingMessage()
 
@@ -735,23 +748,23 @@ func (r *QQRobot) onPrivateOrTempMessage(senderFriendUin int64, tempGroupId int6
 	}
 
 	if cfg.PersonalMessageNotSupportedImage != "" {
-		r.tryAppendImageByUrl(replies, cfg.PersonalMessageNotSupportedImage)
+		r.tryAppendImageByURL(replies, cfg.PersonalMessageNotSupportedImage)
 	}
 
 	if len(replies.Elements) == 0 {
 		return
 	}
 
-	var rspId int32
+	var rspID int32
 	if senderFriendUin != 0 {
-		rspId = r.cqBot.SendPrivateMessage(senderFriendUin, 0, replies)
+		rspID = r.cqBot.SendPrivateMessage(senderFriendUin, 0, replies)
 	} else {
-		rspId = r.cqBot.SendPrivateMessage(tempUin, tempGroupId, replies)
+		rspID = r.cqBot.SendPrivateMessage(tempUin, tempGroupID, replies)
 	}
 
-	if rspId == -1 {
-		logger.Error("【ReplyFail】", p(m), rspId)
+	if rspID == -1 {
+		logger.Error("【ReplyFail】", p(m), rspID)
 		return
 	}
-	logger.Info("【OK】", p(m), 0, replies, rspId)
+	logger.Info("【OK】", p(m), 0, replies, rspID)
 }

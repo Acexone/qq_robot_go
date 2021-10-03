@@ -1,25 +1,16 @@
-package qq_robot
+package qqrobot
 
 import (
-	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 
 	"github.com/Mrs4s/MiraiGo/message"
-	"github.com/Mrs4s/go-cqhttp/global"
+	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
+
+	"github.com/Mrs4s/go-cqhttp/global"
 )
-
-func (r *QQRobot) tryAppendMusicElement(m *message.SendingMessage, musicName string, musicType int) {
-	musicElem, err := r.makeMusicShareElement(musicName, musicType)
-	if err != nil {
-		return
-	}
-
-	m.Append(musicElem)
-}
 
 func (r *QQRobot) makeMusicShareElement(musicName string, musicType int) (*message.MusicShareElement, error) {
 	switch musicType {
@@ -28,15 +19,15 @@ func (r *QQRobot) makeMusicShareElement(musicName string, musicType int) (*messa
 	case message.QQMusic:
 		return r.makeQQMusicShareElement(musicName)
 	default:
-		return nil, fmt.Errorf("未知音乐类型=%v", musicType)
+		return nil, errors.Errorf("未知音乐类型=%v", musicType)
 	}
 }
 
 // 基于 https://github.com/wdvxdr1123/ZeroBot/blob/main/example/music/data.go
 func (r *QQRobot) makeCloudMusicShareElement(musicName string) (*message.MusicShareElement, error) {
-	songId := r.queryNeteaseMusic(musicName)
+	songID := r.queryNeteaseMusic(musicName)
 
-	info, err := global.NeteaseMusicSongInfo(songId)
+	info, err := global.NeteaseMusicSongInfo(songID)
 	if err != nil {
 		return nil, err
 	}
@@ -44,8 +35,8 @@ func (r *QQRobot) makeCloudMusicShareElement(musicName string) (*message.MusicSh
 		return nil, errors.New("song not found")
 	}
 	name := info.Get("name").Str
-	jumpURL := "https://y.music.163.com/m/song/" + songId
-	musicURL := "http://music.163.com/song/media/outer/url?id=" + songId
+	jumpURL := "https://y.music.163.com/m/song/" + songID
+	musicURL := "http://music.163.com/song/media/outer/url?id=" + songID
 	picURL := info.Get("album.picUrl").Str
 	artistName := ""
 	if info.Get("artists.0").Exists() {
@@ -67,7 +58,7 @@ func (r *QQRobot) queryNeteaseMusic(musicName string) string {
 		return "0"
 	}
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36 Edg/87.0.664.66")
-	res, err := r.HttpClient.Do(req)
+	res, err := r.httpClient.Do(req)
 	if err != nil {
 		return "0"
 	}
@@ -81,9 +72,9 @@ func (r *QQRobot) queryNeteaseMusic(musicName string) string {
 
 // 基于 https://github.com/FloatTech/ZeroBot-Plugin/blob/master/plugin_music/selecter.go
 func (r *QQRobot) makeQQMusicShareElement(musicName string) (*message.MusicShareElement, error) {
-	songId := r.queryQQMusic(musicName)
+	songID := r.queryQQMusic(musicName)
 
-	info, err := global.QQMusicSongInfo(songId)
+	info, err := global.QQMusicSongInfo(songID)
 	if err != nil {
 		return nil, err
 	}

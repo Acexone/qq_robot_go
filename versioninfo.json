@@ -38,6 +38,6 @@
             "CharsetID": "04B0"
         }
     },
-    "IconPath": "qq_robot/icon.ico",
-    "ManifestPath": "qq_robot/qq_robot.exe.manifest"
+    "IconPath": "qqrobot/icon.ico",
+    "ManifestPath": "qqrobot/qq_robot.exe.manifest"
 }

@@ -1,4 +1,4 @@
-package qq_robot
+package qqrobot
 
 import (
 	"strconv"
@@ -12,14 +12,14 @@ import (
 func (r *QQRobot) initAiChat() {
 	cfg := r.Config.Robot
 
-	if cfg.TencentAiAppId == "" || cfg.TencentAiAppKey == "" || cfg.TencentAiBotId == "" {
+	if cfg.TencentAiAppID == "" || cfg.TencentAiAppKey == "" || cfg.TencentAiBotID == "" {
 		logger.Warnf("未配置腾讯ai的appid、appkey、botid，将不初始化aichat，详情可见 https://console.cloud.tencent.com/tbp/bots")
 		return
 	}
 
-	credential := common.NewCredential(cfg.TencentAiAppId, cfg.TencentAiAppKey)
+	credential := common.NewCredential(cfg.TencentAiAppID, cfg.TencentAiAppKey)
 	cpf := profile.NewClientProfile()
-	cpf.HttpProfile.Endpoint = TencentAiChatApi
+	cpf.HttpProfile.Endpoint = TencentAiChatAPI
 	r.aiClient, _ = tbp.NewClient(credential, "", cpf)
 }
 
@@ -33,7 +33,7 @@ func (r *QQRobot) aiChat(targetQQ int64, chatText string) (responseText string) 
 
 	request := tbp.NewTextProcessRequest()
 
-	request.BotId = common.StringPtr(cfg.TencentAiBotId)
+	request.BotId = common.StringPtr(cfg.TencentAiBotID)
 	request.BotEnv = common.StringPtr("release")
 	request.TerminalId = common.StringPtr(strconv.FormatInt(targetQQ, 10))
 	request.InputText = common.StringPtr(chatText)

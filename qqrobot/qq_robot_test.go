@@ -1,4 +1,4 @@
-package qq_robot
+package qqrobot
 
 import (
 	"fmt"
@@ -67,7 +67,7 @@ func Test_version_to_version_int_list(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.version, func(t *testing.T) {
-			if got := version_to_version_int_list(tt.version); !reflect.DeepEqual(got, tt.want) {
+			if got := versionToVersionIntList(tt.version); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("version_to_version_int_list(%v) = %v, want %v", tt.version, got, tt.want)
 			}
 		})
@@ -90,7 +90,7 @@ func Test_version_less(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("%v-%v", tt.version_left, tt.version_right), func(t *testing.T) {
-			if got := version_less(tt.version_left, tt.version_right); got != tt.want {
+			if got := versionLess(tt.version_left, tt.version_right); got != tt.want {
 				t.Errorf("version_less(%v, %v) = %v, want %v", tt.version_left, tt.version_right, got, tt.want)
 			}
 		})

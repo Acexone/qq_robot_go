@@ -1,4 +1,4 @@
-package qq_robot
+package qqrobot
 
 import (
 	"encoding/json"
@@ -10,23 +10,27 @@ import (
 	"strings"
 
 	"github.com/Mrs4s/MiraiGo/message"
+	"github.com/pkg/errors"
 )
 
 // 2021/10/02 5:25 by fzls
 
-var ErrNoNewFood = fmt.Errorf("tryFetchMoreFoodImages failed, cannot get new food image that has never been sent")
+var errNoNewFood = errors.Errorf("tryFetchMoreFoodImages failed, cannot get new food image that has never been sent")
 
+// FoodImageRegex 食物图片正则
 var FoodImageRegex = regexp.MustCompile(`<img src="//(.*?\.jpg).*alt="(.*?)"`)
 
+// MeiShiChinaResponse 美食中国回包
 type MeiShiChinaResponse struct {
 	Error int               `json:"error"`
 	Data  []MeiShiChinaFood `json:"data"`
 }
 
+// MeiShiChinaFood 美食中国的食物
 type MeiShiChinaFood struct {
-	Uid            string `json:"uid"`
+	UID            string `json:"uid"`
 	Username       string `json:"username"`
-	Id             string `json:"id"`
+	ID             string `json:"id"`
 	Title          string `json:"title"`
 	Message        string `json:"message"`
 	Mainingredient string `json:"mainingredient"`
@@ -51,13 +55,12 @@ type MeiShiChinaFood struct {
 	Wapurl         string `json:"wapurl"`
 }
 
-func (r *QQRobot) tryFetchMoreFoodImages(rule *Rule, foodSiteUrl string) error {
-
+func (r *QQRobot) tryFetchMoreFoodImages(rule *Rule, foodSiteURL string) error {
 	// 请求网站链接
-	siteUrl := strings.ReplaceAll(foodSiteUrl, TemplateArgs_FoodPage, strconv.FormatInt(rule.SiteToFoodPage[foodSiteUrl], 10))
-	resp, err := r.HttpClient.Get(siteUrl)
+	siteURL := strings.ReplaceAll(foodSiteURL, templateargsFoodpage, strconv.FormatInt(rule.SiteToFoodPage[foodSiteURL], 10))
+	resp, err := r.httpClient.Get(siteURL)
 	if err != nil {
-		return fmt.Errorf("get food site err=%v, siteUrl=%v\n", err, siteUrl)
+		return errors.Errorf("get food site err=%v, siteURL=%v\n", err, siteURL)
 	}
 	defer resp.Body.Close()
 
@@ -67,17 +70,20 @@ func (r *QQRobot) tryFetchMoreFoodImages(rule *Rule, foodSiteUrl string) error {
 	// 解析出所有美食图片
 	var foodImages []FoodImage
 
-	if strings.Contains(siteUrl, "www.xinshipu.com") {
+	switch {
+	case strings.Contains(siteURL, "www.xinshipu.com"):
+
 		// 心食谱
 		htmlText := string(bytesData)
 		matches := FoodImageRegex.FindAllStringSubmatch(htmlText, -1)
 		for _, match := range matches {
 			foodImages = append(foodImages, FoodImage{
 				Name: match[2],
-				Url:  fmt.Sprintf("https://%v", match[1]),
+				URL:  fmt.Sprintf("https://%v", match[1]),
 			})
 		}
-	} else if strings.Contains(siteUrl, "home.meishichina.com") {
+	case strings.Contains(siteURL, "home.meishichina.com"):
+
 		// 美食中国
 		var response MeiShiChinaResponse
 		err := json.Unmarshal(bytesData, &response)
@@ -88,17 +94,17 @@ func (r *QQRobot) tryFetchMoreFoodImages(rule *Rule, foodSiteUrl string) error {
 		for _, food := range response.Data {
 			foodImages = append(foodImages, FoodImage{
 				Name: food.Title,
-				Url:  food.Fcover,
+				URL:  food.Fcover,
 			})
 		}
-	} else {
-		return fmt.Errorf("未支持的食谱网：%v", siteUrl)
+	default:
+		return errors.Errorf("未支持的食谱网：%v", siteURL)
 	}
 
-	var newFetched []FoodImage
+	newFetched := make([]FoodImage, 0, len(foodImages))
 	for _, foodImage := range foodImages {
 		// 跳过已经发送过的食物
-		if _, sent := rule.SentFoodImages[foodImage.Url]; sent {
+		if _, sent := rule.SentFoodImages[foodImage.URL]; sent {
 			continue
 		}
 
@@ -109,10 +115,10 @@ func (r *QQRobot) tryFetchMoreFoodImages(rule *Rule, foodSiteUrl string) error {
 
 	// 判断是否获取到了新的食物
 	if len(newFetched) == 0 {
-		return ErrNoNewFood
+		return errNoNewFood
 	}
 
-	logger.Infof("tryFetchMoreFoodImages fetched %v new food, siteUrl=%v, detail=%v", len(newFetched), siteUrl, newFetched)
+	logger.Infof("tryFetchMoreFoodImages fetched %v new food, siteURL=%v, detail=%v", len(newFetched), siteURL, newFetched)
 
 	return nil
 }
@@ -123,10 +129,10 @@ func (r *QQRobot) createFoodMessage(rule *Rule) (messages *message.SendingMessag
 		// 最多尝试3次
 		for i := 0; i < 3; i++ {
 			// 随机挑选一个食谱网站
-			foodSiteUrl := rule.Config.FoodSiteUrlList[rand.Intn(len(rule.Config.FoodSiteUrlList))]
+			foodSiteURL := rule.Config.FoodSiteURLList[rand.Intn(len(rule.Config.FoodSiteURLList))]
 
-			rule.UpdateFoodPage(foodSiteUrl)
-			err = r.tryFetchMoreFoodImages(rule, foodSiteUrl)
+			rule.UpdateFoodPage(foodSiteURL)
+			err = r.tryFetchMoreFoodImages(rule, foodSiteURL)
 			if err == nil {
 				break
 			}
@@ -140,18 +146,18 @@ func (r *QQRobot) createFoodMessage(rule *Rule) (messages *message.SendingMessag
 
 	// 从缓存中移除并标记已发送
 	delete(rule.CachedFoodImages, foodImage)
-	rule.SentFoodImages[foodImage.Url] = struct{}{}
+	rule.SentFoodImages[foodImage.URL] = struct{}{}
 
 	// 发送食物到对应群聊中
 	description := rule.Config.FoodDescription
 	// 替换时间段
-	description = strings.ReplaceAll(description, TemplateArgs_CurrentPeriodName, getCurrentPeriodName())
+	description = strings.ReplaceAll(description, templateargsCurrentperiodname, getCurrentPeriodName())
 	// 替换食物名参数
-	description = strings.ReplaceAll(description, TemplateArgs_FoodName, foodImage.Name)
+	description = strings.ReplaceAll(description, templateargsFoodname, foodImage.Name)
 
 	messages = message.NewSendingMessage()
 	messages.Append(message.NewText(description))
-	r.tryAppendImageByUrl(messages, foodImage.Url)
+	r.tryAppendImageByURL(messages, foodImage.URL)
 
 	return messages, nil
 }

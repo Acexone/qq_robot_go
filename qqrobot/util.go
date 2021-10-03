@@ -1,4 +1,4 @@
-package qq_robot
+package qqrobot
 
 import (
 	"crypto/md5"
@@ -12,17 +12,18 @@ import (
 
 	"github.com/Mrs4s/MiraiGo/client"
 	"github.com/Mrs4s/MiraiGo/message"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/Mrs4s/go-cqhttp/coolq"
 	"github.com/Mrs4s/go-cqhttp/global"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
 	maxImageSize = 1024 * 1024 * 30 // 30MB
 )
 
-func (r *QQRobot) tryAppendImageByUrl(m *message.SendingMessage, imageUrl string) {
-	image, err := r._makeLocalImage(imageUrl)
+func (r *QQRobot) tryAppendImageByURL(m *message.SendingMessage, imageURL string) {
+	image, err := r._makeLocalImage(imageURL)
 	if err != nil {
 		log.Errorf("_makeLocalImage err=%v", err)
 		return
@@ -32,8 +33,8 @@ func (r *QQRobot) tryAppendImageByUrl(m *message.SendingMessage, imageUrl string
 }
 
 // modified based on makeImageOrVideoElem
-func (r *QQRobot) _makeLocalImage(imageUrl string) (message.IMessageElement, error) {
-	hash := md5.Sum([]byte(imageUrl))
+func (r *QQRobot) _makeLocalImage(imageURL string) (message.IMessageElement, error) {
+	hash := md5.Sum([]byte(imageURL))
 	cacheFile := path.Join(global.CachePath, hex.EncodeToString(hash[:])+".cache")
 	maxSize := func() int64 {
 		return maxImageSize
@@ -42,7 +43,7 @@ func (r *QQRobot) _makeLocalImage(imageUrl string) (message.IMessageElement, err
 	if exist {
 		goto hasCacheFile
 	}
-	if err := global.DownloadFileMultiThreading(imageUrl, cacheFile, maxSize, runtime.NumCPU(), nil); err != nil {
+	if err := global.DownloadFileMultiThreading(imageURL, cacheFile, maxSize, runtime.NumCPU(), nil); err != nil {
 		return nil, err
 	}
 hasCacheFile:
@@ -50,17 +51,17 @@ hasCacheFile:
 }
 
 func (r *QQRobot) ocr(groupImageElement *message.GroupImageElement) (ocrResultString string) {
-	image_md5 := fmt.Sprintf("%x", groupImageElement.Md5)
+	imageMd5 := fmt.Sprintf("%x", groupImageElement.Md5)
 
-	cached, ok := r.ocrCache.Get(image_md5)
+	cached, ok := r.ocrCache.Get(imageMd5)
 	if ok {
 		return cached.(string)
 	}
 
 	defer func() {
-		r.ocrCache.Add(image_md5, ocrResultString)
+		r.ocrCache.Add(imageMd5, ocrResultString)
 	}()
-	
+
 	ocrResult, err := r.cqBot.Client.ImageOcr(groupImageElement)
 	if err != nil {
 		logger.Errorf("ocr出错了，image=%+v，err=%v", groupImageElement, err)
@@ -84,15 +85,16 @@ func (r *QQRobot) formatTime(t time.Time) string {
 
 func getCurrentPeriodName() string {
 	hour := time.Now().Hour()
-	if hour == 23 || 0 <= hour && hour < 5 {
+	switch {
+	case hour == 23 || 0 <= hour && hour < 5:
 		return "深夜"
-	} else if 5 <= hour && hour < 11 {
+	case 5 <= hour && hour < 11:
 		return "早上"
-	} else if 11 <= hour && hour < 13 {
+	case 11 <= hour && hour < 13:
 		return "中午"
-	} else if 13 <= hour && hour < 17 {
+	case 13 <= hour && hour < 17:
 		return "下午"
-	} else {
+	default:
 		return "晚上"
 	}
 }
@@ -103,10 +105,10 @@ func isMemberAdmin(permission client.MemberPermission) bool {
 }
 
 // 单条消息发送的大小有限制，所以需要分成多段来发
-const maxMessageJsonSize = 400
+const maxMessageJSONSize = 400
 
 func splitPlainMessage(content string) []message.IMessageElement {
-	if len(content) <= maxMessageJsonSize {
+	if len(content) <= maxMessageJSONSize {
 		return []message.IMessageElement{message.NewText(content)}
 	}
 
@@ -117,7 +119,7 @@ func splitPlainMessage(content string) []message.IMessageElement {
 	for len(remainingText) != 0 {
 		partSize := 0
 		for byteIdx, runeValue := range remainingText {
-			if partSize+byteIdx > maxMessageJsonSize {
+			if partSize+byteIdx > maxMessageJSONSize {
 				break
 			}
 			partSize += len(string(runeValue))

@@ -24,7 +24,7 @@ import (
 	"github.com/Mrs4s/go-cqhttp/global/config"
 	"github.com/Mrs4s/go-cqhttp/global/terminal"
 	"github.com/Mrs4s/go-cqhttp/global/update"
-	"github.com/Mrs4s/go-cqhttp/qq_robot"
+	"github.com/Mrs4s/go-cqhttp/qqrobot"
 	"github.com/Mrs4s/go-cqhttp/server"
 
 	"github.com/Mrs4s/MiraiGo/binary"
@@ -426,7 +426,7 @@ func main() {
 	log.Info("アトリは、高性能ですから!")
 
 	log.Info("启动本地的机器人处理程序，用于直接收发消息和自动回复")
-	robot := qq_robot.NewQQRobot(bot, "config.toml")
+	robot := qqrobot.NewQQRobot(bot, "config.toml")
 	robot.RegisterHandlers()
 	robot.Start()
 	defer robot.Stop()
