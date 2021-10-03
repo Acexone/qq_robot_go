@@ -52,8 +52,6 @@ jobs:
 
           if [ $GOOS = "windows" ]; then
             GOOS=linux GOARCH=amd64 go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest
-            ls -alh `go env GOPATH`/bin
-            ls -alh `go env GOPATH`/bin/linux_amd64
             go generate .
           fi
 
