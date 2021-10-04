@@ -106,8 +106,8 @@ func main() {
 		panic(err)
 	}
 
-	consoleFormatter := global.LogFormat{true}
-	fileFormatter := global.LogFormat{false}
+	consoleFormatter := global.LogFormat{EnableColor: true}
+	fileFormatter := global.LogFormat{EnableColor: false}
 	log.AddHook(global.NewLocalHook(w, consoleFormatter, fileFormatter, global.GetLogLevel(conf.Output.LogLevel)...))
 
 	mkCacheDir := func(path string, _type string) {

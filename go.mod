@@ -20,6 +20,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
+	github.com/mattn/go-colorable v0.1.11
 	github.com/pkg/errors v0.9.1
 	github.com/segmentio/asm v1.0.1
 	github.com/sirupsen/logrus v1.8.1
@@ -48,7 +49,6 @@ require (
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lestrrat-go/strftime v1.0.5 // indirect
 	github.com/maruel/rs v1.0.0 // indirect
-	github.com/mattn/go-colorable v0.1.11 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
