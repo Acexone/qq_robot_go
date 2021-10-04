@@ -106,7 +106,9 @@ func main() {
 		panic(err)
 	}
 
-	log.AddHook(global.NewLocalHook(w, global.LogFormat{}, global.GetLogLevel(conf.Output.LogLevel)...))
+	consoleFormatter := global.LogFormat{true}
+	fileFormatter := global.LogFormat{false}
+	log.AddHook(global.NewLocalHook(w, consoleFormatter, fileFormatter, global.GetLogLevel(conf.Output.LogLevel)...))
 
 	mkCacheDir := func(path string, _type string) {
 		if !global.PathExists(path) {

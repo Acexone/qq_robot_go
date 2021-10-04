@@ -81,10 +81,20 @@ func (hook *LocalHook) Fire(entry *logrus.Entry) error {
 }
 
 // SetFormatter 设置日志格式
-func (hook *LocalHook) SetFormatter(formatter logrus.Formatter) {
+func (hook *LocalHook) SetFormatter(consoleFormatter, fileFormatter logrus.Formatter) {
 	hook.lock.Lock()
 	defer hook.lock.Unlock()
 
+	tryChangeFormatter(consoleFormatter)
+	tryChangeFormatter(fileFormatter)
+
+	// 用于在console写出
+	logrus.SetFormatter(consoleFormatter)
+	// 用于写入文件
+	hook.formatter = fileFormatter
+}
+
+func tryChangeFormatter(formatter logrus.Formatter) logrus.Formatter {
 	if formatter == nil {
 		// 用默认的
 		formatter = &logrus.TextFormatter{DisableColors: true}
@@ -97,8 +107,8 @@ func (hook *LocalHook) SetFormatter(formatter logrus.Formatter) {
 			// todo
 		}
 	}
-	logrus.SetFormatter(formatter)
-	hook.formatter = formatter
+
+	return formatter
 }
 
 // SetWriter 设置Writer
@@ -116,11 +126,11 @@ func (hook *LocalHook) SetPath(path string) {
 }
 
 // NewLocalHook 初始化本地日志钩子实现
-func NewLocalHook(args interface{}, formatter logrus.Formatter, levels ...logrus.Level) *LocalHook {
+func NewLocalHook(args interface{}, consoleFormatter, fileFormatter logrus.Formatter, levels ...logrus.Level) *LocalHook {
 	hook := &LocalHook{
 		lock: new(sync.Mutex),
 	}
-	hook.SetFormatter(formatter)
+	hook.SetFormatter(consoleFormatter, fileFormatter)
 	hook.levels = append(hook.levels, levels...)
 
 	switch arg := args.(type) {
@@ -178,14 +188,18 @@ func GetLogLevel(level string) []logrus.Level {
 }
 
 // LogFormat specialize for go-cqhttp
-type LogFormat struct{}
+type LogFormat struct {
+	EnableColor bool
+}
 
 // Format implements logrus.Formatter
 func (f LogFormat) Format(entry *logrus.Entry) ([]byte, error) {
 	buf := NewBuffer()
 	defer PutBuffer(buf)
 
-	buf.WriteString(GetLogLevelColorCode(entry.Level))
+	if f.EnableColor {
+		buf.WriteString(GetLogLevelColorCode(entry.Level))
+	}
 
 	buf.WriteByte('[')
 	buf.WriteString(entry.Time.Format("2006-01-02 15:04:05"))
@@ -195,7 +209,9 @@ func (f LogFormat) Format(entry *logrus.Entry) ([]byte, error) {
 	buf.WriteString(entry.Message)
 	buf.WriteString(" \n")
 
-	buf.WriteString(color.ResetSet)
+	if f.EnableColor {
+		buf.WriteString(color.ResetSet)
+	}
 
 	ret := append([]byte(nil), buf.Bytes()...) // copy buffer
 	return ret, nil
