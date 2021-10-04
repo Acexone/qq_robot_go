@@ -17,14 +17,6 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        build-platform: [
-            linux/386, linux/amd64, linux/arm, linux/arm64,
-            windows/386, windows/amd64, windows/arm, windows/arm64,
-            darwin/amd64, darwin/arm64,
-        ]
-
     permissions:
       packages: write
       contents: read
@@ -83,7 +75,6 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          platforms: ${{ matrix.build-platform }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
