@@ -202,34 +202,34 @@ func (f LogFormat) Format(entry *logrus.Entry) ([]byte, error) {
 }
 
 var (
-	ColorCodePanic = fmt.Sprintf(color.SettingTpl, color.Style{color.Bold, color.Red}.String())
-	ColorCodeFatal = fmt.Sprintf(color.SettingTpl, color.Style{color.Bold, color.Red}.String())
-	ColorCodeError = fmt.Sprintf(color.SettingTpl, color.Style{color.Red}.String())
-	ColorCodeWarn  = fmt.Sprintf(color.SettingTpl, color.Style{color.Yellow}.String())
-	ColorCodeInfo  = fmt.Sprintf(color.SettingTpl, color.Style{color.Green}.String())
-	ColorCodeDebug = fmt.Sprintf(color.SettingTpl, color.Style{color.White}.String())
-	ColorCodeTrace = fmt.Sprintf(color.SettingTpl, color.Style{color.Cyan}.String())
+	colorCodePanic = fmt.Sprintf(color.SettingTpl, color.Style{color.Bold, color.Red}.String())
+	colorCodeFatal = fmt.Sprintf(color.SettingTpl, color.Style{color.Bold, color.Red}.String())
+	colorCodeError = fmt.Sprintf(color.SettingTpl, color.Style{color.Red}.String())
+	colorCodeWarn  = fmt.Sprintf(color.SettingTpl, color.Style{color.Yellow}.String())
+	colorCodeInfo  = fmt.Sprintf(color.SettingTpl, color.Style{color.Green}.String())
+	colorCodeDebug = fmt.Sprintf(color.SettingTpl, color.Style{color.White}.String())
+	colorCodeTrace = fmt.Sprintf(color.SettingTpl, color.Style{color.Cyan}.String())
 )
 
 // GetLogLevelColorCode 获取日志等级对应色彩code
 func GetLogLevelColorCode(level logrus.Level) string {
 	switch level {
 	case logrus.PanicLevel:
-		return ColorCodePanic
+		return colorCodePanic
 	case logrus.FatalLevel:
-		return ColorCodeFatal
+		return colorCodeFatal
 	case logrus.ErrorLevel:
-		return ColorCodeError
+		return colorCodeError
 	case logrus.WarnLevel:
-		return ColorCodeWarn
+		return colorCodeWarn
 	case logrus.InfoLevel:
-		return ColorCodeInfo
+		return colorCodeInfo
 	case logrus.DebugLevel:
-		return ColorCodeDebug
+		return colorCodeDebug
 	case logrus.TraceLevel:
-		return ColorCodeTrace
+		return colorCodeTrace
 
 	default:
-		return ColorCodeInfo
+		return colorCodeInfo
 	}
 }
