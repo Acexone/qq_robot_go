@@ -10,7 +10,6 @@ COPY ./ .
 
 RUN set -ex \
     && cd /build \
-    && go generate .
     && go build -ldflags "-s -w -extldflags '-static'" -o cqhttp
 
 FROM alpine:latest
