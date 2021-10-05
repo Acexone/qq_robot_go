@@ -12,6 +12,7 @@ import (
 
 	"github.com/Mrs4s/MiraiGo/client"
 	"github.com/Mrs4s/MiraiGo/message"
+	"github.com/gookit/color"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/Mrs4s/go-cqhttp/coolq"
@@ -72,7 +73,10 @@ func (r *QQRobot) ocr(groupImageElement *message.GroupImageElement) (ocrResultSt
 	for _, textDetection := range ocrResult.Texts {
 		resultBuffer.WriteString(textDetection.Text)
 	}
-	return resultBuffer.String()
+	ocrResultString = resultBuffer.String()
+
+	logger.Debugf(bold(color.Yellow).Render(fmt.Sprintf("ocr ok image=%v  result is:\n%v", groupImageElement.Url, ocrResultString)))
+	return ocrResultString
 }
 
 func (r *QQRobot) currentTime() string {
