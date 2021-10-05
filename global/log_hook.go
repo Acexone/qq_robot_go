@@ -232,7 +232,7 @@ const (
 var (
 	colorCodePanic = fmt.Sprintf(SettingTpl, "1;31") // color.Style{color.Bold, color.Red}.String()
 	colorCodeFatal = fmt.Sprintf(SettingTpl, "1;31") // color.Style{color.Bold, color.Red}.String()
-	colorCodeError = fmt.Sprintf(SettingTpl, "31")   // color.Style{color.Red}.String()
+	colorCodeError = fmt.Sprintf(SettingTpl, "1;31") // color.Style{color.Bold, color.Red}.String()
 	colorCodeWarn  = fmt.Sprintf(SettingTpl, "33")   // color.Style{color.Yellow}.String()
 	colorCodeInfo  = fmt.Sprintf(SettingTpl, "32")   // color.Style{color.Green}.String()
 	colorCodeDebug = fmt.Sprintf(SettingTpl, "37")   // color.Style{color.White}.String()
