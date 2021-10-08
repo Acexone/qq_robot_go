@@ -427,7 +427,7 @@ func main() {
 	log.Info("资源初始化完成, 开始处理信息.")
 	log.Info("アトリは、高性能ですから!")
 
-	log.Info("以下内容基于 go-cqhttp 魔改而成")
+	log.Info("以下内容基于 go-cqhttp 魔改而成，powered by 风之凌殇")
 	log.Info("启动本地的机器人处理程序，用于直接收发消息和自动回复")
 	robot := qqrobot.NewQQRobot(bot, "config.toml")
 	robot.RegisterHandlers()
