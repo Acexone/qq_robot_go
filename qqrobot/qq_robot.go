@@ -121,10 +121,10 @@ func (r *QQRobot) notify(cfg NotifyConfig) {
 		}
 		retCode := r.cqBot.SendGroupMessage(groupID, msg)
 		if retCode == -1 {
-			logger.Errorf("【%v Failed】 %v groupID=%v message=%v err=%v", cfg.Name, nowStr, groupID, msg, retCode)
+			logger.Errorf("【%v Failed】 %v groupID=%v message=%v err=%v", cfg.Name, nowStr, groupID, p(msg), retCode)
 			return
 		}
-		logger.Infof("【%v】 %v groupID=%v message=%v", cfg.Name, nowStr, groupID, msg)
+		logger.Infof("【%v】 %v groupID=%v message=%v", cfg.Name, nowStr, groupID, p(msg))
 	}
 	logger.Infof("robot on %v finished", cfg.Name)
 }
@@ -533,10 +533,10 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 				for _, repeatToGroup := range config.RepeatToGroups {
 					forwardRspID := r.cqBot.SendGroupMessage(repeatToGroup, repeatMessages)
 					if forwardRspID == -1 {
-						logger.Error(fmt.Sprintf("【RepeatToGroup(%v) Failed】", repeatToGroup), nowStr, config.Name, repeatMessages, forwardRspID)
+						logger.Error(fmt.Sprintf("【RepeatToGroup(%v) Failed】", repeatToGroup), nowStr, config.Name, p(repeatMessages), forwardRspID)
 						continue
 					}
-					logger.Info(fmt.Sprintf("【RepeatToGroup(%v)】", repeatToGroup), nowStr, config.Name, repeatMessages, forwardRspID)
+					logger.Info(fmt.Sprintf("【RepeatToGroup(%v)】", repeatToGroup), nowStr, config.Name, p(repeatMessages), forwardRspID)
 				}
 			}
 		} else {
@@ -574,10 +574,10 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 
 		rspID := r.cqBot.SendGroupMessage(groupID, replies)
 		if rspID == -1 {
-			logger.Error("【ReplyFail】", nowStr, config.Name, keyWord, p(m), rspID)
+			logger.Error("【ReplyFail】", nowStr, config.Name, keyWord, p(m), p(replies), rspID)
 			return err
 		}
-		logger.Info(color.Style{color.Bold, color.Green}.Renderln("【OK】", nowStr, config.Name, keyWord, p(m), source, replies, rspID))
+		logger.Info(color.Style{color.Bold, color.Green}.Renderln("【OK】", nowStr, config.Name, keyWord, p(m), source, p(replies), rspID))
 	}
 
 	if config.RevokeMessage {
@@ -607,18 +607,18 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 			for _, forwardToQQ := range config.ForwardToQQs {
 				forwardRspID := r.cqBot.SendPrivateMessage(forwardToQQ, 0, forwardMessages)
 				if forwardRspID == -1 {
-					logger.Error(fmt.Sprintf("【ForwardToQQ(%v) Failed】", forwardToQQ), nowStr, config.Name, forwardMessages, forwardRspID)
+					logger.Error(fmt.Sprintf("【ForwardToQQ(%v) Failed】", forwardToQQ), nowStr, config.Name, p(forwardMessages), forwardRspID)
 					continue
 				}
-				logger.Info(fmt.Sprintf("【ForwardToQQ(%v)】", forwardToQQ), nowStr, config.Name, forwardMessages, forwardRspID)
+				logger.Info(fmt.Sprintf("【ForwardToQQ(%v)】", forwardToQQ), nowStr, config.Name, p(forwardMessages), forwardRspID)
 			}
 			for _, forwardToGroup := range config.ForwardToGroups {
 				forwardRspID := r.cqBot.SendGroupMessage(forwardToGroup, forwardMessages)
 				if forwardRspID == -1 {
-					logger.Error(fmt.Sprintf("【ForwardToGroup(%v) Failed】", forwardToGroup), nowStr, config.Name, forwardMessages, forwardRspID)
+					logger.Error(fmt.Sprintf("【ForwardToGroup(%v) Failed】", forwardToGroup), nowStr, config.Name, p(forwardMessages), forwardRspID)
 					continue
 				}
-				logger.Info(fmt.Sprintf("【ForwardToGroup(%v)】", forwardToGroup), nowStr, config.Name, forwardMessages, forwardRspID)
+				logger.Info(fmt.Sprintf("【ForwardToGroup(%v)】", forwardToGroup), nowStr, config.Name, p(forwardMessages), forwardRspID)
 			}
 		}
 	}
@@ -818,7 +818,7 @@ func (r *QQRobot) onMemberJoin(m *client.MemberJoinGroupEvent, rule *Rule) error
 			logger.Error("【ReplyFail】", nowStr, p(m), rspID)
 			return errors.Errorf("reply fail, rspID=%v", rspID)
 		}
-		logger.Info("【OK】", nowStr, p(m.Group), 0, (replies), rspID)
+		logger.Info("【OK】", nowStr, p(m.Group), 0, p(replies), rspID)
 	}
 
 	if muteTime := config.MuteTime; muteTime != 0 {
@@ -859,8 +859,8 @@ func (r *QQRobot) onPrivateOrTempMessage(senderFriendUin int64, tempGroupID int6
 	}
 
 	if rspID == -1 {
-		logger.Error("【ReplyFail】", p(m), rspID)
+		logger.Error("【ReplyFail】", p(m), p(replies), rspID)
 		return
 	}
-	logger.Info("【OK】", p(m), 0, replies, rspID)
+	logger.Info("【OK】", p(m), 0, p(replies), rspID)
 }
