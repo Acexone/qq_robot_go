@@ -469,6 +469,9 @@ func PasswordHashDecrypt(encryptedPasswordHash string, key []byte) ([]byte, erro
 	return result, nil
 }
 
+const githubRepo = "fzls/qq_robot_go"
+const exeName = "qq_robot_go"
+
 func checkUpdate() {
 	log.Infof("正在检查更新.")
 	if coolq.Version == "(devel)" {
@@ -476,13 +479,13 @@ func checkUpdate() {
 		return
 	}
 	var res string
-	if err := gout.GET("https://api.github.com/repos/Mrs4s/go-cqhttp/releases/latest").BindBody(&res).Do(); err != nil {
+	if err := gout.GET(fmt.Sprintf("https://api.github.com/repos/%v/releases/latest", githubRepo)).BindBody(&res).Do(); err != nil {
 		log.Warnf("检查更新失败: %v", err)
 		return
 	}
 	info := gjson.Parse(res)
 	if global.VersionNameCompare(coolq.Version, info.Get("tag_name").Str) {
-		log.Infof("当前有更新的 go-cqhttp 可供更新, 请前往 https://github.com/Mrs4s/go-cqhttp/releases 下载.")
+		log.Infof("当前有更新的 go-cqhttp 可供更新, 请前往 https://github.com/%v/releases 下载.", githubRepo)
 		log.Infof("当前版本: %v 最新版本: %v", coolq.Version, info.Get("tag_name").Str)
 		return
 	}
@@ -492,7 +495,7 @@ func checkUpdate() {
 func selfUpdate(imageURL string) {
 	log.Infof("正在检查更新.")
 	var res, r string
-	if err := gout.GET("https://api.github.com/repos/Mrs4s/go-cqhttp/releases/latest").BindBody(&res).Do(); err != nil {
+	if err := gout.GET(fmt.Sprintf("https://api.github.com/repos/%v/releases/latest", githubRepo)).BindBody(&res).Do(); err != nil {
 		log.Warnf("检查更新失败: %v", err)
 		return
 	}
@@ -509,20 +512,20 @@ func selfUpdate(imageURL string) {
 		log.Warn("已取消更新！")
 	} else {
 		log.Info("正在更新,请稍等...")
-		sumURL := fmt.Sprintf("%v/Mrs4s/go-cqhttp/releases/download/%v/go-cqhttp_checksums.txt",
+		sumURL := fmt.Sprintf("%v/%v/releases/download/%v/%v_checksums.txt",
 			func() string {
 				if imageURL != "" {
 					return imageURL
 				}
 				return "https://github.com"
-			}(), version)
+			}(), githubRepo, version, exeName)
 		closer, err := global.HTTPGetReadCloser(sumURL)
 		if err != nil {
 			log.Error("更新失败: ", err)
 			goto wait
 		}
 		rd := bufio.NewReader(closer)
-		binaryName := fmt.Sprintf("go-cqhttp_%v_%v.%v", runtime.GOOS, func() string {
+		binaryName := fmt.Sprintf("%v_%v_%v.%v", exeName, runtime.GOOS, func() string {
 			if runtime.GOARCH == "arm" {
 				return "armv7"
 			}
@@ -545,13 +548,13 @@ func selfUpdate(imageURL string) {
 				break
 			}
 		}
-		url := fmt.Sprintf("%v/Mrs4s/go-cqhttp/releases/download/%v/%v",
+		url := fmt.Sprintf("%v/%v/releases/download/%v/%v",
 			func() string {
 				if imageURL != "" {
 					return imageURL
 				}
 				return "https://github.com"
-			}(), version, binaryName)
+			}(), githubRepo, version, binaryName)
 
 		err = update.Update(url, sum)
 		if err != nil {

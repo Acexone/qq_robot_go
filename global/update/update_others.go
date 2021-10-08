@@ -41,7 +41,7 @@ func Update(url string, sum []byte) error {
 		if err != nil {
 			return err
 		}
-		if header.Name == "go-cqhttp" {
+		if header.Name == "qq_robot_go" {
 			err, _ := FromStream(tr)
 			fmt.Println()
 			if err != nil {

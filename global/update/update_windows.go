@@ -28,7 +28,7 @@ func Update(url string, sum []byte) error {
 		return errors.New("文件已损坏")
 	}
 	reader, _ := zip.NewReader(bytes.NewReader(rsp), resp.ContentLength)
-	file, err := reader.Open("go-cqhttp.exe")
+	file, err := reader.Open("qq_robot_go.exe")
 	if err != nil {
 		return err
 	}
