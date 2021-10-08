@@ -11,3 +11,5 @@ logs/
 
 *.exe
 resource.syso
+!global/config/config.yml
+!qqrobot/config.toml
