@@ -75,7 +75,7 @@ func (r *QQRobot) ocr(groupImageElement *message.GroupImageElement) (ocrResultSt
 	}
 	ocrResultString = resultBuffer.String()
 
-	logger.Debugf(bold(color.Yellow).Render(fmt.Sprintf("ocr ok image=%v  result is:\n%v", groupImageElement.Url, ocrResultString)))
+	logger.Infof(bold(color.Yellow).Render(fmt.Sprintf("ocr ok image=%v  result is:\n%v", groupImageElement.Url, ocrResultString)))
 	return ocrResultString
 }
 
