@@ -526,8 +526,12 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 			}
 			for idx, repeatMessages := range r.getForwardMessagesList(m, true) {
 				if idx == 0 {
-					// 第一条转发的消息加上 @all
-					repeatMessages.Elements = append([]message.IMessageElement{message.AtAll()}, repeatMessages.Elements...)
+					repeatMessages.Elements = append([]message.IMessageElement{
+						// 第一条转发的消息加上 @all
+						message.AtAll(),
+						// 再补上一个空格，避免连到一起
+						message.NewText(" "),
+					}, repeatMessages.Elements...)
 				}
 
 				for _, repeatToGroup := range config.RepeatToGroups {
