@@ -4,6 +4,44 @@ before:
   hooks:
     - go mod tidy
 builds:
+  - id: win-x86/64
+    env:
+      - CGO_ENABLED=0
+      - GO111MODULE=on
+    goos:
+      - windows
+    goarch:
+      - 386
+      - amd64
+    goarm:
+      - 7
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X github.com/Mrs4s/go-cqhttp/coolq.Version=v{{.Version}}
+    hooks:
+      pre:
+        - go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest
+        - go generate .
+      post:
+        - rm -f resource.syso
+  - id: win-arm
+    env:
+      - CGO_ENABLED=0
+      - GO111MODULE=on
+    goos:
+      - windows
+    goarch:
+      - arm
+      - arm64
+    goarm:
+      - 7
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X github.com/Mrs4s/go-cqhttp/coolq.Version=v{{.Version}}
   - id: nowin
     env:
       - CGO_ENABLED=0
@@ -28,24 +66,6 @@ builds:
       - -trimpath
     ldflags:
       - -s -w -X github.com/Mrs4s/go-cqhttp/coolq.Version=v{{.Version}}
-  - id: win
-    env:
-      - CGO_ENABLED=0
-      - GO111MODULE=on
-    goos:
-      - windows
-    goarch:
-      - 386
-      - amd64
-      - arm
-      - arm64
-    goarm:
-      - 7
-    mod_timestamp: "{{ .CommitTimestamp }}"
-    flags:
-      - -trimpath
-    ldflags:
-      - -s -w -X github.com/Mrs4s/go-cqhttp/coolq.Version=v{{.Version}}
 
 checksum:
   name_template: "{{ .ProjectName }}_checksums.txt"
@@ -64,7 +84,8 @@ changelog:
 archives:
   - id: binary
     builds:
-      - win
+      - win-x86/64
+      - win-arm
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
     format_overrides:
       - goos: windows
@@ -72,11 +93,19 @@ archives:
   - id: nowin
     builds:
       - nowin
-      - win
+      - win-x86/64
+      - win-arm
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
     format_overrides:
       - goos: windows
         format: zip
+    files:
+      - src: global/config/config.yml
+        dst: .
+        strip_parent: true
+      - src: qqrobot/config.toml
+        dst: .
+        strip_parent: true
 
 nfpms:
   - license: AGPL 3.0
