@@ -18,7 +18,7 @@ import (
 )
 
 // defaultConfig 默认配置文件
-//go:embed default_config.yml
+//go:embed config.yml
 var defaultConfig string
 
 var currentPath = getCurrentPath()

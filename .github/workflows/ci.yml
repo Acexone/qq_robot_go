@@ -57,8 +57,8 @@ jobs:
 
           go build -o "output/$BINARY_NAME" -trimpath -ldflags "$LD_FLAGS" .
 
-          cp global/config/default_config.yml output/config.yml
-          cp qqrobot/default_config.toml output/config.toml
+          cp global/config/config.yml output/config.yml
+          cp qqrobot/config.toml output/config.toml
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2

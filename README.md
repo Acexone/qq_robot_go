@@ -10,7 +10,7 @@
 
 ## 配置自动回复逻辑
 
-复制qqrobot/default_config.toml到qq_robot.exe所在目录，并重命名为config.toml 然后打开qq_robot/config.go和config.toml，按照注释，自行调整配置，并添加各种规则
+复制qqrobot/config.toml到qq_robot.exe所在目录 然后打开qq_robot/config.go和config.toml，按照注释，自行调整配置，并添加各种规则
 
 # TODO
 
