@@ -485,7 +485,7 @@ func checkUpdate() {
 	}
 	info := gjson.Parse(res)
 	if global.VersionNameCompare(coolq.Version, info.Get("tag_name").Str) {
-		log.Infof("当前有更新的 go-cqhttp 可供更新, 请前往 https://github.com/%v/releases 下载.", githubRepo)
+		log.Infof("当前有更新的 %v 可供更新, 请前往 https://github.com/%v/releases 下载.", exeName, githubRepo)
 		log.Infof("当前版本: %v 最新版本: %v", coolq.Version, info.Get("tag_name").Str)
 		return
 	}
