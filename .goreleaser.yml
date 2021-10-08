@@ -24,8 +24,6 @@ builds:
       pre:
         - go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest
         - go generate .
-      post:
-        - rm -f resource.syso
   - id: win-arm
     env:
       - CGO_ENABLED=0
@@ -42,6 +40,8 @@ builds:
       - -trimpath
     ldflags:
       - -s -w -X github.com/Mrs4s/go-cqhttp/coolq.Version=v{{.Version}}
+    hooks:
+      pre: rm -f resource.syso
   - id: nowin
     env:
       - CGO_ENABLED=0
@@ -66,6 +66,8 @@ builds:
       - -trimpath
     ldflags:
       - -s -w -X github.com/Mrs4s/go-cqhttp/coolq.Version=v{{.Version}}
+    hooks:
+      pre: rm -f resource.syso
 
 checksum:
   name_template: "{{ .ProjectName }}_checksums.txt"
