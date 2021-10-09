@@ -65,7 +65,7 @@ func (r *QQRobot) ocr(groupImageElement *message.GroupImageElement) (ocrResultSt
 
 	ocrResult, err := r.cqBot.Client.ImageOcr(groupImageElement)
 	if err != nil {
-		logger.Errorf("ocr出错了，image=%+v，err=%v", groupImageElement, err)
+		logger.Errorf("ocr出错了，image=%+v，err=%v", groupImageElement.Url, err)
 		return ""
 	}
 
