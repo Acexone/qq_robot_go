@@ -89,7 +89,7 @@ func (r *QQRobot) checkSettlements() {
 
 		// 发送结算消息
 		reply := message.NewSendingMessage()
-		msg := r.Config.NotifySettle.StartMessage
+		msg := r.Config.NotifySettle.FinishMessage
 		msg = strings.ReplaceAll(msg, templateargsRealMoney, settleInfo.RealMoney)
 		msg = strings.ReplaceAll(msg, templateargsSettleTime, settleInfo.EndTime)
 		reply.Append(message.NewText(msg))
