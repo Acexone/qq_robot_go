@@ -190,7 +190,7 @@ type NotifyUpdateRule struct {
 // NotifySettleConfig 通知结算配置
 type NotifySettleConfig struct {
 	CheckInterval int64  `toml:"check_interval"` // 检查更新的间隔（秒），建议3600s
-	ApiUrl        string `toml:"api_url"`        // 结算api的url
+	APIUrl        string `toml:"api_url"`        // 结算api的url
 	NotifyQQ      int64  `toml:"notify_qq"`      // 要通知的QQ
 	StartMessage  string `toml:"start_message"`  // 开始结算的消息，参数：$real_money$=结算金额, $settle_time$=对应结算操作的时间
 	FinishMessage string `toml:"end_message"`    // 完成结算的消息，参数：$real_money$=结算金额, $settle_time$=对应结算操作的时间

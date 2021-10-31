@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// SettleResponse 结算结果
 type SettleResponse struct {
 	Code int          `json:"code"`
 	Msg  string       `json:"msg"`
@@ -19,9 +20,10 @@ type SettleResponse struct {
 	Data []SettleInfo `json:"data"`
 }
 
+// SettleInfo 单条结算记录
 type SettleInfo struct {
-	Id             string      `json:"id"`
-	Uid            string      `json:"uid"`
+	ID             string      `json:"id"`
+	UID            string      `json:"uid"`
 	Batch          interface{} `json:"batch"`
 	Auto           string      `json:"auto"`
 	Type           string      `json:"type"`
@@ -100,7 +102,7 @@ func (r *QQRobot) checkSettlements() {
 
 // getLatestSettleInfo 获取最近的结算信息
 func (r *QQRobot) getLatestSettleInfo() (*SettleInfo, error) {
-	resp, err := r.httpClient.Get(r.Config.NotifySettle.ApiUrl)
+	resp, err := r.httpClient.Get(r.Config.NotifySettle.APIUrl)
 	if err != nil {
 		return nil, err
 	}
