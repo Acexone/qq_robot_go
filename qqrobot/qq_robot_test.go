@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
-
-	mylogger "github.com/fzls/logger"
 )
 
 // 2020/10/30 17:39 by fzls
@@ -41,14 +39,6 @@ func Test_convertChineseNumber(t *testing.T) {
 }
 
 func Test_getLatestGitVersion(t *testing.T) {
-	// 初始化日志
-	var err error
-	logger, err = mylogger.NewLogger("logs", "qq_robot", mylogger.DebugLevel)
-	if err != nil {
-		fmt.Printf("new logger err=%v\n", err)
-		return
-	}
-
 	qqRobot := NewQQRobot(nil, "")
 	version, updateMessage := qqRobot.getLatestGitVersion("https://github.com/fzls/djc_helper/blob/master/CHANGELOG.MD")
 	t.Logf("version=%v, updateMessage如下：\n%v", version, updateMessage)
