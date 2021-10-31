@@ -17,6 +17,7 @@ import (
 	"github.com/gookit/color"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
+	logger "github.com/sirupsen/logrus"
 	tbp "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tbp/v20190627"
 
 	"github.com/Mrs4s/go-cqhttp/coolq"
@@ -92,6 +93,8 @@ func NewQQRobot(cqRobot *coolq.CQBot, configPath string) *QQRobot {
 
 // Start 开始运行
 func (r *QQRobot) Start() {
+	initLogger()
+
 	r.StartTime = time.Now()
 	r.quitCtx, r.quitFunc = context.WithCancel(context.Background())
 
@@ -322,7 +325,7 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 	maybeKilledWrongPerson := false // 误杀
 	if _, replied := rule.ProcessedMessages[source]; replied {
 		maybeKilledWrongPerson = true
-		logger.Warnf("【似乎消息混了，不过没办法，继续处理吧-。-】", nowStr, config.Name, p(m))
+		logger.Warn("【似乎消息混了，不过没办法，继续处理吧-。-】", nowStr, config.Name, p(m))
 	}
 	// 是否不需要回复
 	if len(config.KeywordRegexes) != 0 && !hitKeyWords ||

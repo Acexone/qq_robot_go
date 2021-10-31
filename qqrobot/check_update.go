@@ -11,6 +11,7 @@ import (
 
 	"github.com/Mrs4s/MiraiGo/message"
 	"github.com/gookit/color"
+	logger "github.com/sirupsen/logrus"
 )
 
 // 2021/10/02 5:21 by fzls
@@ -150,7 +151,7 @@ func (r *QQRobot) _getLatestGitVersion(gitChangelogPage string) (string, string)
 	// 解析版本信息
 	matches := regGitVersion.FindAllStringSubmatch(htmlText, -1)
 	if len(matches) == 0 {
-		logger.Debugf("getLatestGitVersion gitChangelogPage=%v can not find any match, html text=%v", gitChangelogPage, err, htmlText)
+		logger.Debugf("getLatestGitVersion gitChangelogPage=%v can not find any match, err=%v, html text=%v", gitChangelogPage, err, htmlText)
 		return VersionNone, ""
 	}
 

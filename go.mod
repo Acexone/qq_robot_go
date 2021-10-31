@@ -12,7 +12,7 @@ require (
 	github.com/Microsoft/go-winio v0.5.0
 	github.com/Mrs4s/MiraiGo v0.0.0-20210928143029-dff336b05a9a
 	github.com/dustin/go-humanize v1.0.0
-	github.com/fzls/logger v1.0.1
+	github.com/fzls/logger v1.1.0
 	github.com/gabriel-vasile/mimetype v1.3.1
 	github.com/gookit/color v1.4.2
 	github.com/gorilla/websocket v1.4.2
@@ -57,9 +57,6 @@ require (
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/willf/bitset v1.2.0 // indirect
 	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778 // indirect
-	go.uber.org/atomic v1.9.0 // indirect
-	go.uber.org/multierr v1.7.0 // indirect
-	go.uber.org/zap v1.19.1 // indirect
 	golang.org/x/net v0.0.0-20210505024714-0287a6fb4125 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/sys v0.0.0-20210927094055-39ccf1dd6fa6 // indirect

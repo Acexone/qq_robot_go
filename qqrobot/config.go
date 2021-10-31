@@ -6,6 +6,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/pkg/errors"
+	logger "github.com/sirupsen/logrus"
 )
 
 // TencentAiChatAPI 腾讯ai聊天接口

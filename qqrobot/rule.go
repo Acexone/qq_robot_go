@@ -3,6 +3,8 @@ package qqrobot
 import (
 	"math/rand"
 	"strings"
+
+	logger "github.com/sirupsen/logrus"
 )
 
 // 2020/06/01 2:42 by fzls

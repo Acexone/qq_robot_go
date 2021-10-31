@@ -13,7 +13,7 @@ import (
 	"github.com/Mrs4s/MiraiGo/client"
 	"github.com/Mrs4s/MiraiGo/message"
 	"github.com/gookit/color"
-	log "github.com/sirupsen/logrus"
+	logger "github.com/sirupsen/logrus"
 
 	"github.com/Mrs4s/go-cqhttp/coolq"
 	"github.com/Mrs4s/go-cqhttp/global"
@@ -26,7 +26,7 @@ const (
 func (r *QQRobot) tryAppendImageByURL(m *message.SendingMessage, imageURL string) {
 	image, err := r._makeLocalImage(imageURL)
 	if err != nil {
-		log.Errorf("_makeLocalImage err=%v", err)
+		logger.Errorf("_makeLocalImage err=%v", err)
 		return
 	}
 
