@@ -96,7 +96,7 @@ func (r *QQRobot) checkSettlements() {
 		r.cqBot.SendPrivateMessage(r.Config.NotifySettle.NotifyQQ, 0, reply)
 
 		// 更新通知时间
-		r.lastSettleStartTime = endTime
+		r.lastSettleFinishTime = endTime
 	}
 }
 
