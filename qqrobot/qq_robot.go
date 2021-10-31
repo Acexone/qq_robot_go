@@ -56,6 +56,9 @@ type QQRobot struct {
 
 	CheckUpdateVersionMap map[string]string // 配置的检查更新名称=>最近的版本号，如"DNF蚊子腿小助手更新"=>"v4.2.2"
 
+	lastSettleStartTime  time.Time
+	lastSettleFinishTime time.Time
+
 	quitCtx  context.Context
 	quitFunc context.CancelFunc
 }
@@ -93,7 +96,8 @@ func (r *QQRobot) Start() {
 	r.quitCtx, r.quitFunc = context.WithCancel(context.Background())
 
 	r.notify(r.Config.Robot.OnStart)
-	go r.ticker()
+	go r.updateTicker()
+	go r.settleTicker()
 }
 
 // Stop 停止运行
@@ -129,7 +133,8 @@ func (r *QQRobot) notify(cfg NotifyConfig) {
 	logger.Infof("robot on %v finished", cfg.Name)
 }
 
-func (r *QQRobot) ticker() {
+// updateTicker 检查更新
+func (r *QQRobot) updateTicker() {
 	if r.Config.NotifyUpdate.CheckInterval <= 0 {
 		return
 	}
@@ -144,6 +149,28 @@ func (r *QQRobot) ticker() {
 		select {
 		case <-checkUpdateTicker.C:
 			r.checkUpdates()
+		case <-r.quitCtx.Done():
+			return
+		}
+	}
+}
+
+// settleTicker 检查结算
+func (r *QQRobot) settleTicker() {
+	if r.Config.NotifySettle.CheckInterval <= 0 {
+		return
+	}
+
+	checkSettleTicker := time.NewTicker(time.Second * time.Duration(r.Config.NotifySettle.CheckInterval))
+	defer checkSettleTicker.Stop()
+
+	// 立即开始检查一次
+	r.checkSettlements()
+
+	for {
+		select {
+		case <-checkSettleTicker.C:
+			r.checkSettlements()
 		case <-r.quitCtx.Done():
 			return
 		}

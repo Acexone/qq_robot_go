@@ -20,6 +20,8 @@ const (
 	templateargsCd                = "$cd$"                  // CD
 	templateargsGitversion        = "$git_version$"         // 代码版本，若对应规则配置了changelog的链接，则会将这个变量替换为解析出的最新的版本号，如https://github.com/fzls/djc_helper/blob/master/CHANGELOG.MD
 	templateargsUpdatemessage     = "$update_message$"      // 最新更新信息，若对应规则配置了changelog的链接，则会将这个变量替换为解析出的最新的更新信息，如https://github.com/fzls/djc_helper/blob/master/CHANGELOG.MD
+	templateargsRealMoney         = "$real_money$"          // 结算金额
+	templateargsSettleTime        = "$settle_time$"         // 对应结算操作的时间
 )
 
 // NotifyConfig 通知规则
@@ -185,6 +187,15 @@ type NotifyUpdateRule struct {
 	AtAllOnTrigger   bool     `toml:"at_all_on_trigger"`  // 是否需要@全体成员
 }
 
+// NotifySettleConfig 通知结算配置
+type NotifySettleConfig struct {
+	CheckInterval int64  `toml:"check_interval"` // 检查更新的间隔（秒），建议3600s
+	ApiUrl        string `toml:"api_url"`        // 结算api的url
+	NotifyQQ      int64  `toml:"notify_qq"`      // 要通知的QQ
+	StartMessage  string `toml:"start_message"`  // 开始结算的消息，参数：$real_money$=结算金额, $settle_time$=对应结算操作的时间
+	FinishMessage string `toml:"end_message"`    // 完成结算的消息，参数：$real_money$=结算金额, $settle_time$=对应结算操作的时间
+}
+
 // Config 配置
 type Config struct {
 	Robot            RobotConfig        `toml:"robot"`
@@ -193,6 +204,7 @@ type Config struct {
 	GroupTypeConfigs []GroupTypeConfig  `toml:"rule_type_configs"`
 	Misc             MiscConfig         `toml:"misc"`
 	NotifyUpdate     NotifyUpdateConfig `toml:"notify_update"`
+	NotifySettle     NotifySettleConfig `toml:"notify_settle"`
 }
 
 // LoadConfig 读取配置
