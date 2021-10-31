@@ -12,7 +12,7 @@ require (
 	github.com/Microsoft/go-winio v0.5.0
 	github.com/Mrs4s/MiraiGo v0.0.0-20210928143029-dff336b05a9a
 	github.com/dustin/go-humanize v1.0.0
-	github.com/fzls/logger v1.1.0
+	github.com/fzls/logger v1.1.1
 	github.com/gabriel-vasile/mimetype v1.3.1
 	github.com/gookit/color v1.4.2
 	github.com/gorilla/websocket v1.4.2

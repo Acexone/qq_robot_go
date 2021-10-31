@@ -5,5 +5,5 @@ import (
 )
 
 func initLogger() {
-	logger.InitLogger("logs", "qq_robot", "info", "debug")
+	logger.InitLogger("logs", "qq_robot", "debug")
 }
