@@ -6,7 +6,7 @@ import (
 	"github.com/Mrs4s/MiraiGo/message"
 )
 
-// 单条消息发送的大小限制（预估）
+// MaxMessageSize 单条消息发送的大小限制（预估）
 const MaxMessageSize = 5000
 
 // SplitLongMessage 将过长的消息分割为若干个适合发送的消息
@@ -62,19 +62,19 @@ func mergeContinuousTextMessages(sendingMessage *message.SendingMessage) *messag
 		// 如果之前的是文本元素（可能是多个合并起来的），则在这里将其实际放入消息中
 		if lastIsText {
 			sendingMessage.Elements[totalMessageCount] = message.NewText(textBuffer.String())
-			totalMessageCount += 1
+			totalMessageCount++
 			textBuffer.Reset()
 		}
 		lastIsText = false
 
 		// 非文本元素则直接处理
 		sendingMessage.Elements[totalMessageCount] = msg
-		totalMessageCount += 1
+		totalMessageCount++
 	}
 	// 处理最后几个元素是文本的情况
 	if textBuffer.Len() != 0 {
 		sendingMessage.Elements[totalMessageCount] = message.NewText(textBuffer.String())
-		totalMessageCount += 1
+		totalMessageCount++
 		textBuffer.Reset()
 	}
 	sendingMessage.Elements = sendingMessage.Elements[:totalMessageCount]
@@ -157,7 +157,7 @@ func splitPlainMessage(content string) []message.IMessageElement {
 		}
 	}
 	if last != len(content) {
-		splittedMessage = append(splittedMessage, message.NewText(content[last:len(content)]))
+		splittedMessage = append(splittedMessage, message.NewText(content[last:]))
 	}
 
 	return splittedMessage
