@@ -425,7 +425,25 @@ func (bot *CQBot) CQSendGroupMessage(groupID int64, m gjson.Result, autoEscape b
 		}
 	}
 	fixAt(elem)
-	mid := bot.SendGroupMessage(groupID, &message.SendingMessage{Elements: elem})
+
+	var mid int32
+
+	// 魔改一下，兼容过长的消息，使得青龙面板那边可以发送很多个账号的统计信息
+	msg := &message.SendingMessage{Elements: elem}
+	msgLen := message.EstimateLength(msg.Elements)
+	if msgLen <= MaxMessageSize {
+		mid = bot.SendGroupMessage(groupID, msg)
+	} else {
+		// 特殊处理过长的消息，此时mid返回第一个消息
+		parts := SplitLongMessage(msg)
+		for idx, part := range parts {
+			ret := bot.SendGroupMessage(groupID, part)
+			if idx == 0 {
+				mid = ret
+			}
+		}
+	}
+
 	if mid == -1 {
 		return Failed(100, "SEND_MSG_API_ERROR", "请参考 go-cqhttp 端输出")
 	}
