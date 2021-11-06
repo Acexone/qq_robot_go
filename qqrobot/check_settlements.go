@@ -8,6 +8,7 @@ import (
 
 	"github.com/Mrs4s/MiraiGo/message"
 	"github.com/pkg/errors"
+	logger "github.com/sirupsen/logrus"
 )
 
 // SettleResponse 结算结果
@@ -69,12 +70,7 @@ func (r *QQRobot) checkSettlements() {
 		}
 
 		// 发送结算消息
-		reply := message.NewSendingMessage()
-		msg := r.Config.NotifySettle.StartMessage
-		msg = strings.ReplaceAll(msg, templateargsRealMoney, settleInfo.RealMoney)
-		msg = strings.ReplaceAll(msg, templateargsSettleTime, settleInfo.AddTime)
-		reply.Append(message.NewText(msg))
-		r.cqBot.SendPrivateMessage(r.Config.NotifySettle.NotifyQQ, 0, reply)
+		r.sendSettleMessage(r.Config.NotifySettle.StartMessage, settleInfo.RealMoney, settleInfo.AddTime)
 
 		// 更新通知时间
 		r.lastSettleStartTime = startTime
@@ -88,16 +84,21 @@ func (r *QQRobot) checkSettlements() {
 		}
 
 		// 发送结算消息
-		reply := message.NewSendingMessage()
-		msg := r.Config.NotifySettle.FinishMessage
-		msg = strings.ReplaceAll(msg, templateargsRealMoney, settleInfo.RealMoney)
-		msg = strings.ReplaceAll(msg, templateargsSettleTime, settleInfo.EndTime)
-		reply.Append(message.NewText(msg))
-		r.cqBot.SendPrivateMessage(r.Config.NotifySettle.NotifyQQ, 0, reply)
+		r.sendSettleMessage(r.Config.NotifySettle.FinishMessage, settleInfo.RealMoney, settleInfo.EndTime)
 
 		// 更新通知时间
 		r.lastSettleFinishTime = endTime
 	}
+}
+
+func (r *QQRobot) sendSettleMessage(templateMsg string, realMoney string, settleTime string) {
+	reply := message.NewSendingMessage()
+	msg := templateMsg
+	msg = strings.ReplaceAll(msg, templateargsRealMoney, realMoney)
+	msg = strings.ReplaceAll(msg, templateargsSettleTime, settleTime)
+	reply.Append(message.NewText(msg))
+	r.cqBot.SendPrivateMessage(r.Config.NotifySettle.NotifyQQ, 0, reply)
+	logger.Infof("发送结算消息= %v", message.ToReadableString(reply.Elements))
 }
 
 // getLatestSettleInfo 获取最近的结算信息
