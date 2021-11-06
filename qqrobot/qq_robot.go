@@ -594,6 +594,11 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 	if imageURL != "" {
 		r.tryAppendImageByURL(replies, imageURL)
 	}
+	if len(config.ImageURLList) != 0 {
+		for _, image := range config.ImageURLList {
+			r.tryAppendImageByURL(replies, image)
+		}
+	}
 
 	if maybeKilledWrongPerson {
 		replies.Append(message.NewText("似乎前面有人代替你被误杀了。但是，正义的铁拳虽然会乱锤，却不会错过正确的人。宁可错杀三千，不可放过一人！（手动眼部红光特效）"))
@@ -844,6 +849,11 @@ func (r *QQRobot) onMemberJoin(m *client.MemberJoinGroupEvent, rule *Rule) error
 	// 如配置了图片url，则额外发送图片
 	if config.ImageURL != "" {
 		r.tryAppendImageByURL(replies, config.ImageURL)
+	}
+	if len(config.ImageURLList) != 0 {
+		for _, image := range config.ImageURLList {
+			r.tryAppendImageByURL(replies, image)
+		}
 	}
 
 	if len(replies.Elements) != 0 {

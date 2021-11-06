@@ -118,6 +118,7 @@ type RuleConfig struct {
 	AtAllOnTrigger              bool               `toml:"at_all_on_trigger"`               // 当触发该规则时，是否需要@全体成员
 	GuideContent                string             `toml:"guide_content"`                   // 内容
 	ImageURL                    string             `toml:"image_url"`                       // 图片URL，若有，则会额外附加图片
+	ImageURLList                []string           `toml:"image_url_list"`                  // 图片URL列表，若有，则会额外附加图片
 	RandomImageUrls             []string           `toml:"random_image_urls"`               // 若配置，则从中随机一个作为图片发送，同时ImageUrl配置会被覆盖
 	CD                          int64              `toml:"cd"`                              // cd时长（秒），0表示不设定，若设定，在cd内触发规则时，若设置了cd内回复内容，则回复该内容，否则视为未触发
 	GuideContentInCD            string             `toml:"guide_content_in_cd"`             // cd内触发规则时的回复内容
