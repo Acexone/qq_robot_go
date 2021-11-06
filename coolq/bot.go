@@ -298,7 +298,7 @@ func (bot *CQBot) SendGroupMessage(groupID int64, m *message.SendingMessage) int
 	bot.checkMedia(newElem)
 	ret := bot.Client.SendGroupMessage(groupID, m, ForceFragmented)
 	if ret == nil || ret.Id == -1 {
-		log.Warnf("群消息发送失败: 账号可能被风控.")
+		log.Warnf("群消息发送失败: 账号可能被风控.\ngroupID= %v 消息内容= %v", groupID, message.ToReadableString(m.Elements))
 		return -1
 	}
 	return bot.InsertGroupMessage(ret)
