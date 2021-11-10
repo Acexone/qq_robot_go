@@ -296,7 +296,24 @@ func (bot *CQBot) SendGroupMessage(groupID int64, m *message.SendingMessage) int
 	}
 	m.Elements = newElem
 	bot.checkMedia(newElem)
-	ret := bot.Client.SendGroupMessage(groupID, m, ForceFragmented)
+
+	var ret *message.GroupMessage
+
+	// 魔改一下，兼容过长的消息，使得青龙面板那边可以发送很多个账号的统计信息
+	msgLen := message.EstimateLength(m.Elements)
+	if msgLen <= MaxMessageSize {
+		ret = bot.Client.SendGroupMessage(groupID, m, ForceFragmented)
+	} else {
+		// 特殊处理过长的消息，此时mid返回第一个消息
+		parts := SplitLongMessage(m)
+		for idx, part := range parts {
+			_ret := bot.Client.SendGroupMessage(groupID, part, ForceFragmented)
+			if idx == 0 {
+				ret = _ret
+			}
+		}
+	}
+
 	if ret == nil || ret.Id == -1 {
 		log.Warnf("群消息发送失败: 账号可能被风控.\ngroupID= %v 消息内容= %v", groupID, message.ToReadableString(m.Elements))
 		return -1
