@@ -13,3 +13,5 @@ logs/
 resource.syso
 !global/config/config.yml
 !qqrobot/config.toml
+qqrobot/scripts/bean.jpeg
+qqrobot/scripts/chart.jpeg
