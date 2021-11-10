@@ -311,6 +311,10 @@ func (bot *CQBot) SendGroupMessage(groupID int64, m *message.SendingMessage) int
 			if idx == 0 {
 				ret = _ret
 			}
+			if idx < len(parts)-1 {
+				// 等待一会，尽量确保收到的顺序与发送一致
+				time.Sleep(500 * time.Millisecond)
+			}
 		}
 	}
 
