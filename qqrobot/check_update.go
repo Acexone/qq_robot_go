@@ -101,7 +101,7 @@ func (r *QQRobot) initCheckUpdateVersionMap() {
 }
 
 var regGitVersion = regexp.MustCompile(`([vV][0-9.]+)(\s+\d+\.\d+\.\d+)`)
-var regUpdateInfo = regexp.MustCompile(`(更新公告</h1>)\s*<ol>((\s|\S)+?)</ol>`)
+var regUpdateInfo = regexp.MustCompile(`(更新公告</h1>)\s*<ol.+?>((\s|\S)+?)</ol>`)
 var regUpdateMessages = regexp.MustCompile("<li>(.+?)</li>")
 
 // VersionNone 默认版本号
