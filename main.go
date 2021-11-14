@@ -343,7 +343,8 @@ func main() {
 	}
 	cli.SetOnlineStatus(allowStatus[base.Account.Status])
 
-	servers.Run(coolq.NewQQBot(cli))
+	bot := coolq.NewQQBot(cli)
+	servers.Run(bot)
 	log.Info("资源初始化完成, 开始处理信息.")
 	log.Info("アトリは、高性能ですから!")
 

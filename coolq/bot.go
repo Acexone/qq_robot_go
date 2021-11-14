@@ -239,7 +239,7 @@ func (bot *CQBot) SendGroupMessage(groupID int64, m *message.SendingMessage) int
 		return -1
 	}
 	m.Elements = newElem
-	bot.checkMedia(newElem)
+	bot.checkMedia(newElem, groupID)
 
 	var ret *message.GroupMessage
 
