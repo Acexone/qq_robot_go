@@ -13,10 +13,12 @@ import (
 
 	"github.com/Mrs4s/MiraiGo/utils"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v3"
 
 	"github.com/Mrs4s/go-cqhttp/coolq"
 	"github.com/Mrs4s/go-cqhttp/global"
-	"github.com/Mrs4s/go-cqhttp/global/config"
+	api2 "github.com/Mrs4s/go-cqhttp/modules/api"
+	"github.com/Mrs4s/go-cqhttp/modules/config"
 )
 
 type lambdaClient struct {
@@ -77,8 +79,17 @@ func (l *lambdaResponseWriter) WriteHeader(statusCode int) {
 
 var cli *lambdaClient
 
-// RunLambdaClient  type: [scf,aws]
-func RunLambdaClient(bot *coolq.CQBot, conf *config.LambdaServer) {
+// runLambda  type: [scf,aws]
+func runLambda(bot *coolq.CQBot, node yaml.Node) {
+	var conf config.LambdaServer
+	switch err := node.Decode(&conf); {
+	case err != nil:
+		log.Warn("读取lambda配置失败 :", err)
+		fallthrough
+	case conf.Disabled:
+		return
+	}
+
 	cli = &lambdaClient{
 		lambdaType: conf.Type,
 		client:     http.Client{Timeout: 0},
@@ -105,9 +116,9 @@ func RunLambdaClient(bot *coolq.CQBot, conf *config.LambdaServer) {
 		log.Fatal("unknown lambda type:", conf.Type)
 	}
 
-	api := newAPICaller(bot)
+	api := api2.NewCaller(bot)
 	if conf.RateLimit.Enabled {
-		api.use(rateLimit(conf.RateLimit.Frequency, conf.RateLimit.Bucket))
+		api.Use(rateLimit(conf.RateLimit.Frequency, conf.RateLimit.Bucket))
 	}
 	server := &httpServer{
 		api:         api,
