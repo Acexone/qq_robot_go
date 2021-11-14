@@ -39,7 +39,7 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - -s -w -X github.com/Mrs4s/go-cqhttp/coolq.Version=v{{.Version}}
+      - -s -w -X github.com/Mrs4s/go-cqhttp/internal/base.Version=v{{.Version}}
     hooks:
       pre: rm -f resource.syso
   - id: nowin
