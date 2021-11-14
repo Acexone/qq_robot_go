@@ -12,6 +12,16 @@
 
 复制qqrobot/config.toml到qq_robot.exe所在目录 然后打开qq_robot/config.go和config.toml，按照注释，自行调整配置，并添加各种规则
 
+# 注意
+## 腾讯云部署
+需要修改dns为
+101.6.6.6
+223.6.6.6
+114.114.114.114
+
+不能使用8.8.8.8，已经被腾讯云污染了
+具体可见 https://github.com/Mrs4s/go-cqhttp/issues/1115#issuecomment-949298739
+
 # TODO
 
 - [ ] 看看是否有更多事件值得接入，目前仅处理了群聊、私聊和加群这三个事件
