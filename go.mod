@@ -4,8 +4,6 @@ go 1.17
 
 replace github.com/Mrs4s/go-cqhttp => github.com/fzls/qq_robot_go v1.0.0-beta8
 
-replace github.com/willf/bitset v1.2.0 => github.com/bits-and-blooms/bitset v1.2.0
-
 require (
 	github.com/Baozisoftware/qrcode-terminal-go v0.0.0-20170407111555-c0650d8dff0f
 	github.com/BurntSushi/toml v0.3.1
