@@ -135,15 +135,17 @@ func (bot *CQBot) CQGetGuildMembers(guildID uint64) global.MSG {
 	if guild == nil {
 		return Failed(100, "GUILD_NOT_FOUND")
 	}
-	var members, bots, admins []global.MSG
-	for _, m := range guild.Members {
-		members = append(members, convertGuildMemberInfo(m))
+	members := make([]global.MSG, len(guild.Members))
+	bots := make([]global.MSG, len(guild.Bots))
+	admins := make([]global.MSG, len(guild.Admins))
+	for i, m := range guild.Members {
+		members[i] = convertGuildMemberInfo(m)
 	}
-	for _, m := range guild.Bots {
-		bots = append(bots, convertGuildMemberInfo(m))
+	for i, m := range guild.Bots {
+		bots[i] = convertGuildMemberInfo(m)
 	}
-	for _, m := range guild.Admins {
-		admins = append(admins, convertGuildMemberInfo(m))
+	for i, m := range guild.Admins {
+		admins[i] = convertGuildMemberInfo(m)
 	}
 	return OK(global.MSG{
 		"members": members,
@@ -579,6 +581,19 @@ func (bot *CQBot) CQSendGuildChannelMessage(guildID, channelID uint64, m gjson.R
 		log.Warnf("无法发送频道信息: 频道类型错误, 不接受文本信息")
 		return Failed(100, "CHANNEL_NOT_SUPPORTED_TEXT_MSG", "子频道类型错误, 无法发送文本信息")
 	}
+	fixAt := func(elem []message.IMessageElement) {
+		for _, e := range elem {
+			if at, ok := e.(*message.AtElement); ok && at.Target != 0 && at.Display == "" {
+				mem := guild.FindMember(uint64(at.Target))
+				if mem != nil {
+					at.Display = "@" + mem.Nickname
+				} else {
+					at.Display = "@" + strconv.FormatInt(at.Target, 10)
+				}
+			}
+		}
+	}
+
 	var elem []message.IMessageElement
 	if m.Type == gjson.JSON {
 		elem = bot.ConvertObjectMessage(m, MessageSourceGuildChannel)
@@ -594,6 +609,7 @@ func (bot *CQBot) CQSendGuildChannelMessage(guildID, channelID uint64, m gjson.R
 			elem = bot.ConvertStringMessage(str, MessageSourceGuildChannel)
 		}
 	}
+	fixAt(elem)
 	mid := bot.SendGuildChannelMessage(guildID, channelID, &message.SendingMessage{Elements: elem})
 	if mid == "" {
 		return Failed(100, "SEND_MSG_API_ERROR", "请参考 go-cqhttp 端输出")
