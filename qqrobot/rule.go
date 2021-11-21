@@ -3,6 +3,7 @@ package qqrobot
 import (
 	"math/rand"
 	"strings"
+	"sync"
 
 	logger "github.com/sirupsen/logrus"
 )
@@ -23,6 +24,8 @@ type FoodImage struct {
 
 // Rule 规则，附带一些缓存数据
 type Rule struct {
+	Locker sync.RWMutex // mirai-go的分发是并发的，这里需要保护下多个消息同时尝试应用当前规则的情况
+
 	Config            RuleConfig
 	ProcessedMessages map[int64]struct{}
 	SiteToFoodPage    map[string]int64              // 最新食谱页面的页码数

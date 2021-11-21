@@ -239,6 +239,10 @@ func (r *QQRobot) OnTempMessage(client *client.QQClient, m *client.TempMessageEv
 }
 
 func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
+	// rule内部有些状态可能会改变，这里加锁保护一下
+	rule.Locker.Lock()
+	defer rule.Locker.Unlock()
+
 	config := rule.Config
 	nowStr := r.currentTime()
 	nowUnix := time.Now().Unix()
