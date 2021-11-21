@@ -79,6 +79,8 @@ func NewQQBot(cli *client.QQClient) *CQBot {
 	bot.Client.GuildService.OnGuildChannelMessage(bot.guildChannelMessageEvent)
 	bot.Client.GuildService.OnGuildMessageReactionsUpdated(bot.guildMessageReactionsUpdatedEvent)
 	bot.Client.GuildService.OnGuildChannelUpdated(bot.guildChannelUpdatedEvent)
+	bot.Client.GuildService.OnGuildChannelCreated(bot.guildChannelCreatedEvent)
+	bot.Client.GuildService.OnGuildChannelDestroyed(bot.guildChannelDestroyedEvent)
 	bot.Client.OnGroupMuted(bot.groupMutedEvent)
 	bot.Client.OnGroupMessageRecalled(bot.groupRecallEvent)
 	bot.Client.OnGroupNotify(bot.groupNotifyEvent)
@@ -182,7 +184,7 @@ func (bot *CQBot) UploadLocalImageAsPrivate(userID int64, img *LocalImageElement
 }
 
 // UploadLocalImageAsGuildChannel 上传本地图片至频道
-func (bot *CQBot) UploadLocalImageAsGuildChannel(guildId, channelId uint64, img *LocalImageElement) (*message.GuildImageElement, error) {
+func (bot *CQBot) UploadLocalImageAsGuildChannel(guildID, channelID uint64, img *LocalImageElement) (*message.GuildImageElement, error) {
 	if img.File != "" {
 		f, err := os.Open(img.File)
 		if err != nil {
@@ -194,7 +196,7 @@ func (bot *CQBot) UploadLocalImageAsGuildChannel(guildId, channelId uint64, img 
 	if lawful, mime := base.IsLawfulImage(img.Stream); !lawful {
 		return nil, errors.New("image type error: " + mime)
 	}
-	return bot.Client.GuildService.UploadGuildImage(guildId, channelId, img.Stream)
+	return bot.Client.GuildService.UploadGuildImage(guildID, channelID, img.Stream)
 }
 
 // SendGroupMessage 发送群消息
@@ -216,9 +218,6 @@ func (bot *CQBot) SendGroupMessage(groupID int64, m *message.SendingMessage) int
 					mem.Poke()
 				}
 			}
-			return 0
-		case *GiftElement:
-			bot.Client.SendGroupGift(uint64(groupID), uint64(i.Target), i.GiftID)
 			return 0
 		case *message.MusicShareElement:
 			ret, err := bot.Client.SendGroupMusicShare(groupID, i)
@@ -374,7 +373,7 @@ func (bot *CQBot) SendGuildChannelMessage(guildID, channelID uint64, m *message.
 				continue
 			}
 			e = n
-		case *LocalVideoElement, *LocalVoiceElement, *PokeElement, *message.MusicShareElement, *GiftElement:
+		case *LocalVideoElement, *LocalVoiceElement, *PokeElement, *message.MusicShareElement:
 			log.Warnf("警告: 频道暂不支持发送 %v 消息", i.Type().String())
 			continue
 		}
@@ -471,7 +470,7 @@ func (bot *CQBot) InsertPrivateMessage(m *message.PrivateMessage) int32 {
 		msg.QuotedInfo = &db.QuotedInfo{
 			PrevID:        encodeMessageID(reply.Sender, reply.ReplySeq),
 			PrevGlobalID:  db.ToGlobalID(reply.Sender, reply.ReplySeq),
-			QuotedContent: ToMessageContent(m.Elements),
+			QuotedContent: ToMessageContent(reply.Elements),
 		}
 	}
 	if err := db.InsertPrivateMessage(msg); err != nil {

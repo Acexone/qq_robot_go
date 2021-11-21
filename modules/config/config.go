@@ -61,6 +61,7 @@ type Config struct {
 		LogLevel    string `yaml:"log-level"`
 		LogAging    int    `yaml:"log-aging"`
 		LogForceNew bool   `yaml:"log-force-new"`
+		LogColorful *bool  `yaml:"log-colorful"`
 		Debug       bool   `yaml:"debug"`
 	} `yaml:"output"`
 
@@ -295,7 +296,7 @@ const httpDefault = `  # HTTP 通信设置
       post:
       #- url: '' # 地址
       #  secret: ''           # 密钥
-      #- url: 127.0.0.1:5701 # 地址
+      #- url: http://127.0.0.1:5701/ # 地址
       #  secret: ''          # 密钥
 `
 

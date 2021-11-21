@@ -48,6 +48,14 @@ var allowStatus = [...]client.UserOnlineStatus{
 
 func main() {
 	base.Parse()
+	if !base.FastStart && terminal.RunningByDoubleClick() {
+		err := terminal.NoMoreDoubleClick()
+		if err != nil {
+			log.Errorf("遇到错误: %v", err)
+			time.Sleep(time.Second * 5)
+		}
+		return
+	}
 	switch {
 	case base.LittleH:
 		base.Help()
@@ -71,7 +79,7 @@ func main() {
 		panic(err)
 	}
 
-	consoleFormatter := global.LogFormat{EnableColor: true}
+	consoleFormatter := global.LogFormat{EnableColor: base.LogColorful}
 	fileFormatter := global.LogFormat{EnableColor: false}
 	log.AddHook(global.NewLocalHook(w, consoleFormatter, fileFormatter, global.GetLogLevel(base.LogLevel)...))
 
@@ -115,15 +123,6 @@ func main() {
 				base.FastStart = true
 			}
 		}
-	}
-
-	if !base.FastStart && terminal.RunningByDoubleClick() {
-		err := terminal.NoMoreDoubleClick()
-		if err != nil {
-			log.Errorf("遇到错误: %v", err)
-			time.Sleep(time.Second * 5)
-		}
-		return
 	}
 
 	if (base.Account.Uin == 0 || (base.Account.Password == "" && !base.Account.Encrypt)) && !global.PathExists("session.token") {

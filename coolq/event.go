@@ -9,16 +9,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Mrs4s/go-cqhttp/db"
-	"github.com/Mrs4s/go-cqhttp/internal/cache"
-
-	"github.com/Mrs4s/go-cqhttp/global"
-	"github.com/Mrs4s/go-cqhttp/internal/base"
-
 	"github.com/Mrs4s/MiraiGo/binary"
 	"github.com/Mrs4s/MiraiGo/client"
 	"github.com/Mrs4s/MiraiGo/message"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/Mrs4s/go-cqhttp/db"
+	"github.com/Mrs4s/go-cqhttp/global"
+	"github.com/Mrs4s/go-cqhttp/internal/base"
+	"github.com/Mrs4s/go-cqhttp/internal/cache"
 )
 
 // ToFormattedMessage 将给定[]message.IMessageElement转换为通过coolq.SetMessageFormat所定义的消息上报格式
@@ -187,17 +186,17 @@ func (bot *CQBot) guildMessageReactionsUpdatedEvent(c *client.QQClient, e *clien
 		return
 	}
 	str := fmt.Sprintf("频道 %v(%v) 消息 %v 表情贴片已更新: ", guild.GuildName, guild.GuildId, e.MessageId)
-	var currentReactions []global.MSG
-	for _, r := range e.CurrentReactions {
+	currentReactions := make([]global.MSG, len(e.CurrentReactions))
+	for i, r := range e.CurrentReactions {
 		str += fmt.Sprintf("%v*%v ", r.Face.Name, r.Count)
-		currentReactions = append(currentReactions, global.MSG{
+		currentReactions[i] = global.MSG{
 			"emoji_id":    r.EmojiId,
 			"emoji_index": r.Face.Index,
 			"emoji_type":  r.EmojiType,
 			"emoji_name":  r.Face.Name,
 			"count":       r.Count,
 			"clicked":     r.Clicked,
-		})
+		}
 	}
 	if len(e.CurrentReactions) == 0 {
 		str += "无任何表情"
@@ -213,7 +212,8 @@ func (bot *CQBot) guildMessageReactionsUpdatedEvent(c *client.QQClient, e *clien
 		"operator_id":        e.OperatorId,
 		"current_reactions":  currentReactions,
 		"time":               time.Now().Unix(),
-		"self_id":            c.Uin,
+		"self_id":            bot.Client.Uin,
+		"self_tiny_id":       bot.Client.GuildService.TinyId,
 		"user_id":            e.OperatorId,
 	})
 }
@@ -225,16 +225,65 @@ func (bot *CQBot) guildChannelUpdatedEvent(c *client.QQClient, e *client.GuildCh
 	}
 	log.Infof("频道 %v(%v) 子频道 %v(%v) 信息已更新", guild.GuildName, guild.GuildId, e.NewChannelInfo.ChannelName, e.NewChannelInfo.ChannelId)
 	bot.dispatchEventMessage(global.MSG{
-		"post_type":   "notice",
-		"notice_type": "channel_updated",
-		"guild_id":    e.GuildId,
-		"channel_id":  e.ChannelId,
-		"operator_id": e.OperatorId,
-		"time":        time.Now().Unix(),
-		"self_id":     c.Uin,
-		"user_id":     e.OperatorId,
-		"old_info":    convertChannelInfo(e.OldChannelInfo),
-		"new_info":    convertChannelInfo(e.NewChannelInfo),
+		"post_type":    "notice",
+		"notice_type":  "channel_updated",
+		"guild_id":     e.GuildId,
+		"channel_id":   e.ChannelId,
+		"operator_id":  e.OperatorId,
+		"time":         time.Now().Unix(),
+		"self_id":      bot.Client.Uin,
+		"self_tiny_id": bot.Client.GuildService.TinyId,
+		"user_id":      e.OperatorId,
+		"old_info":     convertChannelInfo(e.OldChannelInfo),
+		"new_info":     convertChannelInfo(e.NewChannelInfo),
+	})
+}
+
+func (bot *CQBot) guildChannelCreatedEvent(c *client.QQClient, e *client.GuildChannelOperationEvent) {
+	guild := c.GuildService.FindGuild(e.GuildId)
+	if guild == nil {
+		return
+	}
+	member := guild.FindMember(e.OperatorId)
+	if member == nil {
+		member = &client.GuildMemberInfo{Nickname: "未知"}
+	}
+	log.Infof("频道 %v(%v) 内用户 %v(%v) 创建了子频道 %v(%v)", guild.GuildName, guild.GuildId, member.Nickname, member.TinyId, e.ChannelInfo.ChannelName, e.ChannelInfo.ChannelId)
+	bot.dispatchEventMessage(global.MSG{
+		"post_type":    "notice",
+		"notice_type":  "channel_created",
+		"guild_id":     e.GuildId,
+		"channel_id":   e.ChannelInfo.ChannelId,
+		"operator_id":  e.OperatorId,
+		"self_id":      bot.Client.Uin,
+		"self_tiny_id": bot.Client.GuildService.TinyId,
+		"user_id":      e.OperatorId,
+		"time":         time.Now().Unix(),
+		"channel_info": convertChannelInfo(e.ChannelInfo),
+	})
+}
+
+func (bot *CQBot) guildChannelDestroyedEvent(c *client.QQClient, e *client.GuildChannelOperationEvent) {
+	guild := c.GuildService.FindGuild(e.GuildId)
+	if guild == nil {
+		return
+	}
+	member := guild.FindMember(e.OperatorId)
+	if member == nil {
+		member = &client.GuildMemberInfo{Nickname: "未知"}
+	}
+	log.Infof("频道 %v(%v) 内用户 %v(%v) 删除了子频道 %v(%v)", guild.GuildName, guild.GuildId, member.Nickname, member.TinyId, e.ChannelInfo.ChannelName, e.ChannelInfo.ChannelId)
+	bot.dispatchEventMessage(global.MSG{
+		"post_type":    "notice",
+		"notice_type":  "channel_destroyed",
+		"guild_id":     e.GuildId,
+		"channel_id":   e.ChannelInfo.ChannelId,
+		"operator_id":  e.OperatorId,
+		"self_id":      bot.Client.Uin,
+		"self_tiny_id": bot.Client.GuildService.TinyId,
+		"user_id":      e.OperatorId,
+		"time":         time.Now().Unix(),
+		"channel_info": convertChannelInfo(e.ChannelInfo),
 	})
 }
 

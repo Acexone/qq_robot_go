@@ -167,6 +167,7 @@ func (c *websocketClient) connect(typ, url string, conptr **wsConn) {
 
 func (c *websocketClient) listenAPI(conn *wsConn, u bool) {
 	defer func() { _ = conn.Close(websocket.StatusNormalClosure, "") }()
+	conn.Conn.SetReadLimit(1024 * 1024 * 128)
 	for {
 		buffer := global.NewBuffer()
 		t, reader, err := conn.Conn.Reader(context.Background())
@@ -240,7 +241,8 @@ func (s *webSocketServer) event(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(status)
 		return
 	}
-	c, err := websocket.Accept(w, r, nil)
+	opts := &websocket.AcceptOptions{InsecureSkipVerify: true}
+	c, err := websocket.Accept(w, r, opts)
 	if err != nil {
 		log.Warnf("处理 WebSocket 请求时出现错误: %v", err)
 		return
@@ -268,7 +270,8 @@ func (s *webSocketServer) api(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(status)
 		return
 	}
-	c, err := websocket.Accept(w, r, nil)
+	opts := &websocket.AcceptOptions{InsecureSkipVerify: true}
+	c, err := websocket.Accept(w, r, opts)
 	if err != nil {
 		log.Warnf("处理 WebSocket 请求时出现错误: %v", err)
 		return
@@ -288,7 +291,8 @@ func (s *webSocketServer) any(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(status)
 		return
 	}
-	c, err := websocket.Accept(w, r, nil)
+	opts := &websocket.AcceptOptions{InsecureSkipVerify: true}
+	c, err := websocket.Accept(w, r, opts)
 	if err != nil {
 		log.Warnf("处理 WebSocket 请求时出现错误: %v", err)
 		return
@@ -312,6 +316,7 @@ func (s *webSocketServer) any(w http.ResponseWriter, r *http.Request) {
 
 func (s *webSocketServer) listenAPI(c *wsConn) {
 	defer func() { _ = c.Close(websocket.StatusNormalClosure, "") }()
+	c.Conn.SetReadLimit(1024 * 1024 * 128)
 	for {
 		buffer := global.NewBuffer()
 		t, reader, err := c.Reader(context.Background())
