@@ -1,13 +1,14 @@
 set -x
 
-# 拉取代码，包括子模块
-git pull --recurse-submodules
-
-# 从私有仓库子模块复制最新配置到项目根目录
-cp qqrobot/setting/{config.toml,config.yml,device.json} .
+# 拉取代码
+git pull
 
 # 构建新版本
 go build -v -o qq_robot .
+
+# 拉取私有仓库子模块的最新版本，并将最新配置复制到项目根目录
+git submodule update --recursive --remote
+cp qqrobot/setting/{config.toml,config.yml,device.json} .
 
 # 运行
 ./qq_robot faststart
