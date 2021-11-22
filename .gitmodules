@@ -1,0 +1,3 @@
+[submodule "qqrobot/setting"]
+	path = qqrobot/setting
+	url = https://github.com/fzls/qq_robot_go_setting.git
