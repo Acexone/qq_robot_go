@@ -32,6 +32,8 @@ func (r *QQRobot) checkUpdates() {
 			nowStr := r.currentTime()
 			for _, groupID := range rule.NotifyGroups {
 				rspID := r.cqBot.SendGroupMessage(groupID, replies)
+				// 广播消息间强行间隔一秒
+				time.Sleep(time.Second)
 				if rspID == -1 {
 					logger.Errorf("【%v Failed】 %v groupID=%v replies=%v err=%v", rule.Name, nowStr, groupID, replies, rspID)
 					continue

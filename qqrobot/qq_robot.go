@@ -573,6 +573,8 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 
 				for _, repeatToGroup := range config.RepeatToGroups {
 					forwardRspID := r.cqBot.SendGroupMessage(repeatToGroup, repeatMessages)
+					// 广播消息间强行间隔一秒
+					time.Sleep(time.Second)
 					if forwardRspID == -1 {
 						logger.Error(fmt.Sprintf("【RepeatToGroup(%v) Failed】", repeatToGroup), nowStr, config.Name, p(repeatMessages), forwardRspID)
 						continue
