@@ -14,6 +14,7 @@ import (
 
 	"github.com/Mrs4s/MiraiGo/client"
 	"github.com/Mrs4s/MiraiGo/message"
+	"github.com/Mrs4s/go-cqhttp/internal/base"
 	"github.com/gookit/color"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
@@ -97,6 +98,8 @@ func (r *QQRobot) Start() {
 
 	r.StartTime = time.Now()
 	r.quitCtx, r.quitFunc = context.WithCancel(context.Background())
+
+	logger.Infof("当前机器人账号：%v", base.Account.Uin)
 
 	r.notify(r.Config.Robot.OnStart)
 	go r.updateTicker()
