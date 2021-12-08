@@ -2,6 +2,21 @@ module github.com/Mrs4s/go-cqhttp
 
 go 1.17
 
+replace github.com/Mrs4s/go-cqhttp => github.com/fzls/qq_robot_go v1.0.0-beta8
+
+// 魔改后需要额外引入的依赖项，单独列出，避免后面又冲突
+require (
+	github.com/BurntSushi/toml v0.3.1
+	github.com/fzls/logger v1.1.1
+	github.com/gookit/color v1.5.0
+	github.com/hashicorp/golang-lru v0.5.4
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.290
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tbp v1.0.290
+)
+
+require github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778 // indirect
+
+// 以下为go-cqhttp原本的依赖
 require (
 	github.com/Baozisoftware/qrcode-terminal-go v0.0.0-20170407111555-c0650d8dff0f
 	github.com/Microsoft/go-winio v0.5.1
