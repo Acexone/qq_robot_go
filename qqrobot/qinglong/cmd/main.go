@@ -9,16 +9,18 @@ import (
 func main() {
 	initLogger()
 
-	envInfos, _ := qinglong.ParseJdCookie()
-	logger.Infof("my: %v", envInfos["jd_70a2bcede031c"])
+	envInfos, err := qinglong.ParseJdCookie()
+	logger.Infof("my: %v %v", envInfos["jd_70a2bcede031c"], err)
 
 	var info *qinglong.JdCookieInfo
 
 	for _, param := range []string{"", "jd_70a2bcede031c", "1", "风之凌殇"} {
 		info = qinglong.QueryCookieInfo(param)
-		chart := qinglong.QueryChartPath(info)
-
-		// logger.Infof("%v: %v", param, info)
-		logger.Infof("%v: %v", param, chart)
+		logger.Infof("%v: %v", param, info)
 	}
+
+	chart := qinglong.QueryChartPath(info)
+	summary := qinglong.QuerySummary(info)
+	logger.Info(chart)
+	logger.Info(summary)
 }

@@ -2,9 +2,13 @@ package qinglong
 
 import (
 	"fmt"
+	"io/ioutil"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
+
+	logger "github.com/sirupsen/logrus"
 )
 
 // QueryCookieInfo 尝试通过pt_pin/序号/昵称等来查询cookie信息
@@ -54,4 +58,33 @@ func QueryChartPath(info *JdCookieInfo) string {
 	}
 
 	return path
+}
+
+// QuerySummary 查询账号对应的最新统计信息
+func QuerySummary(info *JdCookieInfo) string {
+	if info == nil {
+		return ""
+	}
+
+	summaryDir := getPath("log/shufflewzc_faker2_jd_bean_change")
+	logFiles, err := ioutil.ReadDir(summaryDir)
+	if err != nil {
+		logger.Errorf("read log dir failed, err=%v", err)
+		return ""
+	}
+
+	// 按时间逆序排列
+	sort.Slice(logFiles, func(i, j int) bool {
+		return logFiles[i].Name() > logFiles[j].Name()
+	})
+
+	// 因为有可能最新的日志还在处理中，因此逆序搜索每一个日志，直到搜索到为止
+	for _, logFile := range logFiles {
+		summary := parseSummary(info, filepath.Join(summaryDir, logFile.Name()))
+		if summary != "" {
+			return summary
+		}
+	}
+
+	return ""
 }
