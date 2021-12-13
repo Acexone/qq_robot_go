@@ -127,7 +127,7 @@ func parseEnvSh() (map[string]int, error) {
 	return ptPinToIndex, nil
 }
 
-// 以下函数针对的cookie形如 pt_key=XXXX;pt_pin=YYYYYY;
+// 以下函数针对的cookie形如 pt_key=XXXX;pt_pin=YYYY;
 
 func getPtPin(cookie string) string {
 	return getCookie(cookie, "pt_pin")

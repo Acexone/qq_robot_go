@@ -5,12 +5,14 @@ import (
 	"os"
 )
 
+var default_ql_dir = "/qinglong/data"
+
 func getQlDir() string {
 	qlEnv := os.Getenv("QL_DIR")
 	if qlEnv != "" {
 		return qlEnv
 	}
-	return "/qinglong/data"
+	return default_ql_dir
 }
 
 func getPath(path string) string {
