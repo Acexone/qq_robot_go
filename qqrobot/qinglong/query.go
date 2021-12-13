@@ -1,6 +1,8 @@
 package qinglong
 
 import (
+	"fmt"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -37,4 +39,19 @@ func QueryCookieInfo(param string) *JdCookieInfo {
 	}
 
 	return nil
+}
+
+// QueryChartPath 查询账号对应的统计图的路径
+func QueryChartPath(info *JdCookieInfo) string {
+	if info == nil {
+		return ""
+	}
+
+	imageDir := getPath("log/.bean_chart")
+	path, err := filepath.Abs(fmt.Sprintf("%s/chart_%v.jpeg", imageDir, info.Index))
+	if err != nil {
+		return ""
+	}
+
+	return path
 }

@@ -16,6 +16,9 @@ func main() {
 
 	for _, param := range []string{"", "jd_70a2bcede031c", "1", "风之凌殇"} {
 		info = qinglong.QueryCookieInfo(param)
-		logger.Infof("%v: %v", param, info)
+		chart := qinglong.QueryChartPath(info)
+
+		// logger.Infof("%v: %v", param, info)
+		logger.Infof("%v: %v", param, chart)
 	}
 }
