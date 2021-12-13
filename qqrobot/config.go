@@ -91,11 +91,13 @@ const (
 )
 
 var (
-	commandregexAddwhitelist = regexp.MustCompile(`\s*AddWhiteList\s+(?P<RuleName>.+?)\s+(?P<QQ>\d+)`)
-	commandregexRulenamelist = regexp.MustCompile(`RuleNameList`)
-	commandregexBuycard      = regexp.MustCompile(`\s*我想要给(?P<QQ>\d+)买一张(?P<CardIndex>[1-3]-[1-4])`)
-	commandregexQuerycard    = regexp.MustCompile(`\s*给我康康现在还有哪些卡`)
-	commandRegexMusic        = regexp.MustCompile(`.*(点歌|听歌|点首|来首|想听|要听)\s*(?P<MusicName>.+)`)
+	commandregexAddwhitelist    = regexp.MustCompile(`\s*AddWhiteList\s+(?P<RuleName>.+?)\s+(?P<QQ>\d+)`)
+	commandregexRulenamelist    = regexp.MustCompile(`RuleNameList`)
+	commandregexBuycard         = regexp.MustCompile(`\s*我想要给(?P<QQ>\d+)买一张(?P<CardIndex>[1-3]-[1-4])`)
+	commandregexQuerycard       = regexp.MustCompile(`\s*给我康康现在还有哪些卡`)
+	commandRegexMusic           = regexp.MustCompile(`.*(点歌|听歌|点首|来首|想听|要听)\s*(?P<MusicName>.+)`)
+	commandRegexQinglongChart   = regexp.MustCompile(`统计图\s*(?P<QueryParam>.+)`)
+	commandRegexQinglongSummary = regexp.MustCompile(`概览\s*(?P<QueryParam>.+)`)
 )
 
 // RuleConfig 规则配置

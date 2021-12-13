@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Mrs4s/go-cqhttp/coolq"
+	"github.com/Mrs4s/go-cqhttp/qqrobot/qinglong"
 	"github.com/pkg/errors"
 
 	"github.com/Mrs4s/MiraiGo/message"
@@ -101,11 +103,33 @@ func (r *QQRobot) processCommand(commandStr string, m *message.GroupMessage) (ms
 
 		musicElem, err := r.makeMusicShareElement(musicName, message.QQMusic)
 		if err != nil {
-			return "", nil, errors.Errorf("没有找到歌曲：%v", musicName)
+			return fmt.Sprintf("没有找到歌曲：%v", musicName), nil, nil
 		}
 
 		msg = fmt.Sprintf("请欣赏歌曲：%v", musicName)
 		extraReplies = append(extraReplies, musicElem)
+	} else if match = commandRegexQinglongChart.FindStringSubmatch(commandStr); len(match) == len(commandRegexQinglongChart.SubexpNames()) {
+		// full_match|参数
+		queryParam := match[1]
+
+		cookieInfo := qinglong.QueryCookieInfo(queryParam)
+		if cookieInfo == nil {
+			return fmt.Sprintf("未找到相关cookie：%v", queryParam), nil, nil
+		}
+
+		chartPath := qinglong.QueryChartPath(cookieInfo)
+		extraReplies = append(extraReplies, &coolq.LocalImageElement{File: chartPath})
+	} else if match = commandRegexQinglongSummary.FindStringSubmatch(commandStr); len(match) == len(commandRegexQinglongSummary.SubexpNames()) {
+		// full_match|参数
+		queryParam := match[1]
+
+		cookieInfo := qinglong.QueryCookieInfo(queryParam)
+		if cookieInfo == nil {
+			return fmt.Sprintf("未找到相关cookie：%v", queryParam), nil, nil
+		}
+
+		summary := qinglong.QuerySummary(cookieInfo)
+		extraReplies = append(extraReplies, message.NewText(summary))
 	} else {
 		return "", nil, errors.Errorf("没有找到该指令哦")
 	}
