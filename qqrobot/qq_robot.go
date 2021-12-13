@@ -15,6 +15,7 @@ import (
 	"github.com/Mrs4s/MiraiGo/client"
 	"github.com/Mrs4s/MiraiGo/message"
 	"github.com/Mrs4s/go-cqhttp/internal/base"
+	"github.com/Mrs4s/go-cqhttp/qqrobot/qinglong"
 	"github.com/gookit/color"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
@@ -100,6 +101,7 @@ func (r *QQRobot) Start() {
 	r.quitCtx, r.quitFunc = context.WithCancel(context.Background())
 
 	logger.Infof("当前机器人账号：%v", base.Account.Uin)
+	logger.Infof("当前青龙数据目录: %v", qinglong.GetQlDir())
 
 	r.notify(r.Config.Robot.OnStart)
 	go r.updateTicker()
