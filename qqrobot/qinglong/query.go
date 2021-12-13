@@ -53,7 +53,7 @@ func QueryChartPath(info *JdCookieInfo) string {
 	}
 
 	imageDir := getPath("log/.bean_chart")
-	path, err := filepath.Abs(fmt.Sprintf("%s/chart_%v.jpeg", imageDir, info.Index))
+	path, err := filepath.Abs(fmt.Sprintf("%s/chart_%v.jpeg", imageDir, info.PtPin))
 	if err != nil {
 		return ""
 	}

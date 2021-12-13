@@ -40,7 +40,7 @@ func TestQueryCookieInfo(t *testing.T) {
 func TestQueryChartPath(t *testing.T) {
 	info := QueryCookieInfo("1")
 	chartPath := QueryChartPath(info)
-	expected, _ := filepath.Abs(getPath("log/.bean_chart/chart_1.jpeg"))
+	expected, _ := filepath.Abs(getPath("log/.bean_chart/chart_pin_1.jpeg"))
 	assert.Equal(t, expected, chartPath)
 }
 
