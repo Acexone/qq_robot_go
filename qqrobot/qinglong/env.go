@@ -23,7 +23,6 @@ type EnvDBEntry struct {
 type JdCookieInfo struct {
 	Index  int    // 在env.sh中的JD_COOKIE中的顺序，从1开始计数
 	PtPin  string // pt_pin
-	PtKey  string // pt_key
 	Remark string // remark
 }
 
@@ -42,6 +41,13 @@ func ParseJdCookie() (map[string]*JdCookieInfo, error) {
 		cookieInfo := ptPinToCookieInfo[ptPin]
 		if cookieInfo != nil {
 			cookieInfo.Index = index
+		} else {
+			// 部分账号可能在env.db中不存在，但是env.sh中有
+			ptPinToCookieInfo[ptPin] = &JdCookieInfo{
+				Index:  index,
+				PtPin:  ptPin,
+				Remark: ptPin,
+			}
 		}
 	}
 
@@ -72,13 +78,11 @@ func parseEnvDB() (map[string]*JdCookieInfo, error) {
 		}
 
 		ptPin := getPtPin(envEntry.Value)
-		ptKey := getPtKey(envEntry.Value)
 		remark := getRemark(envEntry.Remarks)
 
 		ptPinToCookieInfo[ptPin] = &JdCookieInfo{
 			Index:  -1,
 			PtPin:  ptPin,
-			PtKey:  ptKey,
 			Remark: remark,
 		}
 	}
@@ -127,10 +131,6 @@ func parseEnvSh() (map[string]int, error) {
 
 func getPtPin(cookie string) string {
 	return getCookie(cookie, "pt_pin")
-}
-
-func getPtKey(cookie string) string {
-	return getCookie(cookie, "pt_key")
 }
 
 func getCookie(cookie string, cookieKey string) string {
