@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Mrs4s/go-cqhttp/global"
 	logger "github.com/sirupsen/logrus"
 )
 
@@ -54,6 +55,10 @@ func QueryChartPath(info *JdCookieInfo) string {
 	imageDir := getPath("log/.bean_chart")
 	path, err := filepath.Abs(fmt.Sprintf("%s/chart_%v.jpeg", imageDir, info.Index))
 	if err != nil {
+		return ""
+	}
+
+	if !global.PathExists(path) {
 		return ""
 	}
 
