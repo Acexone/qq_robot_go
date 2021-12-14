@@ -66,6 +66,7 @@ run:
   skip-dirs:
     - db
     - cmd/api-generator
+    - coolq
   tests: true
 
 # output configuration options
