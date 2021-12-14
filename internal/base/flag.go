@@ -73,8 +73,7 @@ func Parse() {
 	arg := os.Args
 	if len(arg) > 1 {
 		for i := range arg {
-			switch arg[i] {
-			case "faststart":
+			if arg[i] == "faststart" {
 				FastStart = true
 			}
 		}
