@@ -102,7 +102,7 @@ archives:
       - goos: windows
         format: zip
     files:
-      - src: global/config/config.yml
+      - src: modules/config/default_config.yml
         dst: .
         strip_parent: true
       - src: qqrobot/config.toml

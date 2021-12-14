@@ -1,6 +1,6 @@
 name: CI
 
-on: [push, pull_request,workflow_dispatch]
+on: [ push, pull_request,workflow_dispatch ]
 
 env:
   BINARY_PREFIX: "qq_robot_"
@@ -15,8 +15,8 @@ jobs:
     strategy:
       matrix:
         # build and publish in parallel: linux/386, linux/amd64, windows/386, windows/amd64, darwin/amd64, darwin/arm64
-        goos: [linux, windows, darwin]
-        goarch: ["386", amd64, arm, arm64]
+        goos: [ linux, windows, darwin ]
+        goarch: [ "386", amd64, arm, arm64 ]
         exclude:
           - goos: darwin
             goarch: arm
@@ -57,7 +57,7 @@ jobs:
 
           go build -o "output/$BINARY_NAME" -trimpath -ldflags "$LD_FLAGS" .
 
-          cp global/config/config.yml output/config.yml
+          cp modules/config/default_config.yml output/config.yml
           cp qqrobot/config.toml output/config.toml
 
       - name: Upload artifact
