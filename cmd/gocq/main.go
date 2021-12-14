@@ -13,7 +13,6 @@ import (
 
 	"github.com/Mrs4s/MiraiGo/binary"
 	"github.com/Mrs4s/MiraiGo/client"
-	"github.com/Mrs4s/go-cqhttp/global/terminal"
 	para "github.com/fumiama/go-hide-param"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	log "github.com/sirupsen/logrus"
@@ -25,6 +24,7 @@ import (
 	"github.com/Mrs4s/go-cqhttp/coolq"
 	"github.com/Mrs4s/go-cqhttp/db"
 	"github.com/Mrs4s/go-cqhttp/global"
+	"github.com/Mrs4s/go-cqhttp/global/terminal"
 	"github.com/Mrs4s/go-cqhttp/internal/base"
 	"github.com/Mrs4s/go-cqhttp/internal/cache"
 	"github.com/Mrs4s/go-cqhttp/internal/selfdiagnosis"
@@ -45,6 +45,14 @@ var allowStatus = [...]client.UserOnlineStatus{
 // Main 启动主程序
 func Main() {
 	base.Parse()
+	if !base.FastStart && terminal.RunningByDoubleClick() {
+		err := terminal.NoMoreDoubleClick()
+		if err != nil {
+			log.Errorf("遇到错误: %v", err)
+			time.Sleep(time.Second * 5)
+		}
+		return
+	}
 	switch {
 	case base.LittleH:
 		base.Help()
@@ -108,18 +116,8 @@ func Main() {
 					byteKey = []byte(arg[p])
 					para.Hide(p)
 				}
-			case "faststart":
-				base.FastStart = true
 			}
 		}
-	}
-	if !base.FastStart && terminal.RunningByDoubleClick() {
-		err := terminal.NoMoreDoubleClick()
-		if err != nil {
-			log.Errorf("遇到错误: %v", err)
-			time.Sleep(time.Second * 5)
-		}
-		return
 	}
 
 	if (base.Account.Uin == 0 || (base.Account.Password == "" && !base.Account.Encrypt)) && !global.PathExists("session.token") {
