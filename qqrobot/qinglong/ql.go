@@ -5,14 +5,15 @@ import (
 	"os"
 )
 
-var default_ql_dir = "/root/qinglong/data"
+var defaultQlDir = "/root/qinglong/data"
 
+// GetQlDir 获取青龙数据目录路径
 func GetQlDir() string {
 	qlEnv := os.Getenv("QL_DIR")
 	if qlEnv != "" {
 		return qlEnv
 	}
-	return default_ql_dir
+	return defaultQlDir
 }
 
 func getPath(path string) string {

@@ -65,22 +65,22 @@ func Test_version_to_version_int_list(t *testing.T) {
 
 func Test_version_less(t *testing.T) {
 	tests := []struct {
-		version_left  string
-		version_right string
-		want          bool
+		versionLeft  string
+		versionRight string
+		want         bool
 	}{
-		{version_left: "v1.0.0", version_right: "v1.0.0", want: false},
-		{version_left: "v1.0.0", version_right: "v1.0.1", want: true},
-		{version_left: "v1.0.0", version_right: "v1.1.0", want: true},
-		{version_left: "v1.0.0", version_right: "v2.0.0", want: true},
-		{version_left: "v2.0.0", version_right: "v1.0.0", want: false},
-		{version_left: "v2.0.0", version_right: "v10.0.0", want: true},
-		{version_left: "v3.2.9.1", version_right: "v4.0.0", want: true},
+		{versionLeft: "v1.0.0", versionRight: "v1.0.0", want: false},
+		{versionLeft: "v1.0.0", versionRight: "v1.0.1", want: true},
+		{versionLeft: "v1.0.0", versionRight: "v1.1.0", want: true},
+		{versionLeft: "v1.0.0", versionRight: "v2.0.0", want: true},
+		{versionLeft: "v2.0.0", versionRight: "v1.0.0", want: false},
+		{versionLeft: "v2.0.0", versionRight: "v10.0.0", want: true},
+		{versionLeft: "v3.2.9.1", versionRight: "v4.0.0", want: true},
 	}
 	for _, tt := range tests {
-		t.Run(fmt.Sprintf("%v-%v", tt.version_left, tt.version_right), func(t *testing.T) {
-			if got := versionLess(tt.version_left, tt.version_right); got != tt.want {
-				t.Errorf("version_less(%v, %v) = %v, want %v", tt.version_left, tt.version_right, got, tt.want)
+		t.Run(fmt.Sprintf("%v-%v", tt.versionLeft, tt.versionRight), func(t *testing.T) {
+			if got := versionLess(tt.versionLeft, tt.versionRight); got != tt.want {
+				t.Errorf("version_less(%v, %v) = %v, want %v", tt.versionLeft, tt.versionRight, got, tt.want)
 			}
 		})
 	}

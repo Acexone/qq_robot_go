@@ -8,8 +8,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Mrs4s/go-cqhttp/global"
 	logger "github.com/sirupsen/logrus"
+
+	"github.com/Mrs4s/go-cqhttp/global"
 )
 
 // QueryCookieInfo 尝试通过pt_pin/序号/昵称等来查询cookie信息

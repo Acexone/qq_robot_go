@@ -14,13 +14,14 @@ import (
 
 	"github.com/Mrs4s/MiraiGo/client"
 	"github.com/Mrs4s/MiraiGo/message"
-	"github.com/Mrs4s/go-cqhttp/internal/base"
-	"github.com/Mrs4s/go-cqhttp/qqrobot/qinglong"
 	"github.com/gookit/color"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
 	logger "github.com/sirupsen/logrus"
 	tbp "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tbp/v20190627"
+
+	"github.com/Mrs4s/go-cqhttp/internal/base"
+	"github.com/Mrs4s/go-cqhttp/qqrobot/qinglong"
 
 	"github.com/Mrs4s/go-cqhttp/coolq"
 )

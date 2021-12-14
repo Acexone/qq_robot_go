@@ -8,15 +8,15 @@ import (
 )
 
 func Test_getQlDir(t *testing.T) {
-	assert.Equal(t, test_ql_dir, GetQlDir())
+	assert.Equal(t, testQlDir, GetQlDir())
 
 	_ = os.Unsetenv("QL_DIR")
-	assert.Equal(t, default_ql_dir, GetQlDir())
+	assert.Equal(t, defaultQlDir, GetQlDir())
 
-	_ = os.Setenv("QL_DIR", test_ql_dir)
-	assert.Equal(t, test_ql_dir, GetQlDir())
+	_ = os.Setenv("QL_DIR", testQlDir)
+	assert.Equal(t, testQlDir, GetQlDir())
 }
 
 func Test_getPath(t *testing.T) {
-	assert.Equal(t, test_ql_dir+"/test.txt", getPath("test.txt"))
+	assert.Equal(t, testQlDir+"/test.txt", getPath("test.txt"))
 }

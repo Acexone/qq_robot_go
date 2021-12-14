@@ -8,9 +8,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/Mrs4s/go-cqhttp/coolq"
 	"github.com/Mrs4s/go-cqhttp/qqrobot/qinglong"
-	"github.com/pkg/errors"
 
 	"github.com/Mrs4s/MiraiGo/message"
 	logger "github.com/sirupsen/logrus"
