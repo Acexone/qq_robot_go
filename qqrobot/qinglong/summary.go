@@ -26,7 +26,11 @@ func parseSummary(info *JdCookieInfo, logFilePath string) string {
 	if prefixIndex == -1 {
 		return ""
 	}
-	suffixIndex := prefixIndex + strings.Index(content[prefixIndex:], suffix)
+	relativeSuffixIndex := strings.Index(content[prefixIndex:], suffix)
+	if relativeSuffixIndex == -1 {
+		return ""
+	}
+	suffixIndex := prefixIndex + relativeSuffixIndex
 
 	summary := content[prefixIndex:suffixIndex]
 
