@@ -22,17 +22,21 @@ func parseCookieExpired(info *JdCookieInfo, logFilePath string) string {
 	prefix := prefixToRemove + info.PtPin
 	suffix := "\n\n"
 
+	// 定位前缀
 	prefixIndex := strings.Index(content, prefix)
 	if prefixIndex == -1 {
 		return ""
 	}
-	relativeSuffixIndex := strings.Index(content[prefixIndex:], suffix)
-	if relativeSuffixIndex == -1 {
+	prefixIndex += len(prefixToRemove)
+
+	// 定位后缀
+	suffixIndex := strings.Index(content[prefixIndex:], suffix)
+	if suffixIndex == -1 {
 		return ""
 	}
-	suffixIndex := prefixIndex + relativeSuffixIndex
+	suffixIndex += prefixIndex
 
-	result := content[prefixIndex+len(prefixToRemove) : suffixIndex]
+	result := content[prefixIndex:suffixIndex]
 
 	return result
 }
