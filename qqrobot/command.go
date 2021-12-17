@@ -131,6 +131,17 @@ func (r *QQRobot) processCommand(commandStr string, m *message.GroupMessage) (ms
 
 		summary := qinglong.QuerySummary(cookieInfo)
 		extraReplies = append(extraReplies, message.NewText(summary))
+	} else if match = commandRegexQinglongCookieExpired.FindStringSubmatch(commandStr); len(match) == len(commandRegexQinglongCookieExpired.SubexpNames()) {
+		// full_match|参数
+		queryParam := match[1]
+
+		cookieInfo := qinglong.QueryCookieInfo(queryParam)
+		if cookieInfo == nil {
+			return fmt.Sprintf("未找到相关cookie：%v", queryParam), nil, nil
+		}
+
+		result := qinglong.QueryCookieExpired(cookieInfo)
+		extraReplies = append(extraReplies, message.NewText(result))
 	} else {
 		return "", nil, errors.Errorf("没有找到该指令哦")
 	}
