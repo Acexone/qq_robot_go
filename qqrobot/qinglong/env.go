@@ -28,14 +28,22 @@ type JdCookieInfo struct {
 }
 
 // ToChatMessage 转换为聊天消息
-func (cookieInfo *JdCookieInfo) ToChatMessage() string {
+func (info *JdCookieInfo) ToChatMessage() string {
+	expiredInfo := "未过期"
+	// 检查是否过期
+	if isCookieExpired(info) {
+		expiredInfo = "已过期，请更新cookie"
+	}
 	return fmt.Sprintf("\n"+
 		"\n序号: %v"+
 		"\npt_pin: %v"+
-		"\n备注: %v",
-		cookieInfo.Index,
-		cookieInfo.PtPin,
-		cookieInfo.Remark,
+		"\n备注: %v"+
+		"\n状态: %v"+
+		"",
+		info.Index,
+		info.PtPin,
+		info.Remark,
+		expiredInfo,
 	)
 }
 
