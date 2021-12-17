@@ -3,6 +3,7 @@ package qinglong
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 )
@@ -24,6 +25,18 @@ type JdCookieInfo struct {
 	Index  int    // 在env.sh中的JD_COOKIE中的顺序，从1开始计数
 	PtPin  string // pt_pin
 	Remark string // remark
+}
+
+// ToChatMessage 转换为聊天消息
+func (cookieInfo *JdCookieInfo) ToChatMessage() string {
+	return fmt.Sprintf("\n"+
+		"\n序号: %v"+
+		"\npt_pin: %v"+
+		"\n备注: %v",
+		cookieInfo.Index,
+		cookieInfo.PtPin,
+		cookieInfo.Remark,
+	)
 }
 
 // ParseJdCookie 解析 db/env.db 和 config/env.sh，获取各个京东cookie的序号和备注信息

@@ -120,6 +120,7 @@ func (r *QQRobot) processCommand(commandStr string, m *message.GroupMessage) (ms
 
 		chartPath := qinglong.QueryChartPath(cookieInfo)
 		extraReplies = append(extraReplies, &coolq.LocalImageElement{File: chartPath})
+		extraReplies = append(extraReplies, message.NewText(cookieInfo.ToChatMessage()))
 	} else if match = commandRegexQinglongSummary.FindStringSubmatch(commandStr); len(match) == len(commandRegexQinglongSummary.SubexpNames()) {
 		// full_match|参数
 		queryParam := match[1]
@@ -131,6 +132,7 @@ func (r *QQRobot) processCommand(commandStr string, m *message.GroupMessage) (ms
 
 		summary := qinglong.QuerySummary(cookieInfo)
 		extraReplies = append(extraReplies, message.NewText(summary))
+		extraReplies = append(extraReplies, message.NewText(cookieInfo.ToChatMessage()))
 	} else if match = commandRegexQinglongCookieExpired.FindStringSubmatch(commandStr); len(match) == len(commandRegexQinglongCookieExpired.SubexpNames()) {
 		// full_match|参数
 		queryParam := match[1]
@@ -142,6 +144,7 @@ func (r *QQRobot) processCommand(commandStr string, m *message.GroupMessage) (ms
 
 		result := qinglong.QueryCookieExpired(cookieInfo)
 		extraReplies = append(extraReplies, message.NewText(result))
+		extraReplies = append(extraReplies, message.NewText(cookieInfo.ToChatMessage()))
 	} else {
 		return "", nil, errors.Errorf("没有找到该指令哦")
 	}
