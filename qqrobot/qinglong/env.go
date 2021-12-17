@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"strings"
 )
@@ -25,6 +26,17 @@ type JdCookieInfo struct {
 	Index  int    // 在env.sh中的JD_COOKIE中的顺序，从1开始计数
 	PtPin  string // pt_pin, note: 定位只能使用这个字段，而不能使用index，因青龙不是依据env.sh来生成index的
 	Remark string // remark
+}
+
+// QueryUnescapedPtPin 返回url解码后的pt_pin
+func (info *JdCookieInfo) QueryUnescapedPtPin() string {
+	// 由于可能部分pt_pin包含中文的url编码，而日志中均会打印为解码后的，需要解码一次
+	pin, err := url.QueryUnescape(info.PtPin)
+	if err != nil {
+		return info.PtPin
+	}
+
+	return pin
 }
 
 // ToChatMessage 转换为聊天消息

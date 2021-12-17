@@ -19,7 +19,7 @@ func parseSummary(info *JdCookieInfo, logFilePath string) string {
 	}
 	content := string(contentBytes)
 
-	blockPrefix := fmt.Sprintf("】%v*********", info.PtPin)
+	blockPrefix := fmt.Sprintf("】%v*********", info.QueryUnescapedPtPin())
 	prefix := "【账号"
 	suffix := "\n\n"
 

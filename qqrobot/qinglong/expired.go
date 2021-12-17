@@ -19,7 +19,7 @@ func parseCookieExpired(info *JdCookieInfo, logFilePath string) string {
 	content := string(contentBytes)
 
 	prefixToRemove := " : "
-	prefix := prefixToRemove + info.PtPin
+	prefix := prefixToRemove + info.QueryUnescapedPtPin()
 	suffix := "\n\n"
 
 	// 定位前缀

@@ -1,6 +1,7 @@
 package qinglong
 
 import (
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -17,4 +18,7 @@ func Test_parseCookieExpired(t *testing.T) {
 
 	info = QueryCookieInfo("3")
 	assert.Equal(t, "pin_3 已失效,已禁用!", parseCookieExpired(info, logPath))
+
+	info = QueryCookieInfo(url.QueryEscape("中文pin"))
+	assert.Equal(t, "中文pin 状态正常!", parseCookieExpired(info, logPath))
 }
