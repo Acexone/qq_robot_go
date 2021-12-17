@@ -75,8 +75,13 @@ func QuerySummary(info *JdCookieInfo) string {
 		return logFiles[i].Name() > logFiles[j].Name()
 	})
 
-	// 因为有可能最新的日志还在处理中，因此逆序搜索每一个日志，直到搜索到为止
-	for _, logFile := range logFiles {
+	// 因为有可能最新的日志还在处理中，因此逆序搜索一定数目的日志，直到搜索到为止
+	const MaxCheckCount = 6
+	for idx, logFile := range logFiles {
+		if idx >= MaxCheckCount {
+			break
+		}
+
 		summary := parseSummary(info, filepath.Join(summaryDir, logFile.Name()))
 		if summary != "" {
 			return summary
