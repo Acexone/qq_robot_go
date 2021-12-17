@@ -51,3 +51,17 @@ func TestQuerySummary(t *testing.T) {
 	info = QueryCookieInfo("3")
 	assert.Empty(t, QuerySummary(info))
 }
+
+func TestQueryCookieExpired(t *testing.T) {
+	info := QueryCookieInfo("1")
+	assert.NotEmpty(t, QueryCookieExpired(info))
+
+	info = QueryCookieInfo("2")
+	assert.NotEmpty(t, QueryCookieExpired(info))
+
+	info = QueryCookieInfo("3")
+	assert.NotEmpty(t, QueryCookieExpired(info))
+
+	info = QueryCookieInfo("4")
+	assert.Empty(t, QueryCookieExpired(info))
+}

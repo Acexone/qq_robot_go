@@ -94,3 +94,35 @@ func QuerySummary(info *JdCookieInfo) string {
 
 	return ""
 }
+
+// QueryCookieExpired 查询账号是否已过期
+func QueryCookieExpired(info *JdCookieInfo) string {
+	if info == nil {
+		return ""
+	}
+
+	checkCookieDir := getPath("log/shufflewzc_faker2_jd_CheckCK")
+	logFiles, err := ioutil.ReadDir(checkCookieDir)
+	if err != nil {
+		logger.Errorf("read log dir failed, err=%v", err)
+		return ""
+	}
+
+	if len(logFiles) == 0 {
+		return ""
+	}
+
+	// 按时间逆序排列
+	sort.Slice(logFiles, func(i, j int) bool {
+		return logFiles[i].Name() > logFiles[j].Name()
+	})
+
+	// 只取最新的一个日志
+	latestLogFile := logFiles[0]
+	result := parseCookieExpired(info, filepath.Join(checkCookieDir, latestLogFile.Name()))
+	if result != "" {
+		return result
+	}
+
+	return ""
+}
