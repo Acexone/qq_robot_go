@@ -115,7 +115,7 @@ func (r *QQRobot) processCommand(commandStr string, m *message.GroupMessage) (ms
 
 		cookieInfo := qinglong.QueryCookieInfo(queryParam)
 		if cookieInfo == nil {
-			return fmt.Sprintf("未找到相关cookie：%v", queryParam), nil, nil
+			return fmt.Sprintf("未找到相关cookie：%v，请使用 pt_pin 或者 备注 来进行查询", queryParam), nil, nil
 		}
 
 		chartPath := qinglong.QueryChartPath(cookieInfo)
@@ -127,7 +127,7 @@ func (r *QQRobot) processCommand(commandStr string, m *message.GroupMessage) (ms
 
 		cookieInfo := qinglong.QueryCookieInfo(queryParam)
 		if cookieInfo == nil {
-			return fmt.Sprintf("未找到相关cookie：%v", queryParam), nil, nil
+			return fmt.Sprintf("未找到相关cookie：%v，请使用 pt_pin 或者 备注 来进行查询", queryParam), nil, nil
 		}
 
 		summary := qinglong.QuerySummary(cookieInfo)
@@ -139,7 +139,7 @@ func (r *QQRobot) processCommand(commandStr string, m *message.GroupMessage) (ms
 
 		cookieInfo := qinglong.QueryCookieInfo(queryParam)
 		if cookieInfo == nil {
-			return fmt.Sprintf("未找到相关cookie：%v", queryParam), nil, nil
+			return fmt.Sprintf("未找到相关cookie：%v，请使用 pt_pin 或者 备注 来进行查询", queryParam), nil, nil
 		}
 
 		result := qinglong.QueryCookieExpired(cookieInfo)

@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 
 	logger "github.com/sirupsen/logrus"
@@ -26,14 +25,6 @@ func QueryCookieInfo(param string) *JdCookieInfo {
 	// 尝试pt_pin
 	if info, ok := ptPinToCookieInfo[param]; ok {
 		return info
-	}
-
-	// 尝试序号
-	index, _ := strconv.ParseInt(param, 10, 64)
-	for _, info := range ptPinToCookieInfo {
-		if info.Index == int(index) {
-			return info
-		}
 	}
 
 	// 尝试昵称

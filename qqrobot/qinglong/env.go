@@ -23,7 +23,6 @@ type EnvDBEntry struct {
 
 // JdCookieInfo 所需的京东cookie信息
 type JdCookieInfo struct {
-	Index  int    // 在env.sh中的JD_COOKIE中的顺序，从1开始计数
 	PtPin  string // pt_pin, note: 定位只能使用这个字段，而不能使用index，因青龙不是依据env.sh来生成index的
 	Remark string // remark
 }
@@ -47,12 +46,10 @@ func (info *JdCookieInfo) ToChatMessage() string {
 		expiredInfo = "已过期，请更新cookie"
 	}
 	return fmt.Sprintf("\n"+
-		"\n序号: %v"+
 		"\npt_pin: %v"+
 		"\n备注: %v"+
 		"\n状态: %v"+
 		"",
-		info.Index,
 		info.PtPin,
 		info.Remark,
 		expiredInfo,
@@ -70,14 +67,11 @@ func ParseJdCookie() (map[string]*JdCookieInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	for ptPin, index := range ptPinToIndex {
+	for ptPin, _ := range ptPinToIndex {
 		cookieInfo := ptPinToCookieInfo[ptPin]
-		if cookieInfo != nil {
-			cookieInfo.Index = index
-		} else {
+		if cookieInfo == nil {
 			// 部分账号可能在env.db中不存在，但是env.sh中有
 			ptPinToCookieInfo[ptPin] = &JdCookieInfo{
-				Index:  index,
 				PtPin:  ptPin,
 				Remark: ptPin,
 			}
@@ -114,7 +108,6 @@ func parseEnvDB() (map[string]*JdCookieInfo, error) {
 		remark := getRemark(envEntry.Remarks)
 
 		ptPinToCookieInfo[ptPin] = &JdCookieInfo{
-			Index:  -1,
 			PtPin:  ptPin,
 			Remark: remark,
 		}
