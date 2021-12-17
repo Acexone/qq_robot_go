@@ -23,7 +23,7 @@ type EnvDBEntry struct {
 // JdCookieInfo 所需的京东cookie信息
 type JdCookieInfo struct {
 	Index  int    // 在env.sh中的JD_COOKIE中的顺序，从1开始计数
-	PtPin  string // pt_pin
+	PtPin  string // pt_pin, note: 定位只能使用这个字段，而不能使用index，因青龙不是依据env.sh来生成index的
 	Remark string // remark
 }
 

@@ -19,18 +19,29 @@ func parseSummary(info *JdCookieInfo, logFilePath string) string {
 	}
 	content := string(contentBytes)
 
-	prefix := fmt.Sprintf("【账号%v🆔】", info.Index)
+	blockPrefix := fmt.Sprintf("】%v*********", info.PtPin)
+	prefix := "【账号"
 	suffix := "\n\n"
 
-	prefixIndex := strings.Index(content, prefix)
+	// 定位唯一区分账号的日志前缀
+	blockPrefixIndex := strings.Index(content, blockPrefix)
+	if blockPrefixIndex == -1 {
+		return ""
+	}
+
+	// 定位实际前缀
+	prefixIndex := strings.Index(content[blockPrefixIndex:], prefix)
 	if prefixIndex == -1 {
 		return ""
 	}
-	relativeSuffixIndex := strings.Index(content[prefixIndex:], suffix)
-	if relativeSuffixIndex == -1 {
+	prefixIndex += blockPrefixIndex
+
+	// 定位后缀
+	suffixIndex := strings.Index(content[prefixIndex:], suffix)
+	if suffixIndex == -1 {
 		return ""
 	}
-	suffixIndex := prefixIndex + relativeSuffixIndex
+	suffixIndex += prefixIndex
 
 	summary := content[prefixIndex:suffixIndex]
 
