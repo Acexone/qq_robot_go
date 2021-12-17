@@ -67,7 +67,7 @@ func ParseJdCookie() (map[string]*JdCookieInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	for ptPin, _ := range ptPinToIndex {
+	for ptPin := range ptPinToIndex {
 		cookieInfo := ptPinToCookieInfo[ptPin]
 		if cookieInfo == nil {
 			// 部分账号可能在env.db中不存在，但是env.sh中有

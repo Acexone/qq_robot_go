@@ -17,7 +17,7 @@ func main() {
 
 	logger.Infof("")
 	logger.Infof("使用不同方式查询cookie信息")
-	for _, param := range []string{"", "jd_70a2bcede031c", "1", "风之凌殇"} {
+	for _, param := range []string{"", "jd_70a2bcede031c", "风之凌殇"} {
 		info = qinglong.QueryCookieInfo(param)
 		logger.Infof("%v: %v", param, info)
 	}

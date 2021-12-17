@@ -1,6 +1,7 @@
 package qinglong
 
 import (
+	"net/url"
 	"path/filepath"
 	"testing"
 
@@ -20,10 +21,6 @@ func TestQueryCookieInfo(t *testing.T) {
 	info = QueryCookieInfo("pin_1")
 	assert.NotNil(t, info)
 
-	// 序号
-	info = QueryCookieInfo("1")
-	assert.NotNil(t, info)
-
 	// 备注
 	info = QueryCookieInfo("测试账号-1")
 	assert.NotNil(t, info)
@@ -38,33 +35,33 @@ func TestQueryCookieInfo(t *testing.T) {
 }
 
 func TestQueryChartPath(t *testing.T) {
-	info := QueryCookieInfo("1")
+	info := QueryCookieInfo("pin_1")
 	chartPath := QueryChartPath(info)
 	expected, _ := filepath.Abs(getPath("log/.bean_chart/chart_pin_1.jpeg"))
 	assert.Equal(t, expected, chartPath)
 }
 
 func TestQuerySummary(t *testing.T) {
-	info := QueryCookieInfo("1")
+	info := QueryCookieInfo("pin_1")
 	assert.NotEmpty(t, QuerySummary(info))
 
-	info = QueryCookieInfo("3")
+	info = QueryCookieInfo("pin_3")
 	assert.Empty(t, QuerySummary(info))
 }
 
 func TestQueryCookieExpired(t *testing.T) {
-	info := QueryCookieInfo("1")
+	info := QueryCookieInfo("pin_1")
 	assert.NotEmpty(t, QueryCookieExpired(info))
 
-	info = QueryCookieInfo("2")
+	info = QueryCookieInfo("pin_2")
 	assert.NotEmpty(t, QueryCookieExpired(info))
 
-	info = QueryCookieInfo("3")
+	info = QueryCookieInfo("pin_3")
 	assert.NotEmpty(t, QueryCookieExpired(info))
 
-	info = QueryCookieInfo("4")
+	info = QueryCookieInfo(url.QueryEscape("中文pin"))
 	assert.NotEmpty(t, QueryCookieExpired(info))
 
-	info = QueryCookieInfo("99999")
+	info = QueryCookieInfo("pin_99999")
 	assert.Empty(t, QueryCookieExpired(info))
 }

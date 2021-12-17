@@ -14,19 +14,16 @@ func TestParseJdCookie(t *testing.T) {
 	// 普通账号
 	ck1, ok := ptPinToCookieInfo["pin_1"]
 	assert.True(t, ok)
-	assert.Equal(t, 1, ck1.Index)
 	assert.Equal(t, "测试账号-1", ck1.Remark)
 
 	// remarks中直接写备注，不带 remark=前缀 和 ;后缀
 	ck2, ok := ptPinToCookieInfo["pin_2"]
 	assert.True(t, ok)
-	assert.Equal(t, 2, ck2.Index)
 	assert.Equal(t, "测试账号-2", ck2.Remark)
 
 	// 仅在env.sh中存在的账号
 	ck3, ok := ptPinToCookieInfo["pin_3"]
 	assert.True(t, ok)
-	assert.Equal(t, 3, ck3.Index)
 	assert.Equal(t, "pin_3", ck3.Remark)
 
 	// 不存在的账号
