@@ -72,6 +72,11 @@ func QuerySummary(info *JdCookieInfo) string {
 		return ""
 	}
 
+	// 检查是否过期
+	if isCookieExpired(info) {
+		return "该账号已过期，请参照群文件教程更新cookie"
+	}
+
 	summaryDir := getPath("log/shufflewzc_faker2_jd_bean_change")
 	logFiles, err := ioutil.ReadDir(summaryDir)
 	if err != nil {
@@ -125,4 +130,9 @@ func QueryCookieExpired(info *JdCookieInfo) string {
 	}
 
 	return ""
+}
+
+func isCookieExpired(info *JdCookieInfo) bool {
+	result := QueryCookieExpired(info)
+	return strings.Contains(result, "已失效")
 }
