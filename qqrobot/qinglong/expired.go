@@ -1,7 +1,6 @@
 package qinglong
 
 import (
-	"fmt"
 	"io/ioutil"
 	"strings"
 
@@ -19,7 +18,8 @@ func parseCookieExpired(info *JdCookieInfo, logFilePath string) string {
 	}
 	content := string(contentBytes)
 
-	prefix := fmt.Sprintf("京东账号%v : ", info.Index)
+	prefixToRemove := " : "
+	prefix := prefixToRemove + info.PtPin
 	suffix := "\n\n"
 
 	prefixIndex := strings.Index(content, prefix)
@@ -32,7 +32,7 @@ func parseCookieExpired(info *JdCookieInfo, logFilePath string) string {
 	}
 	suffixIndex := prefixIndex + relativeSuffixIndex
 
-	result := content[prefixIndex:suffixIndex]
+	result := content[prefixIndex+len(prefixToRemove) : suffixIndex]
 
 	return result
 }
