@@ -63,5 +63,8 @@ func TestQueryCookieExpired(t *testing.T) {
 	assert.NotEmpty(t, QueryCookieExpired(info))
 
 	info = QueryCookieInfo("4")
+	assert.NotEmpty(t, QueryCookieExpired(info))
+
+	info = QueryCookieInfo("99999")
 	assert.Empty(t, QueryCookieExpired(info))
 }

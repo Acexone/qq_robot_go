@@ -9,7 +9,7 @@ import (
 func TestParseJdCookie(t *testing.T) {
 	ptPinToCookieInfo, err := ParseJdCookie()
 	assert.NoError(t, err)
-	assert.Equal(t, 3, len(ptPinToCookieInfo))
+	assert.Equal(t, 4, len(ptPinToCookieInfo))
 
 	// 普通账号
 	ck1, ok := ptPinToCookieInfo["pin_1"]
@@ -37,7 +37,7 @@ func TestParseJdCookie(t *testing.T) {
 func Test_parseEnvDB(t *testing.T) {
 	ptPinToCookieInfo, err := parseEnvDB()
 	assert.NoError(t, err)
-	assert.Equal(t, 2, len(ptPinToCookieInfo))
+	assert.Equal(t, 3, len(ptPinToCookieInfo))
 
 	assert.NotNil(t, ptPinToCookieInfo["pin_1"])
 	assert.Nil(t, ptPinToCookieInfo["pin_3"])
@@ -46,7 +46,7 @@ func Test_parseEnvDB(t *testing.T) {
 func Test_parseEnvSh(t *testing.T) {
 	ptPinToIndex, err := parseEnvSh()
 	assert.NoError(t, err)
-	assert.Equal(t, 3, len(ptPinToIndex))
+	assert.Equal(t, 4, len(ptPinToIndex))
 
 	assert.Equal(t, 1, ptPinToIndex["pin_1"])
 	assert.Equal(t, 3, ptPinToIndex["pin_3"])
