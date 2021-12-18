@@ -43,7 +43,7 @@ func (info *JdCookieInfo) ToChatMessage() string {
 	expiredInfo := "未过期"
 	// 检查是否过期
 	if isCookieExpired(info) {
-		expiredInfo = "已过期，请更新cookie"
+		expiredInfo = "已过期，请更新cookie（每六个小时重新检测并自动启用）"
 	}
 	return fmt.Sprintf("\n"+
 		"\npt_pin: %v"+
