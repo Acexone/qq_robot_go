@@ -274,7 +274,10 @@ func (bot *CQBot) SendGroupMessage(groupID int64, m *message.SendingMessage) int
 	}
 
 	if ret == nil || ret.Id == -1 {
-		log.Warnf("群消息发送失败: 账号可能被风控.\ngroupID= %v 消息内容= %v", groupID, message.ToReadableString(m.Elements))
+		log.Warnf("群消息发送失败: 账号可能被风控."+
+			"（如果消息发送很慢，同时 ctrl+c 退出也很慢，也有可能是DNS问题，推荐改成 101.6.6.6, 223.6.6.6, 114.114.114.114 这三个一起）"+
+			"\ngroupID= %v 消息内容= %v",
+			groupID, message.ToReadableString(m.Elements))
 		return -1
 	}
 	return bot.InsertGroupMessage(ret)
