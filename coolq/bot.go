@@ -254,6 +254,8 @@ func (bot *CQBot) SendGroupMessage(groupID int64, m *message.SendingMessage) int
 
 	var ret *message.GroupMessage
 
+	log.Warnf("调试日志：准备发送消息")
+
 	// 魔改一下，兼容过长的消息，使得青龙面板那边可以发送很多个账号的统计信息
 	msgLen := message.EstimateLength(m.Elements)
 	if msgLen <= MaxMessageSize {
@@ -272,6 +274,8 @@ func (bot *CQBot) SendGroupMessage(groupID int64, m *message.SendingMessage) int
 			}
 		}
 	}
+
+	log.Warnf("调试日志：完成发送消息")
 
 	if ret == nil || ret.Id == -1 {
 		log.Warnf("群消息发送失败: 账号可能被风控.\nret= %+v\ngroupID= %v 消息内容= %v", ret, groupID, message.ToReadableString(m.Elements))
