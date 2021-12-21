@@ -65,6 +65,8 @@ func Test_getCookie(t *testing.T) {
 
 func Test_getRemark(t *testing.T) {
 	assert.Equal(t, "test", getRemark("remark=test;"))
+	assert.Equal(t, "test", getRemark("remark=test;a=b"))
+	assert.Equal(t, "test", getRemark("remark=test;a=b;"))
 	assert.Equal(t, "remark=test", getRemark("remark=remark=test;"))
 	assert.Equal(t, "test", getRemark("test"))
 	assert.Equal(t, "", getRemark(""))

@@ -174,11 +174,15 @@ func getCookie(cookie string, cookieKey string) string {
 }
 
 func getRemark(remarks string) string {
-	if strings.HasPrefix(remarks, "remark=") {
-		// remark=备注;
-		remarks = strings.TrimPrefix(remarks, "remark=")
-		remarks = strings.TrimSuffix(remarks, ";")
+	remark := remarks
+
+	for _, remarkPart := range strings.Split(remarks, ";") {
+		if strings.HasPrefix(remarkPart, "remark=") {
+			// remark=备注;
+			remark = strings.TrimPrefix(remarkPart, "remark=")
+			break
+		}
 	}
 
-	return remarks
+	return remark
 }
