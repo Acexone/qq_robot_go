@@ -140,5 +140,5 @@ func appendLogFileInfo(parsedContents string, logFileName string) string {
 	logTime := strings.TrimSuffix(logFileName, ".log")
 	parsedTime, _ := time.Parse("2006-01-02-15-04-05", logTime)
 
-	return fmt.Sprintf("%s\n\n-- 从 %s 更新的日志中解析得到", parsedContents, parsedTime.Format("2006-01-02 15:04:05"))
+	return fmt.Sprintf("%s\n【解析于 %s 的日志】", parsedContents, parsedTime.Format("2006-01-02 15:04:05"))
 }
