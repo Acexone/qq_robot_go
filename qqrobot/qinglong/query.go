@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	logger "github.com/sirupsen/logrus"
 
@@ -84,7 +85,7 @@ func QuerySummary(info *JdCookieInfo) string {
 
 		summary := parseSummary(info, filepath.Join(summaryDir, logFile.Name()))
 		if summary != "" {
-			return summary
+			return appendLogFileInfo(summary, logFile.Name())
 		}
 	}
 
@@ -126,4 +127,11 @@ func QueryCookieExpired(info *JdCookieInfo) string {
 func isCookieExpired(info *JdCookieInfo) bool {
 	result := QueryCookieExpired(info)
 	return strings.Contains(result, "已失效")
+}
+
+func appendLogFileInfo(parsedContents string, logFileName string) string {
+	logTime := strings.TrimSuffix(logFileName, ".log")
+	parsedTime, _ := time.Parse("2006-01-02-15-04-05", logTime)
+
+	return fmt.Sprintf("%s\n\n-- 从 %s 更新的日志中解析得到", parsedContents, parsedTime.Format("2006-01-02 15:04:05"))
 }
