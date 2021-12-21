@@ -13,6 +13,9 @@ import (
 	"github.com/Mrs4s/go-cqhttp/global"
 )
 
+// maxCheckCount 通过搜索历史日志搜寻信息时，最多尝试的日志文件数目
+const maxCheckCount = 6
+
 // QueryCookieInfo 尝试通过pt_pin/序号/昵称等来查询cookie信息
 func QueryCookieInfo(param string) *JdCookieInfo {
 	if param == "" {
@@ -77,9 +80,8 @@ func QuerySummary(info *JdCookieInfo) string {
 	})
 
 	// 因为有可能最新的日志还在处理中，因此逆序搜索一定数目的日志，直到搜索到为止
-	const MaxCheckCount = 6
 	for idx, logFile := range logFiles {
-		if idx >= MaxCheckCount {
+		if idx >= maxCheckCount {
 			break
 		}
 
@@ -115,9 +117,8 @@ func QueryCookieExpired(info *JdCookieInfo) string {
 	})
 
 	// 因为有可能最新的日志还在处理中，因此逆序搜索一定数目的日志，直到搜索到为止
-	const MaxCheckCount = 6
 	for idx, logFile := range logFiles {
-		if idx >= MaxCheckCount {
+		if idx >= maxCheckCount {
 			break
 		}
 
