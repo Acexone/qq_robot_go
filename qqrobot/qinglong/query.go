@@ -114,11 +114,17 @@ func QueryCookieExpired(info *JdCookieInfo) string {
 		return logFiles[i].Name() > logFiles[j].Name()
 	})
 
-	// 只取最新的一个日志
-	latestLogFile := logFiles[0]
-	result := parseCookieExpired(info, filepath.Join(checkCookieDir, latestLogFile.Name()))
-	if result != "" {
-		return result
+	// 因为有可能最新的日志还在处理中，因此逆序搜索一定数目的日志，直到搜索到为止
+	const MaxCheckCount = 6
+	for idx, logFile := range logFiles {
+		if idx >= MaxCheckCount {
+			break
+		}
+
+		result := parseCookieExpired(info, filepath.Join(checkCookieDir, logFile.Name()))
+		if result != "" {
+			return appendLogFileInfo(result, logFile.Name())
+		}
 	}
 
 	return ""
