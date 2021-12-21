@@ -13,3 +13,4 @@ logs/
 resource.syso
 !modules/config/default_config.yml
 !qqrobot/config.toml
+internal/btree/temp.*.db
