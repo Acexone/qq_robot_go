@@ -16,6 +16,9 @@ import (
 // maxCheckCount 通过搜索历史日志搜寻信息时，最多尝试的日志文件数目
 const maxCheckCount = 6
 
+// maxExpireCheckCount 由于可能最新的还在处理中，因此最多尝试两个，避免过多查询导致之前的过期记录也影响这个
+const maxExpireCheckCount = 2
+
 // QueryCookieInfo 尝试通过pt_pin/序号/昵称等来查询cookie信息
 func QueryCookieInfo(param string) *JdCookieInfo {
 	if param == "" {
@@ -118,13 +121,16 @@ func QueryCookieExpired(info *JdCookieInfo) string {
 
 	// 因为有可能最新的日志还在处理中，因此逆序搜索一定数目的日志，直到搜索到为止
 	for idx, logFile := range logFiles {
-		if idx >= maxCheckCount {
+		if idx >= maxExpireCheckCount {
 			break
 		}
 
-		result := parseCookieExpired(info, filepath.Join(checkCookieDir, logFile.Name()))
+		result, isLogComplete := parseCookieExpired(info, filepath.Join(checkCookieDir, logFile.Name()))
 		if result != "" {
 			return appendLogFileInfo(result, logFile.Name())
+		} else if isLogComplete {
+			// 没有解析到该账号，但该日志是完整日志，说明这个账号未过期
+			return ""
 		}
 	}
 
