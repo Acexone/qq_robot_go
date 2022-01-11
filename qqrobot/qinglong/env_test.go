@@ -1,6 +1,7 @@
 package qinglong
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -73,4 +74,24 @@ func Test_getRemark(t *testing.T) {
 	assert.Equal(t, "test", getRemark("remark=test;@@UID_xxxxxx"))
 	assert.Equal(t, "test", getRemark("test@@UID_xxxxxx"))
 	assert.Equal(t, "test", getRemark("test@@1640780099690@@UID_xxxxxx"))
+}
+
+func TestEnvDBEntry_CreateTime(t *testing.T) {
+	expectedCreateTimeStamp := int64(1636536508)
+	withoutExtraRemark := &EnvDBEntry{
+		Created:   expectedCreateTimeStamp * 1000,
+		Timestamp: "Wed Nov 10 2021 17:28:28 GMT+0800 (中国标准时间)",
+		Remarks:   "test",
+	}
+	assert.Equal(t, expectedCreateTimeStamp, withoutExtraRemark.CreateTime())
+	assert.Equal(t, expectedCreateTimeStamp, withoutExtraRemark.UpdateTime())
+
+	expectedNvjdcUpdateTimeStamp := int64(1636536538)
+	withExtraRemark := &EnvDBEntry{
+		Created:   1636536508000,
+		Timestamp: "Wed Nov 10 2021 17:28:28 GMT+0800 (中国标准时间)",
+		Remarks:   fmt.Sprintf("test@@%v@@UID_xxxxxx", expectedNvjdcUpdateTimeStamp*1000),
+	}
+	assert.Equal(t, expectedCreateTimeStamp, withExtraRemark.CreateTime())
+	assert.Equal(t, expectedNvjdcUpdateTimeStamp, withExtraRemark.UpdateTime())
 }

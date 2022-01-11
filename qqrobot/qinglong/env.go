@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 )
 
 // EnvDBEntry env.db中记录格式
@@ -19,6 +21,47 @@ type EnvDBEntry struct {
 	Position  float64 `json:"position"`
 	Name      string  `json:"name"`
 	Remarks   string  `json:"remarks"`
+}
+
+// CreateTime 创建unix时间戳
+func (e *EnvDBEntry) CreateTime() int64 {
+	return time.UnixMilli(e.Created).Unix()
+}
+
+// UpdateTime 更新unix时间戳
+func (e *EnvDBEntry) UpdateTime() int64 {
+	// 先尝试解析nvjdc设置的更新时间：test@@1640780099690@@UID_xxxxxx
+	if strings.Contains(e.Remarks, "@@") {
+		for _, remarkPart := range strings.Split(e.Remarks, "@@") {
+			if len(remarkPart) != 13 {
+				continue
+			}
+
+			millTimeStamp, err := strconv.ParseInt(remarkPart, 10, 64)
+			if err != nil {
+				continue
+			}
+
+			return time.UnixMilli(millTimeStamp).Unix()
+		}
+	}
+
+	// 否则，解析青龙设置的更新时间
+	// Wed Nov 10 2021 17:28:28 GMT+0800 (中国标准时间)
+	t, _ := time.Parse("Mon Jan 02 2006 15:04:05 MST-0700 (中国标准时间)", e.Timestamp)
+	return t.Unix()
+}
+
+// UsedDays 已使用天数
+func (e *EnvDBEntry) UsedDays() int {
+	return int(time.Now().Unix()-e.CreateTime()) / 86400
+}
+
+const maxValidDays = 30
+
+// EstimateRemainingDays 预计剩余天数
+func (e *EnvDBEntry) EstimateRemainingDays() int {
+	return maxValidDays - int(time.Now().Unix()-e.UpdateTime())/86400
 }
 
 // JdCookieInfo 所需的京东cookie信息
@@ -103,6 +146,9 @@ func parseEnvDB() (map[string]*JdCookieInfo, error) {
 		if envEntry.Name != "JD_COOKIE" {
 			continue
 		}
+
+		v2 := envEntry.UpdateTime()
+		_ = v2
 
 		ptPin := getPtPin(envEntry.Value)
 		remark := getRemark(envEntry.Remarks)
