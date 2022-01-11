@@ -174,14 +174,24 @@ func getCookie(cookie string, cookieKey string) string {
 }
 
 func getRemark(remarks string) string {
+	// 如果有备注，则使用备注
 	remark := remarks
 
+	// 如果备注中有remark=字样
 	for _, remarkPart := range strings.Split(remarks, ";") {
 		if strings.HasPrefix(remarkPart, "remark=") {
 			// remark=备注;
 			remark = strings.TrimPrefix(remarkPart, "remark=")
 			break
 		}
+	}
+
+	// 特殊处理nvdjc附加的备注
+	//   remark=test;@@UID_xxxxxx
+	//   test@@UID_xxxxxx
+	//   test@@1640780099690@@UID_xxxxxx
+	if strings.Contains(remark, "@@") {
+		remark = strings.Split(remark, "@@")[0]
 	}
 
 	return remark

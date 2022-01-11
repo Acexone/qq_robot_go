@@ -70,4 +70,7 @@ func Test_getRemark(t *testing.T) {
 	assert.Equal(t, "remark=test", getRemark("remark=remark=test;"))
 	assert.Equal(t, "test", getRemark("test"))
 	assert.Equal(t, "", getRemark(""))
+	assert.Equal(t, "test", getRemark("remark=test;@@UID_xxxxxx"))
+	assert.Equal(t, "test", getRemark("test@@UID_xxxxxx"))
+	assert.Equal(t, "test", getRemark("test@@1640780099690@@UID_xxxxxx"))
 }
