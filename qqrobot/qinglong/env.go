@@ -66,8 +66,10 @@ func (e *EnvDBEntry) EstimateRemainingDays() int {
 
 // JdCookieInfo 所需的京东cookie信息
 type JdCookieInfo struct {
-	PtPin  string // pt_pin, note: 定位只能使用这个字段，而不能使用index，因青龙不是依据env.sh来生成index的
-	Remark string // remark
+	PtPin                 string // pt_pin, note: 定位只能使用这个字段，而不能使用index，因青龙不是依据env.sh来生成index的
+	Remark                string // remark
+	UsedDays              int    // 已使用天数
+	EstimateRemainingDays int    // 预计剩余天数
 }
 
 // QueryUnescapedPtPin 返回url解码后的pt_pin
@@ -87,6 +89,8 @@ func (info *JdCookieInfo) ToChatMessage() string {
 	// 检查是否过期
 	if isCookieExpired(info) {
 		expiredInfo = "已过期，请更新cookie（每六个小时重新检测并自动启用）"
+	} else if info.UsedDays != 0 {
+		expiredInfo += fmt.Sprintf("，已使用 %d 天, 预计 %d 天后过期", info.UsedDays, info.EstimateRemainingDays)
 	}
 	return fmt.Sprintf("\n"+
 		"\npt_pin: %v"+
@@ -147,15 +151,14 @@ func parseEnvDB() (map[string]*JdCookieInfo, error) {
 			continue
 		}
 
-		v2 := envEntry.UpdateTime()
-		_ = v2
-
 		ptPin := getPtPin(envEntry.Value)
 		remark := getRemark(envEntry.Remarks)
 
 		ptPinToCookieInfo[ptPin] = &JdCookieInfo{
-			PtPin:  ptPin,
-			Remark: remark,
+			PtPin:                 ptPin,
+			Remark:                remark,
+			UsedDays:              envEntry.UsedDays(),
+			EstimateRemainingDays: envEntry.EstimateRemainingDays(),
 		}
 	}
 
