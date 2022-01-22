@@ -537,13 +537,13 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 		if reply != "" {
 			replies.Append(message.NewText(reply))
 		}
-	case actiontypeSendupdatemessage:
+	case actiontypeManaualTriggerUpdateNotify:
 		if isAdmin {
 			// 手动触发更新通知
-			if res := r.manualTriggerUpdateMessage(groupID); res != nil {
+			if res := r.manualTriggerUpdateNotify(rule); res != nil {
 				replies.Elements = append(replies.Elements, res.Elements...)
 			} else {
-				replies.Append(message.NewText("当前群组没有配置检查更新哦~"))
+				replies.Append(message.NewText("未找到指定更新规则，或者网络请求失败"))
 			}
 		} else {
 			replies.Append(message.NewText("只有管理员可以执行这个指令哦~不要调皮<_<"))

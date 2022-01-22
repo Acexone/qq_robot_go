@@ -45,24 +45,35 @@ func (r *QQRobot) checkUpdates() {
 	}
 }
 
-func (r *QQRobot) manualTriggerUpdateMessage(groupID int64) (replies *message.SendingMessage) {
+func (r *QQRobot) manualTriggerUpdateNotify(triggerRule *Rule) (replies *message.SendingMessage) {
 	for _, rule := range r.Config.NotifyUpdate.Rules {
-		inRange := false
-		for _, group := range rule.NotifyGroups {
-			if groupID == group {
-				inRange = true
-				break
-			}
-		}
-		if !inRange {
+		if rule.Name != triggerRule.Config.TargetUpdateRuleName {
 			continue
 		}
 
 		latestVersion, updateMessage := r.getLatestGitVersion(rule.GitChangelogPage)
+		if latestVersion == VersionNone {
+			break
+		}
 
-		replies = r.makeNotifyUpdatesReplies(rule, latestVersion, updateMessage)
-		logger.Infof("manualTriggerUpdateMessage %v, version=%v", rule.Name, latestVersion)
+		updateMessages := r.makeNotifyUpdatesReplies(rule, latestVersion, updateMessage)
+		logger.Infof("manualTriggerUpdateNotify %v, version=%v", rule.Name, latestVersion)
 
+		// 发送给配置的目标群组
+		nowStr := r.currentTime()
+		for _, groupID := range rule.NotifyGroups {
+			rspID := r.cqBot.SendGroupMessage(groupID, updateMessages)
+			// 广播消息间强行间隔一秒
+			time.Sleep(time.Second)
+			if rspID == -1 {
+				logger.Errorf("【%v Failed】 %v groupID=%v updateMessages=%v err=%v", rule.Name, nowStr, groupID, updateMessages, rspID)
+				continue
+			}
+			logger.Infof("【%v】 %v groupID=%v updateMessages=%v", rule.Name, nowStr, groupID, updateMessages)
+		}
+
+		replies = message.NewSendingMessage()
+		replies.Append(message.NewText("已发送更新公告到更新规则中指定的群组"))
 		return replies
 	}
 
