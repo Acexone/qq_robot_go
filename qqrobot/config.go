@@ -82,12 +82,12 @@ type GroupTypeConfig struct {
 type ActionType string
 
 const (
-	actionTypeGuide             ActionType = "guide"
-	actionTypeCommand           ActionType = "command"
-	actionTypeFood              ActionType = "food"
-	actiontypeAichat            ActionType = "ai_chat"
-	actiontypeSendupdatemessage ActionType = "send_update_message"
-	actiontypeRepeater          ActionType = "repeater"
+	actionTypeGuide                      ActionType = "guide"
+	actionTypeCommand                    ActionType = "command"
+	actionTypeFood                       ActionType = "food"
+	actiontypeAichat                     ActionType = "ai_chat"
+	actiontypeManaualTriggerUpdateNotify ActionType = "manaual_trigger_update_notify"
+	actiontypeRepeater                   ActionType = "repeater"
 )
 
 var (
@@ -140,6 +140,7 @@ type RuleConfig struct {
 	GitChangelogPage            string             `toml:"git_changelog_page"`              // 某git仓库的changelog的url，若设定，则将请求这个网页，从中解析出最新的版本号和更新信息，并替换到GuideContent中的$git_version$和$update_message$
 	GuideContentHasPermission   string             `toml:"guide_content_has_permission"`    // 当有权限触发该指令时的回复
 	GuideContentHasNoPermission string             `toml:"guide_content_has_no_permission"` // 当无权限触发该指令时的回复
+	TargetUpdateRuleName        string             `toml:"target_update_rule_name"`         // 目标更新规则的名称
 }
 
 // TimePeriod 时间规则
