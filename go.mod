@@ -14,7 +14,10 @@ require (
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tbp v1.0.290
 )
 
-require github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778 // indirect
+require (
+	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778 // indirect
+	gopkg.in/yaml.v2 v2.2.2 // indirect
+)
 
 // 以下为go-cqhttp原本的依赖
 require (
