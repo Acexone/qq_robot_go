@@ -909,9 +909,15 @@ func (r *QQRobot) onPrivateOrTempMessage(senderFriendUin int64, tempGroupID int6
 
 	var rspID int32
 	if senderFriendUin != 0 {
+		// 好友
 		rspID = r.cqBot.SendPrivateMessage(senderFriendUin, 0, replies)
 	} else {
-		rspID = r.cqBot.SendPrivateMessage(tempUin, tempGroupID, replies)
+		// 临时消息
+		// 重要：现在观测到大量冻结，疑似腾讯暗改协议，请暂时不要使用gocq发送临时消息 - 摸摸摸鱼中中中 发表于 01-23 12:00
+		rspID = -1
+		logger.Warn("目前临时消息会被冻结，将跳过实际发送过程。", p(m), p(replies))
+
+		// rspID = r.cqBot.SendPrivateMessage(tempUin, tempGroupID, replies)
 	}
 
 	if rspID == -1 {
