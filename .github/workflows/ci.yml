@@ -5,8 +5,8 @@ on: [ push, pull_request,workflow_dispatch ]
 env:
   BINARY_PREFIX: "qq_robot_"
   BINARY_SUFFIX: ""
+  COMMIT_ID: "${{ github.sha }}"
   PR_PROMPT: "::warning:: Build artifact will not be uploaded due to the workflow is trigged by pull request."
-  LD_FLAGS: "-w -s"
 
 jobs:
   build:
@@ -49,6 +49,7 @@ jobs:
           if $IS_PR ; then echo $PR_PROMPT; fi
           export BINARY_NAME="$BINARY_PREFIX$GOOS_$GOARCH$BINARY_SUFFIX"
           export CGO_ENABLED=0
+          export LD_FLAGS="-w -s -X github.com/Mrs4s/go-cqhttp/internal/base.Version=${COMMIT_ID::7}"
 
           if [ $GOOS = "windows" ] && [ $GOARCH = "386" -o $GOARCH = "amd64" ]; then
             GOOS=linux GOARCH=amd64 go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest
