@@ -917,7 +917,9 @@ func (r *QQRobot) onPrivateOrTempMessage(senderFriendUin int64, tempGroupID int6
 		rspID = -1
 		logger.Warn("目前临时消息会被冻结，将跳过实际发送过程。", p(m), p(replies))
 
-		// rspID = r.cqBot.SendPrivateMessage(tempUin, tempGroupID, replies)
+		if false {
+			rspID = r.cqBot.SendPrivateMessage(tempUin, tempGroupID, replies)
+		}
 	}
 
 	if rspID == -1 {
