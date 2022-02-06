@@ -10,7 +10,7 @@ import (
 // 2021/12/13 20:48 by fzls
 
 func Test_parseSummary(t *testing.T) {
-	logPath := getPath("log/shufflewzc_faker2_jd_bean_change/2021-12-13-09-30-00.log")
+	logPath := getPath("log/ccwav_QLScript2_jd_bean_change/2021-12-13-09-30-00.log")
 
 	info := QueryCookieInfo("pin_1")
 	assert.Contains(t, parseSummary(info, logPath), "测试账号-1")

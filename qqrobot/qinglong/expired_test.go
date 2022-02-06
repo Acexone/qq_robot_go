@@ -13,7 +13,7 @@ func Test_parseCookieExpired(t *testing.T) {
 		return result
 	}
 
-	logPath := getPath("log/shufflewzc_faker2_jd_CheckCK/2021-12-17-12-00-01.log")
+	logPath := getPath("log/ccwav_QLScript2_jd_CheckCK/2021-12-17-12-00-01.log")
 
 	info := QueryCookieInfo("pin_1")
 	assert.Equal(t, "pin_1 状态正常!", getResult(info, logPath))
