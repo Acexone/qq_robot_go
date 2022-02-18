@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -30,21 +29,22 @@ func (e *EnvDBEntry) CreateTime() int64 {
 
 // UpdateTime 更新unix时间戳
 func (e *EnvDBEntry) UpdateTime() int64 {
-	// 先尝试解析nvjdc设置的更新时间：test@@1640780099690@@UID_xxxxxx
-	if strings.Contains(e.Remarks, "@@") {
-		for _, remarkPart := range strings.Split(e.Remarks, "@@") {
-			if len(remarkPart) != 13 {
-				continue
-			}
-
-			millTimeStamp, err := strconv.ParseInt(remarkPart, 10, 64)
-			if err != nil {
-				continue
-			}
-
-			return time.UnixMilli(millTimeStamp).Unix()
-		}
-	}
+	// re: 鉴于nvjdc经常不可用，避免手动更新后不会更新该时间戳，暂时屏蔽
+	// // 先尝试解析nvjdc设置的更新时间：test@@1640780099690@@UID_xxxxxx
+	// if strings.Contains(e.Remarks, "@@") {
+	// 	for _, remarkPart := range strings.Split(e.Remarks, "@@") {
+	// 		if len(remarkPart) != 13 {
+	// 			continue
+	// 		}
+	//
+	// 		millTimeStamp, err := strconv.ParseInt(remarkPart, 10, 64)
+	// 		if err != nil {
+	// 			continue
+	// 		}
+	//
+	// 		return time.UnixMilli(millTimeStamp).Unix()
+	// 	}
+	// }
 
 	// 否则，解析青龙设置的更新时间
 	// Wed Nov 10 2021 17:28:28 GMT+0800 (中国标准时间)
