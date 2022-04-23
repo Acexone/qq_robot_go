@@ -7,17 +7,14 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"strconv"
 	"strings"
-	"sync"
 
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
-
-	"github.com/Mrs4s/go-cqhttp/internal/param"
 )
 
 // defaultConfig 默认配置文件
+//
 //go:embed default_config.yml
 var defaultConfig string
 
@@ -74,84 +71,31 @@ type Config struct {
 
 // Server 的简介和初始配置
 type Server struct {
-	Brief    string
-	Default  string
-	ParseEnv func() (string, *yaml.Node)
-}
-
-// LevelDBConfig leveldb 相关配置
-type LevelDBConfig struct {
-	Enable bool `yaml:"enable"`
-}
-
-// MongoDBConfig mongodb 相关配置
-type MongoDBConfig struct {
-	Enable   bool   `yaml:"enable"`
-	URI      string `yaml:"uri"`
-	Database string `yaml:"database"`
+	Brief   string
+	Default string
 }
 
 // Parse 从默认配置文件路径中获取
 func Parse(path string) *Config {
-	fromEnv := os.Getenv("GCQ_UIN") != ""
-
 	file, err := os.ReadFile(path)
 	config := &Config{}
 	if err == nil {
 		err = yaml.NewDecoder(strings.NewReader(expand(string(file), os.Getenv))).Decode(config)
-		if err != nil && !fromEnv {
+		if err != nil {
 			log.Fatal("配置文件不合法!", err)
 		}
-	} else if !fromEnv {
+	} else {
 		generateConfig()
 		os.Exit(0)
-	}
-	if fromEnv {
-		// type convert tools
-		toInt64 := func(str string) int64 {
-			i, _ := strconv.ParseInt(str, 10, 64)
-			return i
-		}
-
-		// load config from environment variable
-		param.SetAtDefault(&config.Account.Uin, toInt64(os.Getenv("GCQ_UIN")), int64(0))
-		param.SetAtDefault(&config.Account.Password, os.Getenv("GCQ_PWD"), "")
-		param.SetAtDefault(&config.Account.Status, int32(toInt64(os.Getenv("GCQ_STATUS"))), int32(0))
-		param.SetAtDefault(&config.Account.ReLogin.Disabled, !param.EnsureBool(os.Getenv("GCQ_RELOGIN_DISABLED"), true), false)
-		param.SetAtDefault(&config.Account.ReLogin.Delay, uint(toInt64(os.Getenv("GCQ_RELOGIN_DELAY"))), uint(0))
-		param.SetAtDefault(&config.Account.ReLogin.MaxTimes, uint(toInt64(os.Getenv("GCQ_RELOGIN_MAX_TIMES"))), uint(0))
-		dbConf := &LevelDBConfig{Enable: param.EnsureBool(os.Getenv("GCQ_LEVELDB"), true)}
-		if config.Database == nil {
-			config.Database = make(map[string]yaml.Node)
-		}
-		config.Database["leveldb"] = func() yaml.Node {
-			n := &yaml.Node{}
-			_ = n.Encode(dbConf)
-			return *n
-		}()
-
-		for _, s := range serverconfs {
-			if s.ParseEnv != nil {
-				name, node := s.ParseEnv()
-				if node != nil {
-					config.Servers = append(config.Servers, map[string]yaml.Node{name: *node})
-				}
-			}
-		}
 	}
 	return config
 }
 
-var (
-	serverconfs []*Server
-	mu          sync.Mutex
-)
+var serverconfs []*Server
 
 // AddServer 添加该服务的简介和默认配置
 func AddServer(s *Server) {
-	mu.Lock()
 	serverconfs = append(serverconfs, s)
-	mu.Unlock()
 }
 
 // generateConfig 生成配置文件
@@ -191,12 +135,14 @@ func generateConfig() {
 // os.ExpandEnv 字符 $ 无法逃逸
 // https://github.com/golang/go/issues/43482
 func expand(s string, mapping func(string) string) string {
-	r := regexp.MustCompile(`\${([a-zA-Z_]+[a-zA-Z0-9_]*)}`)
-	re := r.FindAllStringSubmatch(s, -1)
-	for _, i := range re {
-		if len(i) == 2 {
-			s = strings.ReplaceAll(s, i[0], mapping(i[1]))
+	r := regexp.MustCompile(`\${([a-zA-Z_]+[a-zA-Z0-9_:/.]*)}`)
+	return r.ReplaceAllStringFunc(s, func(s string) string {
+		s = strings.Trim(s, "${}")
+		before, after, ok := strings.Cut(s, ":")
+		m := mapping(before)
+		if ok && m == "" {
+			return after
 		}
-	}
-	return s
+		return m
+	})
 }

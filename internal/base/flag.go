@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
@@ -64,6 +65,7 @@ func Parse() {
 	flag.BoolVar(&LittleH, "h", false, "this Help")
 	flag.StringVar(&LittleWD, "w", "", "cover the working directory")
 	d := flag.Bool("D", false, "debug mode")
+	flag.BoolVar(&FastStart, "faststart", false, "skip waiting 5 seconds")
 	flag.Parse()
 
 	if *d {
@@ -149,12 +151,16 @@ func ResetWorkingDir() {
 		}
 	}
 	p, _ := filepath.Abs(os.Args[0])
+	_, err := os.Stat(p)
+	if !(err == nil || errors.Is(err, os.ErrExist)) {
+		log.Fatalf("重置工作目录时出现错误: 无法找到路径 %v", p)
+	}
 	proc := exec.Command(p, args...)
 	proc.Stdin = os.Stdin
 	proc.Stdout = os.Stdout
 	proc.Stderr = os.Stderr
 	proc.Dir = wd
-	err := proc.Run()
+	err = proc.Run()
 	if err != nil {
 		panic(err)
 	}
