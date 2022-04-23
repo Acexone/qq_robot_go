@@ -70,7 +70,7 @@ func QuerySummary(info *JdCookieInfo) string {
 		return ""
 	}
 
-	summaryDir := getPath("log/ccwav_QLScript2_jd_bean_change")
+	summaryDir := getPath("log/KingRan_KR_jd_bean_change_pro")
 	logFiles, err := ioutil.ReadDir(summaryDir)
 	if err != nil {
 		logger.Errorf("read log dir failed, err=%v", err)
