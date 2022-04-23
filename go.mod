@@ -5,6 +5,10 @@ go 1.18
 replace github.com/Mrs4s/go-cqhttp => github.com/fzls/qq_robot_go v1.0.0-beta8
 
 // 魔改后需要额外引入的依赖项，单独列出，避免后面又冲突
+// note: 合并upstream的方法：
+//  1. 打开github desktop，点击左侧的 History
+//  2. 在 选择分支的输入框（提示有 Select branch to compare），选择 upstream/dev
+//  3. 点击 左下方的合并按钮（Create a merge commit）
 require (
 	github.com/BurntSushi/toml v1.1.0
 	github.com/fzls/logger v1.1.1
