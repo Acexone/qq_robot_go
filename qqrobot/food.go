@@ -61,7 +61,7 @@ func (r *QQRobot) tryFetchMoreFoodImages(rule *Rule, foodSiteURL string) error {
 	siteURL := strings.ReplaceAll(foodSiteURL, templateargsFoodpage, strconv.FormatInt(rule.SiteToFoodPage[foodSiteURL], 10))
 	resp, err := r.httpClient.Get(siteURL)
 	if err != nil {
-		return errors.Errorf("get food site err=%v, siteURL=%v\n", err, siteURL)
+		return errors.Errorf("get food site err=%v, siteURL=%v", err, siteURL)
 	}
 	defer resp.Body.Close()
 
