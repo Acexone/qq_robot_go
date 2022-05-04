@@ -70,7 +70,26 @@ func QuerySummary(info *JdCookieInfo) string {
 		return ""
 	}
 
-	summaryDir := getPath("log/KingRan_KR_jd_bean_change_pro")
+	targetSummary := ""
+
+	logFileList := []string{
+		"log/ccwav_QLScript2_jd_bean_change",
+		"log/KingRan_KR_jd_bean_change_pro",
+	}
+	for _, logFile := range logFileList {
+		summary := querySummary(info, logFile)
+		if summary != "" && strings.Contains(summary, "东东农场") {
+			// 从多个日志来源中查询概览，优先包含 东东农场 信息的那个，因为有时候可能其中一个接口会无法查询农场的信息
+			targetSummary = summary
+			break
+		}
+	}
+
+	return targetSummary
+}
+
+func querySummary(info *JdCookieInfo, logFile string) string {
+	summaryDir := getPath(logFile)
 	logFiles, err := ioutil.ReadDir(summaryDir)
 	if err != nil {
 		logger.Errorf("read log dir failed, err=%v", err)
