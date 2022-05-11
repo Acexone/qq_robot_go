@@ -83,7 +83,7 @@ func Main() {
 
 	mkCacheDir := func(path string, _type string) {
 		if !global.PathExists(path) {
-			if err := os.MkdirAll(path, 0o755); err != nil {
+			if err := os.MkdirAll(path, 0o644); err != nil {
 				log.Fatalf("创建%s缓存文件夹失败: %v", _type, err)
 			}
 		}
@@ -132,11 +132,9 @@ func Main() {
 	log.Info("当前版本:", base.Version)
 	if base.Debug {
 		log.SetLevel(log.DebugLevel)
-		log.SetReportCaller(true)
 		log.Warnf("已开启Debug模式.")
-		log.Debugf("开发交流群: 192548878")
+		// log.Debugf("开发交流群: 192548878")
 	}
-	log.Info("用户交流群: 721829413")
 	if !global.PathExists("device.json") {
 		log.Warn("虚拟设备信息不存在, 将自动生成随机设备.")
 		client.GenRandomDevice()
@@ -262,7 +260,7 @@ func Main() {
 	}
 	var times uint = 1 // 重试次数
 	var reLoginLock sync.Mutex
-	cli.OnDisconnected(func(q *client.QQClient, e *client.ClientDisconnectedEvent) {
+	cli.DisconnectedEvent.Subscribe(func(q *client.QQClient, e *client.ClientDisconnectedEvent) {
 		reLoginLock.Lock()
 		defer reLoginLock.Unlock()
 		times = 1
@@ -336,10 +334,9 @@ func Main() {
 	robot.Start()
 	defer robot.Stop()
 
-	go selfupdate.CheckUpdate()
 	go func() {
-		time.Sleep(5 * time.Second)
-		go selfdiagnosis.NetworkDiagnosis(cli)
+		selfupdate.CheckUpdate()
+		selfdiagnosis.NetworkDiagnosis(cli)
 	}()
 
 	<-global.SetupMainSignalHandler()
@@ -394,22 +391,36 @@ func newClient() *client.QQClient {
 		}
 		log.Infof("读取到 %v 个自定义地址.", len(addr))
 	}
-	c.OnLog(func(c *client.QQClient, e *client.LogEvent) {
-		switch e.Type {
-		case "INFO":
-			log.Info("Protocol -> " + e.Message)
-		case "ERROR":
-			log.Error("Protocol -> " + e.Message)
-		case "DEBUG":
-			log.Debug("Protocol -> " + e.Message)
-		case "DUMP":
-			if !global.PathExists(global.DumpsPath) {
-				_ = os.MkdirAll(global.DumpsPath, 0o755)
-			}
-			dumpFile := path.Join(global.DumpsPath, fmt.Sprintf("%v.dump", time.Now().Unix()))
-			log.Errorf("出现错误 %v. 详细信息已转储至文件 %v 请连同日志提交给开发者处理", e.Message, dumpFile)
-			_ = os.WriteFile(dumpFile, e.Dump, 0o644)
-		}
-	})
+	c.SetLogger(protocolLogger{})
 	return c
+}
+
+type protocolLogger struct{}
+
+const fromProtocol = "Protocol -> "
+
+func (p protocolLogger) Info(format string, arg ...any) {
+	log.Infof(fromProtocol+format, arg...)
+}
+
+func (p protocolLogger) Warning(format string, arg ...any) {
+	log.Warnf(fromProtocol+format, arg...)
+}
+
+func (p protocolLogger) Debug(format string, arg ...any) {
+	log.Debugf(fromProtocol+format, arg...)
+}
+
+func (p protocolLogger) Error(format string, arg ...any) {
+	log.Errorf(fromProtocol+format, arg...)
+}
+
+func (p protocolLogger) Dump(data []byte, format string, arg ...any) {
+	if !global.PathExists(global.DumpsPath) {
+		_ = os.MkdirAll(global.DumpsPath, 0o755)
+	}
+	dumpFile := path.Join(global.DumpsPath, fmt.Sprintf("%v.dump", time.Now().Unix()))
+	message := fmt.Sprintf(format, arg...)
+	log.Errorf("出现错误 %v. 详细信息已转储至文件 %v 请连同日志提交给开发者处理", message, dumpFile)
+	_ = os.WriteFile(dumpFile, data, 0o644)
 }
