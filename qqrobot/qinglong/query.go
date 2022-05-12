@@ -64,7 +64,7 @@ func QueryChartPath(info *JdCookieInfo) string {
 	return path
 }
 
-// QuerySummary 查询账号对应的最新统计信息
+// QuerySummary 查询账号对应的最新统计信息，返回第一个包含农场信息的结果，如果都不包含，则返回最后一个不为空的结果
 func QuerySummary(info *JdCookieInfo) string {
 	if info == nil {
 		return ""
@@ -78,9 +78,11 @@ func QuerySummary(info *JdCookieInfo) string {
 	}
 	for _, logFile := range logFileList {
 		summary := querySummary(info, logFile)
-		if summary != "" && strings.Contains(summary, "东东农场") {
-			// 从多个日志来源中查询概览，优先包含 东东农场 信息的那个，因为有时候可能其中一个接口会无法查询农场的信息
+		if summary != "" {
 			targetSummary = summary
+		}
+		if strings.Contains(summary, "东东农场") {
+			// 从多个日志来源中查询概览，优先包含 东东农场 信息的那个，因为有时候可能其中一个接口会无法查询农场的信息
 			break
 		}
 	}
