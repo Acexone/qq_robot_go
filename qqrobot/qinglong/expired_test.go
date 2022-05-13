@@ -9,7 +9,7 @@ import (
 
 func Test_parseCookieExpired(t *testing.T) {
 	getResult := func(info *JdCookieInfo, logFilePath string) string {
-		result, _ := parseCookieExpired(info, logFilePath)
+		result, _, _ := parseCookieExpired(info, logFilePath)
 		return result
 	}
 

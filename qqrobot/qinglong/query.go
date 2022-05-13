@@ -141,17 +141,23 @@ func QueryCookieExpired(info *JdCookieInfo) string {
 	})
 
 	// 因为有可能最新的日志还在处理中，因此逆序搜索一定数目的日志，直到搜索到为止
-	for idx, logFile := range logFiles {
-		if idx >= maxExpireCheckCount {
-			break
-		}
-
-		result, isLogComplete := parseCookieExpired(info, filepath.Join(checkCookieDir, logFile.Name()))
+	processedValidLogCount := 0
+	for _, logFile := range logFiles {
+		result, isLogComplete, skipThis := parseCookieExpired(info, filepath.Join(checkCookieDir, logFile.Name()))
 		if result != "" {
 			return appendLogFileInfo(result, logFile.Name())
 		} else if isLogComplete {
 			// 没有解析到该账号，但该日志是完整日志，说明这个账号未过期
 			return ""
+		} else if skipThis {
+			// 如果内部判定需要跳过该文件，则不计数，继续尝试下一个
+		} else {
+			processedValidLogCount++
+		}
+
+		// 仅尝试该数目个正常的日志
+		if processedValidLogCount >= maxExpireCheckCount {
+			break
 		}
 	}
 
