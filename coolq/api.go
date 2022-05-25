@@ -407,7 +407,6 @@ func (bot *CQBot) CQGetGroupList(noCache bool) global.MSG {
 		gs = append(gs, global.MSG{
 			"group_id":          g.Code,
 			"group_name":        g.Name,
-			"group_memo":        g.Memo,
 			"group_create_time": g.GroupCreateTime,
 			"group_level":       g.GroupLevel,
 			"max_member_count":  g.MaxMemberCount,
@@ -449,7 +448,6 @@ func (bot *CQBot) CQGetGroupInfo(groupID int64, noCache bool) global.MSG {
 		return OK(global.MSG{
 			"group_id":          group.Code,
 			"group_name":        group.Name,
-			"group_memo":        group.Memo,
 			"group_create_time": group.GroupCreateTime,
 			"group_level":       group.GroupLevel,
 			"max_member_count":  group.MaxMemberCount,
@@ -1470,18 +1468,18 @@ func (bot *CQBot) CQDownloadFile(url string, headers gjson.Result, threadCount i
 	h := map[string]string{}
 	if headers.IsArray() {
 		for _, sub := range headers.Array() {
-			str := strings.SplitN(sub.String(), "=", 2)
-			if len(str) == 2 {
-				h[str[0]] = str[1]
+			first, second, ok := strings.Cut(sub.String(), "=")
+			if ok {
+				h[first] = second
 			}
 		}
 	}
 	if headers.Type == gjson.String {
 		lines := strings.Split(headers.String(), "\r\n")
 		for _, sub := range lines {
-			str := strings.SplitN(sub, "=", 2)
-			if len(str) == 2 {
-				h[str[0]] = str[1]
+			first, second, ok := strings.Cut(sub, "=")
+			if ok {
+				h[first] = second
 			}
 		}
 	}
@@ -1772,12 +1770,10 @@ func (bot *CQBot) CQSetGroupAnonymousBan(groupID int64, flag string, duration in
 		return Failed(100, "INVALID_FLAG", "无效的flag")
 	}
 	if g := bot.Client.FindGroup(groupID); g != nil {
-		s := strings.SplitN(flag, "|", 2)
-		if len(s) != 2 {
+		id, nick, ok := strings.Cut(flag, "|")
+		if !ok {
 			return Failed(100, "INVALID_FLAG", "无效的flag")
 		}
-		id := s[0]
-		nick := s[1]
 		if err := g.MuteAnonymous(id, nick, duration); err != nil {
 			log.Warnf("anonymous ban error: %v", err)
 			return Failed(100, "CALL_API_ERROR", err.Error())

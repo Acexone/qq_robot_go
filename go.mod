@@ -23,8 +23,8 @@ require github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778 // indirect
 // 以下为go-cqhttp原本的依赖
 require (
 	github.com/Microsoft/go-winio v0.5.1
-	github.com/Mrs4s/MiraiGo v0.0.0-20220405134734-9cb9e80d99d8
-	github.com/RomiChan/syncx v0.0.0-20220320130821-c88644afda9c
+	github.com/Mrs4s/MiraiGo v0.0.0-20220524053130-007f228e1092
+	github.com/RomiChan/syncx v0.0.0-20220404072119-d7ea0ae15a4c
 	github.com/RomiChan/websocket v1.4.3-0.20220123145318-307a86b127bc
 	github.com/fumiama/go-hide-param v0.1.4
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
@@ -44,7 +44,7 @@ require (
 )
 
 require (
-	github.com/RomiChan/protobuf v0.0.0-20220318113238-d8a99598f896 // indirect
+	github.com/RomiChan/protobuf v0.1.1-0.20220524030518-4f349493f9da // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.5.3 // indirect
 	github.com/fumiama/imgsz v0.0.2 // indirect
