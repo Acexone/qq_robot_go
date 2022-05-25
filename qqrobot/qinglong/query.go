@@ -144,14 +144,15 @@ func QueryCookieExpired(info *JdCookieInfo) string {
 	processedValidLogCount := 0
 	for _, logFile := range logFiles {
 		result, isLogComplete, skipThis := parseCookieExpired(info, filepath.Join(checkCookieDir, logFile.Name()))
-		if result != "" {
+		switch {
+		case result != "":
 			return appendLogFileInfo(result, logFile.Name())
-		} else if isLogComplete {
+		case isLogComplete:
 			// 没有解析到该账号，但该日志是完整日志，说明这个账号未过期
 			return ""
-		} else if skipThis {
+		case skipThis:
 			// 如果内部判定需要跳过该文件，则不计数，继续尝试下一个
-		} else {
+		default:
 			processedValidLogCount++
 		}
 
