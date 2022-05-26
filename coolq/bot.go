@@ -137,6 +137,12 @@ type worker struct {
 func (w *worker) do(f func()) {
 	w.wg.Add(1)
 	go func() {
+		defer func() {
+			if err := recover(); err != nil {
+				// 临时处理办法，提个issue等处理
+				log.Errorf("临时处理办法: worker panic: %v", err)
+			}
+		}()
 		defer w.wg.Done()
 		f()
 	}()
