@@ -572,7 +572,7 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 				}
 			}
 			for idx, repeatMessages := range r.getForwardMessagesList(m, true) {
-				if idx == 0 {
+				if config.RepeatAtAll && idx == 0 {
 					repeatMessages.Elements = append([]message.IMessageElement{
 						// 第一条转发的消息加上 @all
 						message.AtAll(),

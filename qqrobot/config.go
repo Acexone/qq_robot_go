@@ -129,6 +129,7 @@ type RuleConfig struct {
 	ForwardToGroups             []int64            `toml:"forward_to_groups"`               // 将消息转发到该QQ群列表
 	RepeatToGroups              []int64            `toml:"repeat_to_groups"`                // 将消息复读到该QQ群列表
 	RepeatToGroupTypes          []string           `toml:"repeat_to_group_types"`           // 复读适用的QQ群类别，将于QQ群ID列表合并组成最终生效QQ群列表
+	RepeatAtAll                 bool               `toml:"repeat_at_all"`                   // 复读时，在开头加上@全体
 	FoodSiteURLList             []string           `toml:"food_site_url_list"`              // 美食图片来源网站列表
 	FoodDescription             string             `toml:"food_description"`                // 美食描述，参数：$food_name$=食物名字
 	RevokeMessage               bool               `toml:"revoke_message"`                  // 是否撤回该条消息
