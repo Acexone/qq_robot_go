@@ -1,9 +1,12 @@
 package qqrobot
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"os/exec"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
@@ -11,11 +14,16 @@ import (
 	"time"
 
 	"github.com/Mrs4s/MiraiGo/message"
+	"github.com/Mrs4s/go-cqhttp/global"
 	"github.com/gookit/color"
 	logger "github.com/sirupsen/logrus"
 )
 
 // 2021/10/02 5:21 by fzls
+
+type PythonDownloadNewVersionResult struct {
+	Filepath string `json:"downloaded_path"`
+}
 
 func (r *QQRobot) checkUpdates() {
 	for _, rule := range r.Config.NotifyUpdate.Rules {
@@ -42,8 +50,47 @@ func (r *QQRobot) checkUpdates() {
 				logger.Infof("【%v】 %v groupID=%v replies=%v", rule.Name, nowStr, groupID, replies)
 			}
 			logger.Infof("check update %v, from %v to %v", rule.Name, lastVersion, latestVersion)
+
+			if interpreter, script := rule.DownloadNewVersionPythonInterpreterPath, rule.DownloadNewVersionPythonScriptPath; interpreter != "" && script != "" && global.PathExists(interpreter) && global.PathExists(script) {
+
+				logger.Infof("通知完毕，开始更新新版本到各个群中")
+				oldVersionKeywords := "DNF蚊子腿小助手_v"
+
+				logger.Infof("开始调用配置的更新命令来获取新版本: %v %v", interpreter, script)
+				newVersionFilePath, err := downloadNewVersionUsingPythonScript(interpreter, script)
+				if err != nil {
+					logger.Warnf("下载新版本失败, err=%v", err)
+					continue
+				}
+
+				uploadFileName := filepath.Base(newVersionFilePath)
+
+				for _, groupID := range rule.NotifyGroups {
+					logger.Infof("开始上传 %v 到 群 %v", uploadFileName, groupID)
+					r.updateFileInGroup(groupID, newVersionFilePath, uploadFileName, oldVersionKeywords)
+				}
+			} else {
+				logger.Infof("更新规则 %v 未配置更新python脚本，或者对应脚本不存在，将不会尝试下载并上传新版本到群文件", rule.Name)
+			}
 		}
 	}
+}
+
+func downloadNewVersionUsingPythonScript(pythonInterpreterPath string, pythonScriptPath string) (string, error) {
+	cmd := exec.Command(pythonInterpreterPath, pythonScriptPath)
+	cmd.Dir = filepath.Dir(pythonScriptPath)
+	out, err := cmd.Output()
+	if err != nil {
+		return "", fmt.Errorf("调用python脚本 %v 下载新版本失败，err=%v", pythonScriptPath, err)
+	}
+
+	var result PythonDownloadNewVersionResult
+	err = json.Unmarshal(out, &result)
+	if err != nil {
+		return "", fmt.Errorf("解析python返回的结果失败, out=%v, err=%v", string(out), err)
+	}
+
+	return result.Filepath, nil
 }
 
 func (r *QQRobot) updateFileInGroup(groupID int64, localFilePath string, uploadFileName string, oldVersionKeyWords string) {

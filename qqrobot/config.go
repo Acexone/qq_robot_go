@@ -184,14 +184,16 @@ type NotifyUpdateConfig struct {
 
 // NotifyUpdateRule 通知更新规则
 type NotifyUpdateRule struct {
-	Name               string   `toml:"name"`                  // 名称
-	NotifyGroups       []int64  `toml:"notify_groups"`         // 通知的群
-	NotifyGroupTypes   []string `toml:"notify_group_types"`    // 通知适用的QQ群类别，将于QQ群ID列表合并组成最终生效QQ群列表
-	Message            string   `toml:"message"`               // 通知的消息，参数：$git_version$=最新版本, $update_message$=更新信息
-	ImageURL           string   `toml:"image_url"`             // 图片URL，若有，则会额外附加图片
-	GitChangelogRawUrl string   `toml:"git_changelog_raw_url"` // git仓库的changelog的raw url，将请求这个网页，从中解析出最新的版本号和更新信息，并替换到message中的$git_version$和$update_message$
-	AtQQsOnTrigger     []int64  `toml:"at_qqs_on_trigger"`     // 需要at的qq列表
-	AtAllOnTrigger     bool     `toml:"at_all_on_trigger"`     // 是否需要@全体成员
+	Name                                    string   `toml:"name"`                                         // 名称
+	NotifyGroups                            []int64  `toml:"notify_groups"`                                // 通知的群
+	NotifyGroupTypes                        []string `toml:"notify_group_types"`                           // 通知适用的QQ群类别，将于QQ群ID列表合并组成最终生效QQ群列表
+	Message                                 string   `toml:"message"`                                      // 通知的消息，参数：$git_version$=最新版本, $update_message$=更新信息
+	ImageURL                                string   `toml:"image_url"`                                    // 图片URL，若有，则会额外附加图片
+	GitChangelogRawUrl                      string   `toml:"git_changelog_raw_url"`                        // git仓库的changelog的raw url，将请求这个网页，从中解析出最新的版本号和更新信息，并替换到message中的$git_version$和$update_message$
+	AtQQsOnTrigger                          []int64  `toml:"at_qqs_on_trigger"`                            // 需要at的qq列表
+	AtAllOnTrigger                          bool     `toml:"at_all_on_trigger"`                            // 是否需要@全体成员
+	DownloadNewVersionPythonInterpreterPath string   `toml:"download_new_version_python_interpreter_path"` // 下载新版本的所需的python解释器路径
+	DownloadNewVersionPythonScriptPath      string   `toml:"download_new_version_python_script_path"`      // 下载新版本的python脚本路径。将会在stdout中输出json回复 {"downloaded_path": "xxx"}。如果未配置，则不会尝试下载新版本并上传到群文件
 }
 
 // NotifySettleConfig 通知结算配置
