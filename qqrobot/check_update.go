@@ -51,28 +51,33 @@ func (r *QQRobot) checkUpdates() {
 			}
 			logger.Infof("check update %v, from %v to %v", rule.Name, lastVersion, latestVersion)
 
-			if interpreter, script := rule.DownloadNewVersionPythonInterpreterPath, rule.DownloadNewVersionPythonScriptPath; interpreter != "" && script != "" && global.PathExists(interpreter) && global.PathExists(script) {
-
-				logger.Infof("通知完毕，开始更新新版本到各个群中")
-				oldVersionKeywords := "DNF蚊子腿小助手_v"
-
-				logger.Infof("开始调用配置的更新命令来获取新版本: %v %v", interpreter, script)
-				newVersionFilePath, err := downloadNewVersionUsingPythonScript(interpreter, script)
-				if err != nil {
-					logger.Warnf("下载新版本失败, err=%v", err)
-					continue
-				}
-
-				uploadFileName := filepath.Base(newVersionFilePath)
-
-				for _, groupID := range rule.NotifyGroups {
-					logger.Infof("开始上传 %v 到 群 %v", uploadFileName, groupID)
-					r.updateFileInGroup(groupID, newVersionFilePath, uploadFileName, oldVersionKeywords)
-				}
-			} else {
-				logger.Infof("更新规则 %v 未配置更新python脚本，或者对应脚本不存在，将不会尝试下载并上传新版本到群文件", rule.Name)
-			}
+			r.updateNewVersionInGroup(rule.Name, rule.NotifyGroups, rule.DownloadNewVersionPythonInterpreterPath, rule.DownloadNewVersionPythonScriptPath)
 		}
+	}
+}
+
+func (r *QQRobot) updateNewVersionInGroup(ctx string, groups []int64, interpreter string, script string) {
+	if interpreter != "" && script != "" && global.PathExists(interpreter) && global.PathExists(script) {
+		logger.Infof("开始更新新版本到各个群中: %v", groups)
+		oldVersionKeywords := "DNF蚊子腿小助手_v"
+
+		logger.Infof("开始调用配置的更新命令来获取新版本: %v %v", interpreter, script)
+		newVersionFilePath, err := downloadNewVersionUsingPythonScript(interpreter, script)
+		if err != nil {
+			logger.Warnf("下载新版本失败, err=%v", err)
+			return
+		}
+
+		uploadFileName := filepath.Base(newVersionFilePath)
+
+		for _, groupID := range groups {
+			logger.Infof("开始上传 %v 到 群 %v", uploadFileName, groupID)
+			r.updateFileInGroup(groupID, newVersionFilePath, uploadFileName, oldVersionKeywords)
+			// 广播消息间强行间隔一秒
+			time.Sleep(time.Second)
+		}
+	} else {
+		logger.Infof("%v: 未配置更新python脚本，或者对应脚本不存在，将不会尝试下载并上传新版本到群文件", ctx)
 	}
 }
 

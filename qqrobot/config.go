@@ -88,6 +88,7 @@ const (
 	actiontypeAichat                     ActionType = "ai_chat"
 	actiontypeManaualTriggerUpdateNotify ActionType = "manaual_trigger_update_notify"
 	actiontypeRepeater                   ActionType = "repeater"
+	actiontypeUpdateNewVersion           ActionType = "update_new_version"
 )
 
 var (
@@ -103,45 +104,49 @@ var (
 
 // RuleConfig 规则配置
 type RuleConfig struct {
-	Name                        string             `toml:"name"`                            // 规则名称
-	Type                        RuleType           `toml:"type"`                            // 规则类别
-	RawGroupIds                 []int64            `toml:"group_ids"`                       // 适用的QQ群ID列表
-	GroupTypes                  []string           `toml:"group_types"`                     // 适用的QQ群类别，将于QQ群ID列表合并组成最终生效QQ群列表
-	GroupIds                    map[int64]struct{} `toml:"-"`                               //
-	RawKeywords                 []string           `toml:"keywords"`                        // 适用的关键词列表
-	KeywordRegexes              []*regexp.Regexp   `toml:"-"`                               // 适用的关键词的正则表达式列表
-	RawExcludeKeywords          []string           `toml:"exclude_keywords"`                // 需要过滤的关键词列表
-	ExcludeKeywordRegexes       []*regexp.Regexp   `toml:"-"`                               // 需要过滤的关键词的正则表达式列表
-	AtQQs                       []int64            `toml:"at_qqs"`                          // 需要判定at的qq列表
-	ExcludeQQs                  []int64            `toml:"exclude_qqs"`                     // 排除的QQ列表
-	ExcludeAdmin                bool               `toml:"exclude_admin"`                   // 是否排除管理员
-	Action                      ActionType         `toml:"action"`                          // 动作
-	SendOnJoin                  bool               `toml:"send_on_join"`                    // 是否在入群时发送
-	AtQQsOnTrigger              []int64            `toml:"at_qqs_on_trigger"`               // 当触发该规则时，需要at的qq列表
-	AtAllOnTrigger              bool               `toml:"at_all_on_trigger"`               // 当触发该规则时，是否需要@全体成员
-	GuideContent                string             `toml:"guide_content"`                   // 内容
-	ImageURL                    string             `toml:"image_url"`                       // 图片URL，若有，则会额外附加图片
-	ImageURLList                []string           `toml:"image_url_list"`                  // 图片URL列表，若有，则会额外附加图片
-	RandomImageUrls             []string           `toml:"random_image_urls"`               // 若配置，则从中随机一个作为图片发送，同时ImageUrl配置会被覆盖
-	CD                          int64              `toml:"cd"`                              // cd时长（秒），0表示不设定，若设定，在cd内触发规则时，若设置了cd内回复内容，则回复该内容，否则视为未触发
-	GuideContentInCD            string             `toml:"guide_content_in_cd"`             // cd内触发规则时的回复内容
-	ForwardToQQs                []int64            `toml:"forward_to_qqs"`                  // 将消息转发到该QQ列表
-	ForwardToGroups             []int64            `toml:"forward_to_groups"`               // 将消息转发到该QQ群列表
-	RepeatToGroups              []int64            `toml:"repeat_to_groups"`                // 将消息复读到该QQ群列表
-	RepeatToGroupTypes          []string           `toml:"repeat_to_group_types"`           // 复读适用的QQ群类别，将于QQ群ID列表合并组成最终生效QQ群列表
-	RepeatAtAll                 bool               `toml:"repeat_at_all"`                   // 复读时，在开头加上@全体
-	FoodSiteURLList             []string           `toml:"food_site_url_list"`              // 美食图片来源网站列表
-	FoodDescription             string             `toml:"food_description"`                // 美食描述，参数：$food_name$=食物名字
-	RevokeMessage               bool               `toml:"revoke_message"`                  // 是否撤回该条消息
-	MuteTime                    int64              `toml:"mute_time"`                       // 禁言时间，为0则表示不禁言(单位为秒)
-	ParseMuteTime               bool               `toml:"parse_mute_time"`                 // 是否从消息从解析想要被禁言的时间
-	TimePeriods                 []TimePeriod       `toml:"time_periods"`                    // 适用该规则的时间段（前者包含，后者不包含）
-	TriggerRuleCount            int64              `toml:"trigger_rule_count"`              // TriggerRuleDuration内触发的规则数目是否超过该数目
-	TriggerRuleDuration         int64              `toml:"trigger_rule_duration"`           // 判定恶意触发机器人规则的时间周期（秒）
-	GitChangelogRawUrl          string             `toml:"git_changelog_raw_url"`           // 某git仓库的changelog的raw url，若设定，则将请求这个网页，从中解析出最新的版本号和更新信息，并替换到GuideContent中的$git_version$和$update_message$
-	GuideContentHasPermission   string             `toml:"guide_content_has_permission"`    // 当有权限触发该指令时的回复
-	GuideContentHasNoPermission string             `toml:"guide_content_has_no_permission"` // 当无权限触发该指令时的回复
-	TargetUpdateRuleName        string             `toml:"target_update_rule_name"`         // 目标更新规则的名称
+	Name                                    string             `toml:"name"`                                         // 规则名称
+	Type                                    RuleType           `toml:"type"`                                         // 规则类别
+	RawGroupIds                             []int64            `toml:"group_ids"`                                    // 适用的QQ群ID列表
+	GroupTypes                              []string           `toml:"group_types"`                                  // 适用的QQ群类别，将于QQ群ID列表合并组成最终生效QQ群列表
+	GroupIds                                map[int64]struct{} `toml:"-"`                                            //
+	RawKeywords                             []string           `toml:"keywords"`                                     // 适用的关键词列表
+	KeywordRegexes                          []*regexp.Regexp   `toml:"-"`                                            // 适用的关键词的正则表达式列表
+	RawExcludeKeywords                      []string           `toml:"exclude_keywords"`                             // 需要过滤的关键词列表
+	ExcludeKeywordRegexes                   []*regexp.Regexp   `toml:"-"`                                            // 需要过滤的关键词的正则表达式列表
+	AtQQs                                   []int64            `toml:"at_qqs"`                                       // 需要判定at的qq列表
+	ExcludeQQs                              []int64            `toml:"exclude_qqs"`                                  // 排除的QQ列表
+	ExcludeAdmin                            bool               `toml:"exclude_admin"`                                // 是否排除管理员
+	Action                                  ActionType         `toml:"action"`                                       // 动作
+	SendOnJoin                              bool               `toml:"send_on_join"`                                 // 是否在入群时发送
+	AtQQsOnTrigger                          []int64            `toml:"at_qqs_on_trigger"`                            // 当触发该规则时，需要at的qq列表
+	AtAllOnTrigger                          bool               `toml:"at_all_on_trigger"`                            // 当触发该规则时，是否需要@全体成员
+	GuideContent                            string             `toml:"guide_content"`                                // 内容
+	ImageURL                                string             `toml:"image_url"`                                    // 图片URL，若有，则会额外附加图片
+	ImageURLList                            []string           `toml:"image_url_list"`                               // 图片URL列表，若有，则会额外附加图片
+	RandomImageUrls                         []string           `toml:"random_image_urls"`                            // 若配置，则从中随机一个作为图片发送，同时ImageUrl配置会被覆盖
+	CD                                      int64              `toml:"cd"`                                           // cd时长（秒），0表示不设定，若设定，在cd内触发规则时，若设置了cd内回复内容，则回复该内容，否则视为未触发
+	GuideContentInCD                        string             `toml:"guide_content_in_cd"`                          // cd内触发规则时的回复内容
+	ForwardToQQs                            []int64            `toml:"forward_to_qqs"`                               // 将消息转发到该QQ列表
+	ForwardToGroups                         []int64            `toml:"forward_to_groups"`                            // 将消息转发到该QQ群列表
+	RepeatToGroups                          []int64            `toml:"repeat_to_groups"`                             // 将消息复读到该QQ群列表
+	RepeatToGroupTypes                      []string           `toml:"repeat_to_group_types"`                        // 复读适用的QQ群类别，将于QQ群ID列表合并组成最终生效QQ群列表
+	RepeatAtAll                             bool               `toml:"repeat_at_all"`                                // 复读时，在开头加上@全体
+	UpdateNewVersionToGroups                []int64            `toml:"update_new_version_to_groups"`                 // 更新新版本到该QQ群列表
+	UpdateNewVersionToGroupTypes            []string           `toml:"update_new_version_to_group_types"`            // 更新新版本适用的QQ群类别，将于QQ群ID列表合并组成最终生效QQ群列表
+	DownloadNewVersionPythonInterpreterPath string             `toml:"download_new_version_python_interpreter_path"` // 下载新版本的所需的python解释器路径
+	DownloadNewVersionPythonScriptPath      string             `toml:"download_new_version_python_script_path"`      // 下载新版本的python脚本路径。将会在stdout中输出json回复 {"downloaded_path": "xxx"}。如果未配置，则不会尝试下载新版本并上传到群文件
+	FoodSiteURLList                         []string           `toml:"food_site_url_list"`                           // 美食图片来源网站列表
+	FoodDescription                         string             `toml:"food_description"`                             // 美食描述，参数：$food_name$=食物名字
+	RevokeMessage                           bool               `toml:"revoke_message"`                               // 是否撤回该条消息
+	MuteTime                                int64              `toml:"mute_time"`                                    // 禁言时间，为0则表示不禁言(单位为秒)
+	ParseMuteTime                           bool               `toml:"parse_mute_time"`                              // 是否从消息从解析想要被禁言的时间
+	TimePeriods                             []TimePeriod       `toml:"time_periods"`                                 // 适用该规则的时间段（前者包含，后者不包含）
+	TriggerRuleCount                        int64              `toml:"trigger_rule_count"`                           // TriggerRuleDuration内触发的规则数目是否超过该数目
+	TriggerRuleDuration                     int64              `toml:"trigger_rule_duration"`                        // 判定恶意触发机器人规则的时间周期（秒）
+	GitChangelogRawUrl                      string             `toml:"git_changelog_raw_url"`                        // 某git仓库的changelog的raw url，若设定，则将请求这个网页，从中解析出最新的版本号和更新信息，并替换到GuideContent中的$git_version$和$update_message$
+	GuideContentHasPermission               string             `toml:"guide_content_has_permission"`                 // 当有权限触发该指令时的回复
+	GuideContentHasNoPermission             string             `toml:"guide_content_has_no_permission"`              // 当无权限触发该指令时的回复
+	TargetUpdateRuleName                    string             `toml:"target_update_rule_name"`                      // 目标更新规则的名称
 }
 
 // TimePeriod 时间规则
@@ -259,6 +264,7 @@ func (c *Config) Init() {
 		}
 
 		rule.RepeatToGroups = c.mergeGroupTypesIntoGroups(rule.RepeatToGroups, rule.RepeatToGroupTypes)
+		rule.UpdateNewVersionToGroups = c.mergeGroupTypesIntoGroups(rule.UpdateNewVersionToGroups, rule.UpdateNewVersionToGroupTypes)
 	}
 
 	for idx := range c.NotifyUpdate.Rules {

@@ -595,6 +595,12 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 		} else {
 			replies.Append(message.NewText("只有管理员可以执行这个指令哦~不要调皮<_<"))
 		}
+	case actiontypeUpdateNewVersion:
+		if isAdmin {
+			r.updateNewVersionInGroup("手动触发更新新版本", config.UpdateNewVersionToGroups, config.DownloadNewVersionPythonInterpreterPath, config.DownloadNewVersionPythonScriptPath)
+		} else {
+			replies.Append(message.NewText("只有管理员可以执行这个指令哦~不要调皮<_<"))
+		}
 	default:
 		if hitKeyWords {
 			replies.Append(message.NewText(fmt.Sprintf(
