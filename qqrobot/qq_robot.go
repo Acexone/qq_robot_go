@@ -488,8 +488,8 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 	switch config.Action {
 	case actionTypeGuide:
 		guideContent = strings.ReplaceAll(guideContent, templateargsMutetime, strconv.FormatInt(muteTime, 10))
-		if config.GitChangelogPage != "" {
-			latestVersion, updateMessage := r.getLatestGitVersion(config.GitChangelogPage)
+		if config.GitChangelogRawUrl != "" {
+			latestVersion, updateMessage := r.getLatestGitVersion(config.GitChangelogRawUrl)
 			guideContent = strings.ReplaceAll(guideContent, templateargsGitversion, latestVersion)
 			guideContent = strings.ReplaceAll(guideContent, templateargsUpdatemessage, updateMessage)
 		}

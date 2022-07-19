@@ -138,7 +138,7 @@ type RuleConfig struct {
 	TimePeriods                 []TimePeriod       `toml:"time_periods"`                    // 适用该规则的时间段（前者包含，后者不包含）
 	TriggerRuleCount            int64              `toml:"trigger_rule_count"`              // TriggerRuleDuration内触发的规则数目是否超过该数目
 	TriggerRuleDuration         int64              `toml:"trigger_rule_duration"`           // 判定恶意触发机器人规则的时间周期（秒）
-	GitChangelogPage            string             `toml:"git_changelog_page"`              // 某git仓库的changelog的url，若设定，则将请求这个网页，从中解析出最新的版本号和更新信息，并替换到GuideContent中的$git_version$和$update_message$
+	GitChangelogRawUrl          string             `toml:"git_changelog_raw_url"`           // 某git仓库的changelog的raw url，若设定，则将请求这个网页，从中解析出最新的版本号和更新信息，并替换到GuideContent中的$git_version$和$update_message$
 	GuideContentHasPermission   string             `toml:"guide_content_has_permission"`    // 当有权限触发该指令时的回复
 	GuideContentHasNoPermission string             `toml:"guide_content_has_no_permission"` // 当无权限触发该指令时的回复
 	TargetUpdateRuleName        string             `toml:"target_update_rule_name"`         // 目标更新规则的名称
@@ -184,14 +184,14 @@ type NotifyUpdateConfig struct {
 
 // NotifyUpdateRule 通知更新规则
 type NotifyUpdateRule struct {
-	Name             string   `toml:"name"`               // 名称
-	NotifyGroups     []int64  `toml:"notify_groups"`      // 通知的群
-	NotifyGroupTypes []string `toml:"notify_group_types"` // 通知适用的QQ群类别，将于QQ群ID列表合并组成最终生效QQ群列表
-	Message          string   `toml:"message"`            // 通知的消息，参数：$git_version$=最新版本, $update_message$=更新信息
-	ImageURL         string   `toml:"image_url"`          // 图片URL，若有，则会额外附加图片
-	GitChangelogPage string   `toml:"git_changelog_page"` // git仓库的changelog的url，将请求这个网页，从中解析出最新的版本号和更新信息，并替换到message中的$git_version$和$update_message$
-	AtQQsOnTrigger   []int64  `toml:"at_qqs_on_trigger"`  // 需要at的qq列表
-	AtAllOnTrigger   bool     `toml:"at_all_on_trigger"`  // 是否需要@全体成员
+	Name               string   `toml:"name"`                  // 名称
+	NotifyGroups       []int64  `toml:"notify_groups"`         // 通知的群
+	NotifyGroupTypes   []string `toml:"notify_group_types"`    // 通知适用的QQ群类别，将于QQ群ID列表合并组成最终生效QQ群列表
+	Message            string   `toml:"message"`               // 通知的消息，参数：$git_version$=最新版本, $update_message$=更新信息
+	ImageURL           string   `toml:"image_url"`             // 图片URL，若有，则会额外附加图片
+	GitChangelogRawUrl string   `toml:"git_changelog_raw_url"` // git仓库的changelog的raw url，将请求这个网页，从中解析出最新的版本号和更新信息，并替换到message中的$git_version$和$update_message$
+	AtQQsOnTrigger     []int64  `toml:"at_qqs_on_trigger"`     // 需要at的qq列表
+	AtAllOnTrigger     bool     `toml:"at_all_on_trigger"`     // 是否需要@全体成员
 }
 
 // NotifySettleConfig 通知结算配置

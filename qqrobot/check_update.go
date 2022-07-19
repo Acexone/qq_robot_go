@@ -3,6 +3,7 @@ package qqrobot
 import (
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"regexp"
 	"sort"
 	"strconv"
@@ -19,7 +20,7 @@ import (
 func (r *QQRobot) checkUpdates() {
 	for _, rule := range r.Config.NotifyUpdate.Rules {
 		lastVersion := r.CheckUpdateVersionMap[rule.Name]
-		latestVersion, updateMessage := r.getLatestGitVersion(rule.GitChangelogPage)
+		latestVersion, updateMessage := r.getLatestGitVersion(rule.GitChangelogRawUrl)
 		if versionLess(lastVersion, latestVersion) {
 			// 版本有更新
 			r.CheckUpdateVersionMap[rule.Name] = latestVersion
@@ -51,7 +52,7 @@ func (r *QQRobot) manualTriggerUpdateNotify(triggerRule *Rule) (replies *message
 			continue
 		}
 
-		latestVersion, updateMessage := r.getLatestGitVersion(rule.GitChangelogPage)
+		latestVersion, updateMessage := r.getLatestGitVersion(rule.GitChangelogRawUrl)
 		if latestVersion == VersionNone {
 			break
 		}
@@ -107,32 +108,20 @@ func (r *QQRobot) initCheckUpdateVersionMap() {
 	}
 	logger.Infof(bold(color.Yellow).Render(fmt.Sprintf("将以%v的间隔定期检查配置的项目的版本更新情况", time.Second*time.Duration(r.Config.NotifyUpdate.CheckInterval))))
 	for _, rule := range r.Config.NotifyUpdate.Rules {
-		latestVersion, updateMessage := r.getLatestGitVersion(rule.GitChangelogPage)
+		latestVersion, updateMessage := r.getLatestGitVersion(rule.GitChangelogRawUrl)
 		r.CheckUpdateVersionMap[rule.Name] = latestVersion
 		logger.Infof(bold(color.Yellow).Render(fmt.Sprintf("项目[%v]当前的最新版本为%v, 更新信息如下：\n%v", rule.Name, latestVersion, updateMessage)))
 	}
 }
 
 var regGitVersion = regexp.MustCompile(`([vV][0-9.]+)(\s+\d+\.\d+\.\d+)`)
-var regUpdateInfo = regexp.MustCompile(`(更新公告</h1>)\s*<ol.+?>((\s|\S)+?)</ol>`)
-var regUpdateMessages = regexp.MustCompile("<li>(.+?)</li>")
+var regUpdateInfo = regexp.MustCompile(`更新公告\s*(?P<update_message>(\s|\S)+?)\n\n`)
 
 // VersionNone 默认版本号
 var VersionNone = "v0.0.0"
 
-// GithubMirrorSites github的镜像站
-var GithubMirrorSites = []string{
-	"hub.fastgit.org",
-	"github.com.cnpmjs.org",
-}
-
-func (r *QQRobot) getLatestGitVersion(gitChangelogPage string) (latestVersion string, updateMessage string) {
-	urls := make([]string, 0, len(GithubMirrorSites)+1)
-	// 先尝试国内镜像，最后尝试直接访问
-	for _, mirrorSite := range GithubMirrorSites {
-		urls = append(urls, strings.ReplaceAll(gitChangelogPage, "github.com", mirrorSite))
-	}
-	urls = append(urls, gitChangelogPage)
+func (r *QQRobot) getLatestGitVersion(gitChangelogRawUrl string) (latestVersion string, updateMessage string) {
+	urls := generateMirrorGithubRawUrls(gitChangelogRawUrl)
 
 	for _, url := range urls {
 		latestVersion, updateMessage = r._getLatestGitVersion(url)
@@ -142,6 +131,60 @@ func (r *QQRobot) getLatestGitVersion(gitChangelogPage string) (latestVersion st
 	}
 
 	return
+}
+
+// 形如 https://github.com/fzls/djc_helper/raw/master/CHANGELOG.MD
+var regRawUrl = regexp.MustCompile(`https://github.com/(?P<owner>\w+)/(?P<repo_name>\w+)/raw/(?P<branch_name>\w+)/(?P<filepath_in_repo>[\w\W]+)`)
+
+func generateMirrorGithubRawUrls(gitChangelogRawUrl string) []string {
+	match := regRawUrl.FindStringSubmatch(gitChangelogRawUrl)
+	if match == nil {
+		return []string{gitChangelogRawUrl}
+	}
+	owner := match[regRawUrl.SubexpIndex("owner")]
+	repoName := match[regRawUrl.SubexpIndex("repo_name")]
+	branchName := match[regRawUrl.SubexpIndex("branch_name")]
+	filepathInRepo := match[regRawUrl.SubexpIndex("filepath_in_repo")]
+
+	var urls []string
+
+	// 先加入比较快的几个镜像
+	urls = append(urls, "https://raw.iqiq.io/{owner}/{repo_name}/{branch_name}/{filepath_in_repo}")
+	urls = append(urls, "https://raw.連接.台灣/{owner}/{repo_name}/{branch_name}/{filepath_in_repo}")
+	urls = append(urls, "https://raw-gh.gcdn.mirr.one/{owner}/{repo_name}/{branch_name}/{filepath_in_repo}")
+
+	// 随机乱序，确保均匀分布请求
+	rand.Shuffle(len(urls), func(i, j int) {
+		urls[i], urls[j] = urls[j], urls[i]
+	})
+
+	// 然后加入几个慢的镜像和源站
+	urls = append(urls, "https://cdn.staticaly.com/gh/{owner}/{repo_name}/{branch_name}/{filepath_in_repo}")
+	urls = append(urls, "https://gcore.jsdelivr.net/gh/{owner}/{repo_name}@{branch_name}/{filepath_in_repo}")
+	urls = append(urls, "https://fastly.jsdelivr.net/gh/{owner}/{repo_name}@{branch_name}/{filepath_in_repo}")
+	urls = append(urls, "https://raw.fastgit.org/{owner}/{repo_name}/{branch_name}/{filepath_in_repo}")
+	urls = append(urls, "https://ghproxy.com/https://raw.githubusercontent.com/{owner}/{repo_name}/{branch_name}/{filepath_in_repo}")
+	urls = append(urls, "https://ghproxy.futils.com/https://github.com/{owner}/{repo_name}/blob/{branch_name}/{filepath_in_repo}")
+
+	// 最后加入原始地址和一些不可达的
+	urls = append(urls, "https://raw.githubusercontents.com/{owner}/{repo_name}/{branch_name}/{filepath_in_repo}")
+	urls = append(urls, "https://github.com/{owner}/{repo_name}/raw/{branch_name}/{filepath_in_repo}")
+
+	// 替换占位符为实际值
+	placeholderToValue := map[string]string{
+		"{owner}":            owner,
+		"{repo_name}":        repoName,
+		"{branch_name}":      branchName,
+		"{filepath_in_repo}": filepathInRepo,
+	}
+	for idx := 0; idx < len(urls); idx++ {
+		for placeholder, value := range placeholderToValue {
+			urls[idx] = strings.ReplaceAll(urls[idx], placeholder, value)
+		}
+	}
+
+	// 返回最终结果
+	return urls
 }
 
 func (r *QQRobot) _getLatestGitVersion(gitChangelogPage string) (string, string) {
@@ -180,14 +223,7 @@ func (r *QQRobot) _getLatestGitVersion(gitChangelogPage string) (string, string)
 	// 解析更新信息
 	var updateMessage string
 	if match := regUpdateInfo.FindStringSubmatch(htmlText); match != nil {
-		messagesText := match[2]
-		if matches := regUpdateMessages.FindAllStringSubmatch(messagesText, -1); matches != nil {
-			var messages []string
-			for idx, match := range matches {
-				messages = append(messages, fmt.Sprintf("%v. %v", idx+1, match[1]))
-			}
-			updateMessage = strings.Join(messages, "\n")
-		}
+		updateMessage = match[regUpdateInfo.SubexpIndex("update_message")]
 	}
 
 	return versions[0], updateMessage
