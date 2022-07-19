@@ -46,6 +46,36 @@ func (r *QQRobot) checkUpdates() {
 	}
 }
 
+func (r *QQRobot) updateFileInGroup(groupID int64, localFilePath string, uploadFileName string, oldVersionKeyWords string) {
+	logger.Infof("开始更新 群 %v 的 %v 文件，旧版本关键词为 %v，新版本路径为 %v", groupID, uploadFileName, oldVersionKeyWords, localFilePath)
+
+	// 获取群文件信息
+	fs, err := r.cqBot.Client.GetGroupFileSystem(groupID)
+	if err != nil {
+		logger.Warnf("获取群 %v 文件系统信息失败: %v", groupID, err)
+		return
+	}
+	files, _, err := fs.Root()
+	if err != nil {
+		logger.Warnf("获取群 %v 根目录文件失败: %v", groupID, err)
+		return
+	}
+
+	// 移除之前版本
+	for _, file := range files {
+		if strings.Contains(file.FileName, oldVersionKeyWords) {
+			logger.Infof("找到了目标文件=%v", file)
+
+			res := fs.DeleteFile("", file.FileId, file.BusId)
+			logger.Infof("删除群 %v 文件 %v(%v) 结果为 %v", groupID, file.FileName, file.FileId, res)
+		}
+	}
+
+	// 上传新版本
+	err = fs.UploadFile(localFilePath, uploadFileName, "/")
+	logger.Warnf("上传群 %v 文件 %v 结果为 %v", groupID, uploadFileName, err)
+}
+
 func (r *QQRobot) manualTriggerUpdateNotify(triggerRule *Rule) (replies *message.SendingMessage) {
 	for _, rule := range r.Config.NotifyUpdate.Rules {
 		if rule.Name != triggerRule.Config.TargetUpdateRuleName {
