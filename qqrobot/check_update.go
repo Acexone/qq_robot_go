@@ -37,6 +37,9 @@ func (r *QQRobot) checkUpdates() {
 			if lastVersion == VersionNone {
 				continue
 			}
+
+			logger.Infof("%v 版本有更新 %v => %v, 开始通知各个群以及上传群文件", rule.Name, lastVersion, latestVersion)
+
 			replies := r.makeNotifyUpdatesReplies(rule, latestVersion, updateMessage)
 			nowStr := r.currentTime()
 			for _, groupID := range rule.NotifyGroups {
