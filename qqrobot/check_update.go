@@ -98,7 +98,12 @@ func downloadNewVersionUsingPythonScript(pythonInterpreterPath string, pythonScr
 	// 现在脚本基于github来下载，中间需要二次压缩，导致会出现一些多余的字符串，因此这里需要将结果部分提取出来
 	output := string(out)
 	boundaryMark := "$$boundary$$"
-	jsonResult := strings.Split(output, boundaryMark)[1]
+	parts := strings.Split(output, boundaryMark)
+	if len(parts) != 3 {
+		return "", errors.Errorf("输出格式不符合预期，预期应由 %v 分隔为三部分, output=%v", boundaryMark, output)
+	}
+
+	jsonResult := parts[1]
 	jsonResult = strings.TrimSpace(jsonResult)
 
 	var result PythonDownloadNewVersionResult
