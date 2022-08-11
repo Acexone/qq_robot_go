@@ -242,9 +242,15 @@ func generateMirrorGithubRawUrls(gitChangelogRawURL string) []string {
 	var urls []string
 
 	// 先加入比较快的几个镜像
+	urls = append(urls, "https://hk1.monika.love/{owner}/{repo_name}/{branch_name}/{filepath_in_repo}")
 	urls = append(urls, "https://raw.iqiq.io/{owner}/{repo_name}/{branch_name}/{filepath_in_repo}")
-	urls = append(urls, "https://raw.連接.台灣/{owner}/{repo_name}/{branch_name}/{filepath_in_repo}")
 	urls = append(urls, "https://raw-gh.gcdn.mirr.one/{owner}/{repo_name}/{branch_name}/{filepath_in_repo}")
+	urls = append(urls, "https://raw.fastgit.org/{owner}/{repo_name}/{branch_name}/{filepath_in_repo}")
+	urls = append(urls, "https://raw.githubusercontents.com/{owner}/{repo_name}/{branch_name}/{filepath_in_repo}")
+	urls = append(urls, "https://gcore.jsdelivr.net/gh/{owner}/{repo_name}@{branch_name}/{filepath_in_repo}")
+	urls = append(urls, "https://kgithub.com/{owner}/{repo_name}/raw/{branch_name}/{filepath_in_repo}")
+	urls = append(urls, "https://cdn.staticaly.com/gh/{owner}/{repo_name}/{branch_name}/{filepath_in_repo}")
+	urls = append(urls, "https://ghproxy.com/https://raw.githubusercontent.com/{owner}/{repo_name}/{branch_name}/{filepath_in_repo}")
 
 	// 随机乱序，确保均匀分布请求
 	rand.Shuffle(len(urls), func(i, j int) {
@@ -252,15 +258,10 @@ func generateMirrorGithubRawUrls(gitChangelogRawURL string) []string {
 	})
 
 	// 然后加入几个慢的镜像和源站
-	urls = append(urls, "https://cdn.staticaly.com/gh/{owner}/{repo_name}/{branch_name}/{filepath_in_repo}")
-	urls = append(urls, "https://gcore.jsdelivr.net/gh/{owner}/{repo_name}@{branch_name}/{filepath_in_repo}")
 	urls = append(urls, "https://fastly.jsdelivr.net/gh/{owner}/{repo_name}@{branch_name}/{filepath_in_repo}")
-	urls = append(urls, "https://raw.fastgit.org/{owner}/{repo_name}/{branch_name}/{filepath_in_repo}")
-	urls = append(urls, "https://ghproxy.com/https://raw.githubusercontent.com/{owner}/{repo_name}/{branch_name}/{filepath_in_repo}")
-	urls = append(urls, "https://ghproxy.futils.com/https://github.com/{owner}/{repo_name}/blob/{branch_name}/{filepath_in_repo}")
+	urls = append(urls, "https://cdn.jsdelivr.net/gh/{owner}/{repo_name}@{branch_name}/{filepath_in_repo}")
 
 	// 最后加入原始地址和一些不可达的
-	urls = append(urls, "https://raw.githubusercontents.com/{owner}/{repo_name}/{branch_name}/{filepath_in_repo}")
 	urls = append(urls, "https://github.com/{owner}/{repo_name}/raw/{branch_name}/{filepath_in_repo}")
 
 	// 替换占位符为实际值
