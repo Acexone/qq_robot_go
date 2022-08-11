@@ -41,23 +41,35 @@ func (r *QQRobot) checkUpdates() {
 				continue
 			}
 
-			logger.Infof("%v 版本有更新 %v => %v, 开始通知各个群以及上传群文件", rule.Name, lastVersion, latestVersion)
-
-			replies := r.makeNotifyUpdatesReplies(rule, latestVersion, updateMessage)
-			nowStr := r.currentTime()
-			for _, groupID := range rule.NotifyGroups {
-				rspID := r.cqBot.SendGroupMessage(groupID, replies)
-				// 广播消息间强行间隔一秒
-				time.Sleep(time.Second)
-				if rspID == -1 {
-					logger.Errorf("【%v Failed】 %v groupID=%v replies=%v err=%v", rule.Name, nowStr, groupID, replies, rspID)
-					continue
+			// re: 以下是临时措施，应对changelog中的版本更新后平均约 10 分钟后github action的打包release流程才完成的情况
+			// undone: 等将新版本改成基于release中的meta信息来获取后，再改成实时通知
+			go func() {
+				logger.Warnf("%v 版本有更新 %v => %v，但目前因获取版本的来源比release早约十分钟，因此在这里等待20分钟后再实际进行通知", rule.Name, lastVersion, latestVersion)
+				select {
+				case <-time.After(2 * 10 * time.Minute):
+					break
+				case <-r.quitCtx.Done():
+					return
 				}
-				logger.Infof("【%v】 %v groupID=%v replies=%v", rule.Name, nowStr, groupID, replies)
-			}
-			logger.Infof("check update %v, from %v to %v", rule.Name, lastVersion, latestVersion)
 
-			r.updateNewVersionInGroup(rule.Name, rule.NotifyGroups, rule.DownloadNewVersionPythonInterpreterPath, rule.DownloadNewVersionPythonScriptPath)
+				logger.Infof("%v 版本有更新 %v => %v, 开始通知各个群以及上传群文件", rule.Name, lastVersion, latestVersion)
+
+				replies := r.makeNotifyUpdatesReplies(rule, latestVersion, updateMessage)
+				nowStr := r.currentTime()
+				for _, groupID := range rule.NotifyGroups {
+					rspID := r.cqBot.SendGroupMessage(groupID, replies)
+					// 广播消息间强行间隔一秒
+					time.Sleep(time.Second)
+					if rspID == -1 {
+						logger.Errorf("【%v Failed】 %v groupID=%v replies=%v err=%v", rule.Name, nowStr, groupID, replies, rspID)
+						continue
+					}
+					logger.Infof("【%v】 %v groupID=%v replies=%v", rule.Name, nowStr, groupID, replies)
+				}
+				logger.Infof("check update %v, from %v to %v", rule.Name, lastVersion, latestVersion)
+
+				r.updateNewVersionInGroup(rule.Name, rule.NotifyGroups, rule.DownloadNewVersionPythonInterpreterPath, rule.DownloadNewVersionPythonScriptPath)
+			}()
 		}
 	}
 }
