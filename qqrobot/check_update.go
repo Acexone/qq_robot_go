@@ -92,10 +92,16 @@ func downloadNewVersionUsingPythonScript(pythonInterpreterPath string, pythonScr
 		return "", fmt.Errorf("调用python脚本 %v 下载新版本失败，err=%v", pythonScriptPath, err)
 	}
 
+	// 现在脚本基于github来下载，中间需要二次压缩，导致会出现一些多余的字符串，因此这里需要将结果部分提取出来
+	output := string(out)
+	boundaryMark := "$$boundary$$"
+	jsonResult := strings.Split(output, boundaryMark)[1]
+	jsonResult = strings.TrimSpace(jsonResult)
+
 	var result PythonDownloadNewVersionResult
-	err = json.Unmarshal(out, &result)
+	err = json.Unmarshal([]byte(jsonResult), &result)
 	if err != nil {
-		return "", fmt.Errorf("解析python返回的结果失败, out=%v, err=%v", string(out), err)
+		return "", fmt.Errorf("解析python返回的结果失败, jsonResult=%v, err=%v", jsonResult, err)
 	}
 
 	return result.Filepath, nil

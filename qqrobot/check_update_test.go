@@ -14,8 +14,8 @@ func Test_generateMirrorGithubRawUrls(t *testing.T) {
 }
 
 func Test_downloadNewVersionUsingPythonScript(t *testing.T) {
-	pythonInterpreter := "D:\\_coding\\python\\djc_helper\\.venv_dev\\Scripts\\python.exe"
-	pythonScript := "D:/_coding/python/djc_helper/download_latest_version.py"
+	pythonInterpreter := "D:\\_codes\\Python\\djc_helper_public\\.venv_dev\\Scripts\\python.exe"
+	pythonScript := "D:\\_codes\\Python\\djc_helper_public\\download_latest_version.py"
 	got, err := downloadNewVersionUsingPythonScript(pythonInterpreter, pythonScript)
 	if err != nil {
 		t.Errorf("downloadNewVersionUsingPythonScript err=%v", err)
