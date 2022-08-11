@@ -92,7 +92,7 @@ func downloadNewVersionUsingPythonScript(pythonInterpreterPath string, pythonScr
 	cmd.Dir = filepath.Dir(pythonScriptPath)
 	out, err := cmd.Output()
 	if err != nil {
-		return "", errors.Errorf("调用python脚本 %v 下载新版本失败，err=%v", pythonScriptPath, err)
+		return "", errors.Errorf("调用python脚本 %v 下载新版本失败，err=%v, out=%v", pythonScriptPath, err, string(out))
 	}
 
 	// 现在脚本基于github来下载，中间需要二次压缩，导致会出现一些多余的字符串，因此这里需要将结果部分提取出来
