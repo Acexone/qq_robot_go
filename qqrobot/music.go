@@ -1,7 +1,7 @@
 package qqrobot
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 
@@ -62,7 +62,7 @@ func (r *QQRobot) queryNeteaseMusic(musicName string) string {
 	if err != nil {
 		return "0"
 	}
-	data, err := ioutil.ReadAll(res.Body)
+	data, err := io.ReadAll(res.Body)
 	_ = res.Body.Close()
 	if err != nil {
 		return "0"
@@ -124,6 +124,6 @@ func netGet(url string, header http.Header) []byte {
 		return nil
 	}
 	defer res.Body.Close()
-	result, _ := ioutil.ReadAll(res.Body)
+	result, _ := io.ReadAll(res.Body)
 	return result
 }

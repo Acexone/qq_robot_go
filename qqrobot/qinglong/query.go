@@ -2,7 +2,7 @@ package qinglong
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -92,7 +92,7 @@ func QuerySummary(info *JdCookieInfo) string {
 
 func querySummary(info *JdCookieInfo, logFile string) string {
 	summaryDir := getPath(logFile)
-	logFiles, err := ioutil.ReadDir(summaryDir)
+	logFiles, err := os.ReadDir(summaryDir)
 	if err != nil {
 		logger.Errorf("read log dir failed, err=%v", err)
 		return ""
@@ -125,7 +125,7 @@ func QueryCookieExpired(info *JdCookieInfo) string {
 	}
 
 	checkCookieDir := getPath("log/ccwav_QLScript2_jd_CheckCK")
-	logFiles, err := ioutil.ReadDir(checkCookieDir)
+	logFiles, err := os.ReadDir(checkCookieDir)
 	if err != nil {
 		logger.Errorf("read log dir failed, err=%v", err)
 		return ""

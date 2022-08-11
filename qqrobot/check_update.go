@@ -3,7 +3,7 @@ package qqrobot
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"os/exec"
 	"path/filepath"
@@ -14,10 +14,11 @@ import (
 	"time"
 
 	"github.com/Mrs4s/MiraiGo/message"
-	"github.com/Mrs4s/go-cqhttp/global"
 	"github.com/gookit/color"
 	"github.com/pkg/errors"
 	logger "github.com/sirupsen/logrus"
+
+	"github.com/Mrs4s/go-cqhttp/global"
 )
 
 // 2021/10/02 5:21 by fzls
@@ -290,7 +291,7 @@ func (r *QQRobot) _getLatestGitVersion(gitChangelogPage string) (string, string)
 	defer resp.Body.Close()
 
 	// 获取网页内容
-	bytesData, err := ioutil.ReadAll(resp.Body)
+	bytesData, err := io.ReadAll(resp.Body)
 	if err != nil {
 		logger.Debugf("getLatestGitVersion gitChangelogPage=%v err=%v", gitChangelogPage, err)
 		return VersionNone, ""

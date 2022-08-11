@@ -2,7 +2,7 @@ package qqrobot
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"strings"
 	"time"
 
@@ -109,7 +109,7 @@ func (r *QQRobot) getLatestSettleInfo() (*SettleInfo, error) {
 	}
 	defer resp.Body.Close()
 
-	bytesData, _ := ioutil.ReadAll(resp.Body)
+	bytesData, _ := io.ReadAll(resp.Body)
 
 	var settleResponse SettleResponse
 	err = json.Unmarshal(bytesData, &settleResponse)

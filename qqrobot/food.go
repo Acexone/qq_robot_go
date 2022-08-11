@@ -3,7 +3,7 @@ package qqrobot
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"regexp"
 	"strconv"
@@ -66,7 +66,7 @@ func (r *QQRobot) tryFetchMoreFoodImages(rule *Rule, foodSiteURL string) error {
 	defer resp.Body.Close()
 
 	// 获取网页内容
-	bytesData, _ := ioutil.ReadAll(resp.Body)
+	bytesData, _ := io.ReadAll(resp.Body)
 
 	// 解析出所有美食图片
 	var foodImages []FoodImage

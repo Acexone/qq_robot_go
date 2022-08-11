@@ -2,7 +2,7 @@ package qinglong
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/Mrs4s/go-cqhttp/global"
@@ -13,7 +13,7 @@ func parseSummary(info *JdCookieInfo, logFilePath string) string {
 		return ""
 	}
 
-	contentBytes, err := ioutil.ReadFile(logFilePath)
+	contentBytes, err := os.ReadFile(logFilePath)
 	if err != nil {
 		return ""
 	}

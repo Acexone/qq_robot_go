@@ -1,7 +1,7 @@
 package qinglong
 
 import (
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/Mrs4s/go-cqhttp/global"
@@ -12,7 +12,7 @@ func parseCookieExpired(info *JdCookieInfo, logFilePath string) (result string, 
 		return "", false, true
 	}
 
-	contentBytes, err := ioutil.ReadFile(logFilePath)
+	contentBytes, err := os.ReadFile(logFilePath)
 	if err != nil {
 		return "", false, true
 	}
