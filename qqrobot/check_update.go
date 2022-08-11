@@ -16,11 +16,13 @@ import (
 	"github.com/Mrs4s/MiraiGo/message"
 	"github.com/Mrs4s/go-cqhttp/global"
 	"github.com/gookit/color"
+	"github.com/pkg/errors"
 	logger "github.com/sirupsen/logrus"
 )
 
 // 2021/10/02 5:21 by fzls
 
+// PythonDownloadNewVersionResult 使用python脚本下载最新版本的结果
 type PythonDownloadNewVersionResult struct {
 	Filepath string `json:"downloaded_path"`
 }
@@ -28,7 +30,7 @@ type PythonDownloadNewVersionResult struct {
 func (r *QQRobot) checkUpdates() {
 	for _, rule := range r.Config.NotifyUpdate.Rules {
 		lastVersion := r.CheckUpdateVersionMap[rule.Name]
-		latestVersion, updateMessage := r.getLatestGitVersion(rule.GitChangelogRawUrl)
+		latestVersion, updateMessage := r.getLatestGitVersion(rule.GitChangelogRawURL)
 		if versionLess(lastVersion, latestVersion) {
 			// 版本有更新
 			r.CheckUpdateVersionMap[rule.Name] = latestVersion
@@ -89,7 +91,7 @@ func downloadNewVersionUsingPythonScript(pythonInterpreterPath string, pythonScr
 	cmd.Dir = filepath.Dir(pythonScriptPath)
 	out, err := cmd.Output()
 	if err != nil {
-		return "", fmt.Errorf("调用python脚本 %v 下载新版本失败，err=%v", pythonScriptPath, err)
+		return "", errors.Errorf("调用python脚本 %v 下载新版本失败，err=%v", pythonScriptPath, err)
 	}
 
 	// 现在脚本基于github来下载，中间需要二次压缩，导致会出现一些多余的字符串，因此这里需要将结果部分提取出来
@@ -101,7 +103,7 @@ func downloadNewVersionUsingPythonScript(pythonInterpreterPath string, pythonScr
 	var result PythonDownloadNewVersionResult
 	err = json.Unmarshal([]byte(jsonResult), &result)
 	if err != nil {
-		return "", fmt.Errorf("解析python返回的结果失败, jsonResult=%v, err=%v", jsonResult, err)
+		return "", errors.Errorf("解析python返回的结果失败, jsonResult=%v, err=%v", jsonResult, err)
 	}
 
 	return result.Filepath, nil
@@ -143,7 +145,7 @@ func (r *QQRobot) manualTriggerUpdateNotify(triggerRule *Rule) (replies *message
 			continue
 		}
 
-		latestVersion, updateMessage := r.getLatestGitVersion(rule.GitChangelogRawUrl)
+		latestVersion, updateMessage := r.getLatestGitVersion(rule.GitChangelogRawURL)
 		if latestVersion == VersionNone {
 			break
 		}
@@ -199,7 +201,7 @@ func (r *QQRobot) initCheckUpdateVersionMap() {
 	}
 	logger.Infof(bold(color.Yellow).Render(fmt.Sprintf("将以%v的间隔定期检查配置的项目的版本更新情况", time.Second*time.Duration(r.Config.NotifyUpdate.CheckInterval))))
 	for _, rule := range r.Config.NotifyUpdate.Rules {
-		latestVersion, updateMessage := r.getLatestGitVersion(rule.GitChangelogRawUrl)
+		latestVersion, updateMessage := r.getLatestGitVersion(rule.GitChangelogRawURL)
 		r.CheckUpdateVersionMap[rule.Name] = latestVersion
 		logger.Infof(bold(color.Yellow).Render(fmt.Sprintf("项目[%v]当前的最新版本为%v, 更新信息如下：\n%v", rule.Name, latestVersion, updateMessage)))
 	}
@@ -211,8 +213,8 @@ var regUpdateInfo = regexp.MustCompile(`更新公告\s*(?P<update_message>(\s|\S
 // VersionNone 默认版本号
 var VersionNone = "v0.0.0"
 
-func (r *QQRobot) getLatestGitVersion(gitChangelogRawUrl string) (latestVersion string, updateMessage string) {
-	urls := generateMirrorGithubRawUrls(gitChangelogRawUrl)
+func (r *QQRobot) getLatestGitVersion(gitChangelogRawURL string) (latestVersion string, updateMessage string) {
+	urls := generateMirrorGithubRawUrls(gitChangelogRawURL)
 
 	for _, url := range urls {
 		latestVersion, updateMessage = r._getLatestGitVersion(url)
@@ -225,17 +227,17 @@ func (r *QQRobot) getLatestGitVersion(gitChangelogRawUrl string) (latestVersion 
 }
 
 // 形如 https://github.com/fzls/djc_helper/raw/master/CHANGELOG.MD
-var regRawUrl = regexp.MustCompile(`https://github.com/(?P<owner>\w+)/(?P<repo_name>\w+)/raw/(?P<branch_name>\w+)/(?P<filepath_in_repo>[\w\W]+)`)
+var regRawURL = regexp.MustCompile(`https://github.com/(?P<owner>\w+)/(?P<repo_name>\w+)/raw/(?P<branch_name>\w+)/(?P<filepath_in_repo>[\w\W]+)`)
 
-func generateMirrorGithubRawUrls(gitChangelogRawUrl string) []string {
-	match := regRawUrl.FindStringSubmatch(gitChangelogRawUrl)
+func generateMirrorGithubRawUrls(gitChangelogRawURL string) []string {
+	match := regRawURL.FindStringSubmatch(gitChangelogRawURL)
 	if match == nil {
-		return []string{gitChangelogRawUrl}
+		return []string{gitChangelogRawURL}
 	}
-	owner := match[regRawUrl.SubexpIndex("owner")]
-	repoName := match[regRawUrl.SubexpIndex("repo_name")]
-	branchName := match[regRawUrl.SubexpIndex("branch_name")]
-	filepathInRepo := match[regRawUrl.SubexpIndex("filepath_in_repo")]
+	owner := match[regRawURL.SubexpIndex("owner")]
+	repoName := match[regRawURL.SubexpIndex("repo_name")]
+	branchName := match[regRawURL.SubexpIndex("branch_name")]
+	filepathInRepo := match[regRawURL.SubexpIndex("filepath_in_repo")]
 
 	var urls []string
 
