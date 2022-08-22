@@ -68,13 +68,13 @@ func (r *QQRobot) checkUpdates() {
 				}
 				logger.Infof("check update %v, from %v to %v", rule.Name, lastVersion, latestVersion)
 
-				r.updateNewVersionInGroup(rule.Name, rule.NotifyGroups, rule.DownloadNewVersionPythonInterpreterPath, rule.DownloadNewVersionPythonScriptPath)
+				r.updateNewVersionInGroup(rule.Name, rule.NotifyGroups, rule.DownloadNewVersionPythonInterpreterPath, rule.DownloadNewVersionPythonScriptPath, true)
 			}()
 		}
 	}
 }
 
-func (r *QQRobot) updateNewVersionInGroup(ctx string, groups []int64, interpreter string, script string) {
+func (r *QQRobot) updateNewVersionInGroup(ctx string, groups []int64, interpreter string, script string, needRetry bool) {
 	if interpreter != "" && script != "" && global.PathExists(interpreter) && global.PathExists(script) {
 		logger.Infof("开始更新新版本到各个群中: %v", groups)
 		oldVersionKeywords := "DNF蚊子腿小助手_v"
@@ -88,11 +88,51 @@ func (r *QQRobot) updateNewVersionInGroup(ctx string, groups []int64, interprete
 
 		uploadFileName := filepath.Base(newVersionFilePath)
 
-		for _, groupID := range groups {
-			logger.Infof("开始上传 %v 到 群 %v", uploadFileName, groupID)
-			r.updateFileInGroup(groupID, newVersionFilePath, uploadFileName, oldVersionKeywords)
-			// 广播消息间强行间隔一秒
-			time.Sleep(time.Second)
+		groupsToUpload := groups
+		failIndex := 1
+		retryWaitTime := time.Minute
+		maxRetryWaitTime := time.Hour
+		for {
+			// 尝试上传新版本
+			for _, groupID := range groupsToUpload {
+				logger.Infof("开始上传 %v 到 群 %v", uploadFileName, groupID)
+				r.updateFileInGroup(groupID, newVersionFilePath, uploadFileName, oldVersionKeywords)
+				// 广播消息间强行间隔一秒
+				time.Sleep(time.Second)
+			}
+
+			// 检查是否上传成功
+			var groupsNotUploaded []int64
+			for _, groupID := range groupsToUpload {
+				if !r.hasFileInGroup(groupID, uploadFileName) {
+					groupsNotUploaded = append(groupsNotUploaded, groupID)
+				}
+			}
+			if len(groupsNotUploaded) == 0 {
+				logger.Infof("全部上传成功，完毕")
+				break
+			}
+
+			logger.Infof("%v 个群未上传成功： %v", len(groupsNotUploaded), groupsNotUploaded)
+			if !needRetry {
+				logger.Warnf("当前配置为不需要重试")
+				break
+			}
+
+			logger.Infof("第 %v 次上传失败， 等待 %v 后再尝试上传到这些群中", failIndex, retryWaitTime)
+			select {
+			case <-time.After(retryWaitTime):
+				break
+			case <-r.quitCtx.Done():
+				return
+			}
+
+			groupsToUpload = groupsNotUploaded
+			failIndex += 1
+			retryWaitTime *= 2
+			if retryWaitTime >= maxRetryWaitTime {
+				retryWaitTime = maxRetryWaitTime
+			}
 		}
 	} else {
 		logger.Infof("%v: 未配置更新python脚本，或者对应脚本不存在，将不会尝试下载并上传新版本到群文件", ctx)
@@ -155,6 +195,30 @@ func (r *QQRobot) updateFileInGroup(groupID int64, localFilePath string, uploadF
 	// 上传新版本
 	err = fs.UploadFile(localFilePath, uploadFileName, "/")
 	logger.Warnf("上传群 %v 文件 %v 结果为 %v", groupID, uploadFileName, err)
+}
+
+// hasFileInGroup 指定群中是否有指定名称的文件
+func (r *QQRobot) hasFileInGroup(groupID int64, uploadFileName string) (has bool) {
+	// 获取群文件信息
+	fs, err := r.cqBot.Client.GetGroupFileSystem(groupID)
+	if err != nil {
+		logger.Warnf("获取群 %v 文件系统信息失败: %v", groupID, err)
+		return
+	}
+	files, _, err := fs.Root()
+	if err != nil {
+		logger.Warnf("获取群 %v 根目录文件失败: %v", groupID, err)
+		return
+	}
+
+	// 移除之前版本
+	for _, file := range files {
+		if file.FileName == uploadFileName {
+			return true
+		}
+	}
+
+	return
 }
 
 func (r *QQRobot) manualTriggerUpdateNotify(triggerRule *Rule) (replies *message.SendingMessage) {
