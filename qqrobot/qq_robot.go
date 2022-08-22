@@ -602,7 +602,7 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 				config.UpdateNewVersionToGroups, config.DownloadNewVersionPythonInterpreterPath, config.DownloadNewVersionPythonScriptPath,
 				false,
 			)
-			replies.Append(message.NewText("指令执行成功，可查看各个群看看是否上传成功。如果失败，可查看机器人的服务器日志排查"))
+			replies.Append(message.NewText("上传完毕，具体情况可查看服务器日志"))
 		} else {
 			replies.Append(message.NewText("只有管理员可以执行这个指令哦~不要调皮<_<"))
 		}
