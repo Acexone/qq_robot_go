@@ -96,7 +96,7 @@ func (r *QQRobot) updateNewVersionInGroup(ctx string, groups []int64, interprete
 			// 尝试上传新版本
 			for _, groupID := range groupsToUpload {
 				logger.Infof("开始上传 %v 到 群 %v", uploadFileName, groupID)
-				r.updateFileInGroup(groupID, newVersionFilePath, uploadFileName, oldVersionKeywords)
+				r.updateFileInGroup(groupID, newVersionFilePath, uploadFileName, oldVersionKeywords, false)
 				// 广播消息间强行间隔一秒
 				time.Sleep(time.Second)
 			}
@@ -167,7 +167,13 @@ func downloadNewVersionUsingPythonScript(pythonInterpreterPath string, pythonScr
 	return result.Filepath, nil
 }
 
-func (r *QQRobot) updateFileInGroup(groupID int64, localFilePath string, uploadFileName string, oldVersionKeyWords string) {
+func (r *QQRobot) updateFileInGroup(
+	groupID int64,
+	localFilePath string,
+	uploadFileName string,
+	oldVersionKeyWords string,
+	replaceIfExists bool,
+) {
 	logger.Infof("开始更新 群 %v 的 %v 文件，旧版本关键词为 %v，新版本路径为 %v", groupID, uploadFileName, oldVersionKeyWords, localFilePath)
 
 	// 获取群文件信息
@@ -180,6 +186,16 @@ func (r *QQRobot) updateFileInGroup(groupID int64, localFilePath string, uploadF
 	if err != nil {
 		logger.Warnf("获取群 %v 根目录文件失败: %v", groupID, err)
 		return
+	}
+
+	if !replaceIfExists {
+		// 如果已经存在该文件，则直接返回
+		for _, file := range files {
+			if file.FileName == uploadFileName {
+				logger.Infof("群 %v 中已有 %v 文件，且当前配置为不覆盖已有文件，将直接跳过", groupID, uploadFileName)
+				return
+			}
+		}
 	}
 
 	// 移除之前版本
