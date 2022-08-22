@@ -90,6 +90,7 @@ func (r *QQRobot) updateNewVersionInGroup(ctx string, groups []int64, interprete
 
 		groupsToUpload := groups
 		failIndex := 1
+		maxFailTimes := 10
 		retryWaitTime := time.Minute
 		maxRetryWaitTime := time.Hour
 		for {
@@ -116,6 +117,11 @@ func (r *QQRobot) updateNewVersionInGroup(ctx string, groups []int64, interprete
 			logger.Infof("%v 个群未上传成功： %v", len(groupsNotUploaded), groupsNotUploaded)
 			if !needRetry {
 				logger.Warnf("当前配置为不需要重试")
+				break
+			}
+
+			if failIndex > maxFailTimes {
+				logger.Warnf("重试次数超过 %v 次，停止重试", maxFailTimes)
 				break
 			}
 
