@@ -91,8 +91,8 @@ func (r *QQRobot) updateNewVersionInGroup(ctx string, groups []int64, interprete
 		groupsToUpload := groups
 		failIndex := 1
 		maxFailTimes := 10
-		retryWaitTime := time.Minute
-		maxRetryWaitTime := time.Hour
+		retryWaitTime := time.Hour
+		maxRetryWaitTime := 12 * time.Hour
 		for {
 			// 尝试上传新版本
 			for _, groupID := range groupsToUpload {
