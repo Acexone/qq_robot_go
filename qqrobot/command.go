@@ -102,7 +102,7 @@ func (r *QQRobot) processCommand(commandStr string, m *message.GroupMessage) (ms
 		// full_match|听歌关键词|musicName
 		musicName := match[2]
 
-		musicElem, err := r.makeMusicShareElement(musicName, message.CloudMusic)
+		musicElem, err := r.makeMusicShareElement(musicName, message.QQMusic)
 		if err != nil {
 			return fmt.Sprintf("没有找到歌曲：%v", musicName), nil, nil
 		}
