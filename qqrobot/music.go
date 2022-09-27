@@ -1,9 +1,11 @@
 package qqrobot
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/Mrs4s/MiraiGo/message"
 	"github.com/pkg/errors"
@@ -99,19 +101,19 @@ func (r *QQRobot) makeQQMusicShareElement(musicName string) (*message.MusicShare
 	}, nil
 }
 
+// queryQQMusic qq音乐页面上面的智能搜索框的接口
 func (r *QQRobot) queryQQMusic(musicName string) string {
 	// 搜索音乐信息 第一首歌
 	h1 := http.Header{
-		"User-Agent": []string{"Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:84.0) Gecko/20100101 Firefox/84.0"},
+		"User-Agent": []string{"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"},
 	}
-	search, _ := url.Parse("https://c.y.qq.com/soso/fcgi-bin/client_search_cp")
-	search.RawQuery = url.Values{
-		"w": []string{musicName},
-	}.Encode()
-	res := netGet(search.String(), h1)
-	info := gjson.ParseBytes(res[9 : len(res)-1]).Get("data.song.list.0")
+	search := fmt.Sprintf("https://c.y.qq.com/splcloud/fcgi-bin/smartbox_new.fcg?"+
+		"key=%v&_=%v&cv=4747474&ct=24&format=json&inCharset=utf-8&outCharset=utf-8&notice=0&platform=yqq.json&needNewCode=1",
+		url.QueryEscape(musicName), time.Now().UnixMilli())
+	res := netGet(search, h1)
+	info := gjson.ParseBytes(res).Get("data.song.itemlist.0")
 
-	return info.Get("songid").String()
+	return info.Get("id").String()
 }
 
 // netGet 返回请求数据
