@@ -74,12 +74,17 @@ func (r *QQRobot) checkUpdates() {
 	}
 }
 
+func boldYellowLog(format string, args ...interface{}) {
+	logger.Infof(bold(color.Yellow).Render(fmt.Sprintf(format, args...)))
+}
+
 func (r *QQRobot) updateNewVersionInGroup(ctx string, groups []int64, interpreter string, script string, needRetry bool) {
 	if interpreter != "" && script != "" && global.PathExists(interpreter) && global.PathExists(script) {
-		logger.Infof("开始更新新版本到各个群中: %v", groups)
+		boldYellowLog("开始更新新版本到各个群中: %v", groups)
+		boldYellowLog("是否重试: %v", needRetry)
 		oldVersionKeywords := "DNF蚊子腿小助手_v"
 
-		logger.Infof("开始调用配置的更新命令来获取新版本: %v %v", interpreter, script)
+		boldYellowLog("开始调用配置的更新命令来获取新版本: %v %v", interpreter, script)
 		newVersionFilePath, err := downloadNewVersionUsingPythonScript(interpreter, script)
 		if err != nil {
 			logger.Warnf("下载新版本失败, err=%v", err)
@@ -96,7 +101,7 @@ func (r *QQRobot) updateNewVersionInGroup(ctx string, groups []int64, interprete
 		for {
 			// 尝试上传新版本
 			for _, groupID := range groupsToUpload {
-				logger.Infof("开始上传 %v 到 群 %v", uploadFileName, groupID)
+				boldYellowLog("开始上传 %v 到 群 %v", uploadFileName, groupID)
 				r.updateFileInGroup(groupID, newVersionFilePath, uploadFileName, oldVersionKeywords, false)
 				// 广播消息间强行间隔一秒
 				time.Sleep(time.Second)
@@ -110,11 +115,11 @@ func (r *QQRobot) updateNewVersionInGroup(ctx string, groups []int64, interprete
 				}
 			}
 			if len(groupsNotUploaded) == 0 {
-				logger.Infof("全部上传成功，完毕")
+				boldYellowLog("全部上传成功，完毕")
 				break
 			}
 
-			logger.Infof("%v 个群未上传成功： %v", len(groupsNotUploaded), groupsNotUploaded)
+			boldYellowLog("%v 个群未上传成功： %v", len(groupsNotUploaded), groupsNotUploaded)
 			if !needRetry {
 				logger.Warnf("当前配置为不需要重试")
 				break
@@ -125,7 +130,7 @@ func (r *QQRobot) updateNewVersionInGroup(ctx string, groups []int64, interprete
 				break
 			}
 
-			logger.Infof("第 %v 次上传失败， 等待 %v 后再尝试上传到这些群中", failIndex, retryWaitTime)
+			boldYellowLog("第 %v 次上传失败， 等待 %v 后再尝试上传到这些群中", failIndex, retryWaitTime)
 			select {
 			case <-time.After(retryWaitTime):
 				break
@@ -141,7 +146,7 @@ func (r *QQRobot) updateNewVersionInGroup(ctx string, groups []int64, interprete
 			}
 		}
 	} else {
-		logger.Infof("%v: 未配置更新python脚本，或者对应脚本不存在，将不会尝试下载并上传新版本到群文件", ctx)
+		boldYellowLog("%v: 未配置更新python脚本，或者对应脚本不存在，将不会尝试下载并上传新版本到群文件", ctx)
 	}
 }
 
