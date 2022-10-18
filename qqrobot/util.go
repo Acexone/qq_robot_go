@@ -79,6 +79,10 @@ func (r *QQRobot) ocr(groupImageElement *message.GroupImageElement) (ocrResultSt
 	return ocrResultString
 }
 
+func (r *QQRobot) sendTextMessageToGroup(groupID int64, msg string) {
+	r.cqBot.SendGroupMessage(groupID, message.NewSendingMessage().Append(message.NewText(msg)))
+}
+
 func (r *QQRobot) currentTime() string {
 	return r.formatTime(time.Now())
 }
