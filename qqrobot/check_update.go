@@ -113,7 +113,7 @@ func (r *QQRobot) updateNewVersionInGroup(ctx string, groups []int64, progressNo
 		maxRetryWaitTime := 12 * time.Hour
 		for {
 			// 尝试上传新版本
-			notifyUpdateProgress("[%v/%v] 开始尝试上传", failIndex, maxFailTimes, retryWaitTime)
+			notifyUpdateProgress("[%v/%v] 开始尝试上传", failIndex, maxFailTimes)
 			for _, groupID := range groupsToUpload {
 				boldYellowLog("开始上传 %v 到 群 %v", uploadFileName, groupID)
 				r.updateFileInGroup(groupID, newVersionFilePath, uploadFileName, oldVersionKeywords, false)
