@@ -192,6 +192,8 @@ type NotifyUpdateRule struct {
 	Name                                    string   `toml:"name"`                                         // 名称
 	NotifyGroups                            []int64  `toml:"notify_groups"`                                // 通知的群
 	NotifyGroupTypes                        []string `toml:"notify_group_types"`                           // 通知适用的QQ群类别，将于QQ群ID列表合并组成最终生效QQ群列表
+	ProgressNotifyGroups                    []int64  `toml:"progress_notify_groups"`                       // 进度发生变更时通知的群
+	ProgressNotifyGroupTypes                []string `toml:"progress_notify_group_types"`                  // 进度发生变更时通知适用的QQ群类别，将于QQ群ID列表合并组成最终生效QQ群列表
 	Message                                 string   `toml:"message"`                                      // 通知的消息，参数：$git_version$=最新版本, $update_message$=更新信息
 	ImageURL                                string   `toml:"image_url"`                                    // 图片URL，若有，则会额外附加图片
 	GitChangelogRawURL                      string   `toml:"git_changelog_raw_url"`                        // git仓库的changelog的raw url，将请求这个网页，从中解析出最新的版本号和更新信息，并替换到message中的$git_version$和$update_message$
@@ -271,6 +273,7 @@ func (c *Config) Init() {
 		rule := &c.NotifyUpdate.Rules[idx]
 
 		rule.NotifyGroups = c.mergeGroupTypesIntoGroups(rule.NotifyGroups, rule.NotifyGroupTypes)
+		rule.ProgressNotifyGroups = c.mergeGroupTypesIntoGroups(rule.ProgressNotifyGroups, rule.ProgressNotifyGroupTypes)
 	}
 
 	if err := c.check(); err != nil {

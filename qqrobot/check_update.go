@@ -68,7 +68,10 @@ func (r *QQRobot) checkUpdates() {
 				}
 				logger.Infof("check update %v, from %v to %v", rule.Name, lastVersion, latestVersion)
 
-				r.updateNewVersionInGroup(rule.Name, rule.NotifyGroups, rule.DownloadNewVersionPythonInterpreterPath, rule.DownloadNewVersionPythonScriptPath, true)
+				r.updateNewVersionInGroup(rule.Name,
+					rule.NotifyGroups, rule.ProgressNotifyGroups,
+					rule.DownloadNewVersionPythonInterpreterPath, rule.DownloadNewVersionPythonScriptPath, true,
+				)
 			}()
 		}
 	}
@@ -78,16 +81,26 @@ func boldYellowLog(format string, args ...interface{}) {
 	logger.Infof(bold(color.Yellow).Render(fmt.Sprintf(format, args...)))
 }
 
-func (r *QQRobot) updateNewVersionInGroup(ctx string, groups []int64, interpreter string, script string, needRetry bool) {
+func (r *QQRobot) updateNewVersionInGroup(ctx string, groups []int64, progressNotifyGroups []int64, interpreter string, script string, needRetry bool) {
+	notifyUpdateProgress := func(progressMessageFormat string, args ...interface{}) {
+		msg := fmt.Sprintf(progressMessageFormat, args...)
+		// 打个日志
+		boldYellowLog(msg)
+		// 通知到指定的群
+		for _, groupID := range progressNotifyGroups {
+			r.sendTextMessageToGroup(groupID, msg)
+		}
+	}
+
 	if interpreter != "" && script != "" && global.PathExists(interpreter) && global.PathExists(script) {
-		boldYellowLog("开始更新新版本到各个群中: %v", groups)
-		boldYellowLog("是否重试: %v", needRetry)
+		notifyUpdateProgress("开始更新新版本到各个群中: %v", groups)
+		notifyUpdateProgress("是否重试: %v", needRetry)
 		oldVersionKeywords := "DNF蚊子腿小助手_v"
 
-		boldYellowLog("开始调用配置的更新命令来获取新版本: %v %v", interpreter, script)
+		notifyUpdateProgress("开始调用配置的更新命令来获取新版本: %v %v", interpreter, script)
 		newVersionFilePath, err := downloadNewVersionUsingPythonScript(interpreter, script)
 		if err != nil {
-			logger.Warnf("下载新版本失败, err=%v", err)
+			notifyUpdateProgress("下载新版本失败, err=%v", err)
 			return
 		}
 
@@ -100,7 +113,7 @@ func (r *QQRobot) updateNewVersionInGroup(ctx string, groups []int64, interprete
 		maxRetryWaitTime := 12 * time.Hour
 		for {
 			// 尝试上传新版本
-			boldYellowLog("[%v/%v] 开始尝试上传", failIndex, maxFailTimes, retryWaitTime)
+			notifyUpdateProgress("[%v/%v] 开始尝试上传", failIndex, maxFailTimes, retryWaitTime)
 			for _, groupID := range groupsToUpload {
 				boldYellowLog("开始上传 %v 到 群 %v", uploadFileName, groupID)
 				r.updateFileInGroup(groupID, newVersionFilePath, uploadFileName, oldVersionKeywords, false)
@@ -116,22 +129,22 @@ func (r *QQRobot) updateNewVersionInGroup(ctx string, groups []int64, interprete
 				}
 			}
 			if len(groupsNotUploaded) == 0 {
-				boldYellowLog("全部上传成功，完毕")
+				notifyUpdateProgress("全部上传成功，完毕")
 				break
 			}
 
-			boldYellowLog("%v 个群未上传成功： %v", len(groupsNotUploaded), groupsNotUploaded)
+			notifyUpdateProgress("%v 个群未上传成功： %v", len(groupsNotUploaded), groupsNotUploaded)
 			if !needRetry {
-				logger.Warnf("当前配置为不需要重试")
+				notifyUpdateProgress("当前配置为不需要重试，将停止上传流程")
 				break
 			}
 
 			if failIndex > maxFailTimes {
-				logger.Warnf("重试次数超过 %v 次，停止重试", maxFailTimes)
+				notifyUpdateProgress("重试次数超过 %v 次，将停止上传流程", maxFailTimes)
 				break
 			}
 
-			boldYellowLog("[%v/%v] 上传失败， 等待 %v 后再尝试上传到这些群中", failIndex, maxFailTimes, retryWaitTime)
+			notifyUpdateProgress("[%v/%v] 上传失败， 等待 %v 后再尝试上传到这些群中", failIndex, maxFailTimes, retryWaitTime)
 			select {
 			case <-time.After(retryWaitTime):
 				break
@@ -147,7 +160,7 @@ func (r *QQRobot) updateNewVersionInGroup(ctx string, groups []int64, interprete
 			}
 		}
 	} else {
-		boldYellowLog("%v: 未配置更新python脚本，或者对应脚本不存在，将不会尝试下载并上传新版本到群文件", ctx)
+		notifyUpdateProgress("%v: 未配置更新python脚本，或者对应脚本不存在，将不会尝试下载并上传新版本到群文件", ctx)
 	}
 }
 

@@ -601,8 +601,8 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 
 			go func() {
 				r.updateNewVersionInGroup("手动触发更新新版本",
-					config.UpdateNewVersionToGroups, config.DownloadNewVersionPythonInterpreterPath, config.DownloadNewVersionPythonScriptPath,
-					true,
+					config.UpdateNewVersionToGroups, []int64{groupID},
+					config.DownloadNewVersionPythonInterpreterPath, config.DownloadNewVersionPythonScriptPath, true,
 				)
 				r.sendTextMessageToGroup(groupID, "上传完毕，具体情况可查看服务器日志")
 			}()
