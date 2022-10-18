@@ -100,7 +100,7 @@ func (r *QQRobot) updateNewVersionInGroup(ctx string, groups []int64, interprete
 		maxRetryWaitTime := 12 * time.Hour
 		for {
 			// 尝试上传新版本
-			logger.Infof("[%v/%v] 开始尝试上传", failIndex, maxFailTimes, retryWaitTime)
+			boldYellowLog("[%v/%v] 开始尝试上传", failIndex, maxFailTimes, retryWaitTime)
 			for _, groupID := range groupsToUpload {
 				boldYellowLog("开始上传 %v 到 群 %v", uploadFileName, groupID)
 				r.updateFileInGroup(groupID, newVersionFilePath, uploadFileName, oldVersionKeywords, false)
@@ -131,7 +131,7 @@ func (r *QQRobot) updateNewVersionInGroup(ctx string, groups []int64, interprete
 				break
 			}
 
-			logger.Infof("[%v/%v] 上传失败， 等待 %v 后再尝试上传到这些群中", failIndex, maxFailTimes, retryWaitTime)
+			boldYellowLog("[%v/%v] 上传失败， 等待 %v 后再尝试上传到这些群中", failIndex, maxFailTimes, retryWaitTime)
 			select {
 			case <-time.After(retryWaitTime):
 				break
