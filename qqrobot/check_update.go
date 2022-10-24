@@ -44,7 +44,7 @@ func (r *QQRobot) checkUpdates() {
 			// re: 以下是临时措施，应对changelog中的版本更新后平均约 10 分钟后github action的打包release流程才完成的情况
 			// undone: 等将新版本改成基于release中的meta信息来获取后，再改成实时通知
 			go func() {
-				logger.Warnf("%v 版本有更新 %v => %v，但目前因获取版本的来源比release早约十分钟，因此在这里等待20分钟后再实际进行通知", rule.Name, lastVersion, latestVersion)
+				r.doNotifyUpdateProgress(rule.ProgressNotifyGroups, "%v 版本有更新 %v => %v，但目前因获取版本的来源比release早约十分钟，因此在这里等待20分钟后再实际进行通知", rule.Name, lastVersion, latestVersion)
 				select {
 				case <-time.After(2 * 10 * time.Minute):
 					break
@@ -52,7 +52,7 @@ func (r *QQRobot) checkUpdates() {
 					return
 				}
 
-				logger.Infof("%v 版本有更新 %v => %v, 开始通知各个群以及上传群文件", rule.Name, lastVersion, latestVersion)
+				r.doNotifyUpdateProgress(rule.ProgressNotifyGroups, "%v 版本有更新 %v => %v, 开始通知各个群以及上传群文件", rule.Name, lastVersion, latestVersion)
 
 				replies := r.makeNotifyUpdatesReplies(rule, latestVersion, updateMessage)
 				nowStr := r.currentTime()
@@ -81,15 +81,19 @@ func boldYellowLog(format string, args ...interface{}) {
 	logger.Infof(bold(color.Yellow).Render(fmt.Sprintf(format, args...)))
 }
 
+func (r *QQRobot) doNotifyUpdateProgress(progressNotifyGroups []int64, progressMessageFormat string, args ...interface{}) {
+	msg := fmt.Sprintf(progressMessageFormat, args...)
+	// 打个日志
+	boldYellowLog(msg)
+	// 通知到指定的群
+	for _, groupID := range progressNotifyGroups {
+		r.sendTextMessageToGroup(groupID, msg)
+	}
+}
+
 func (r *QQRobot) updateNewVersionInGroup(ctx string, groups []int64, progressNotifyGroups []int64, interpreter string, script string, needRetry bool) {
 	notifyUpdateProgress := func(progressMessageFormat string, args ...interface{}) {
-		msg := fmt.Sprintf(progressMessageFormat, args...)
-		// 打个日志
-		boldYellowLog(msg)
-		// 通知到指定的群
-		for _, groupID := range progressNotifyGroups {
-			r.sendTextMessageToGroup(groupID, msg)
-		}
+		r.doNotifyUpdateProgress(progressNotifyGroups, progressMessageFormat, args...)
 	}
 
 	if interpreter != "" && script != "" && global.PathExists(interpreter) && global.PathExists(script) {
