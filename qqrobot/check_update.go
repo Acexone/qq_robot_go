@@ -57,11 +57,11 @@ func (r *QQRobot) checkUpdates() {
 				replies := r.makeNotifyUpdatesReplies(rule, latestVersion, updateMessage)
 				nowStr := r.currentTime()
 				for _, groupID := range rule.NotifyGroups {
-					rspID := r.cqBot.SendGroupMessage(groupID, replies)
+					rspID, err := r.cqBot.SendGroupMessage(groupID, replies)
 					// 广播消息间强行间隔一秒
 					time.Sleep(time.Second)
 					if rspID == -1 {
-						logger.Errorf("【%v Failed】 %v groupID=%v replies=%v err=%v", rule.Name, nowStr, groupID, replies, rspID)
+						logger.Errorf("【%v Failed】 %v groupID=%v replies=%v rspID=%v err=%v", rule.Name, nowStr, groupID, replies, rspID, err)
 						continue
 					}
 					logger.Infof("【%v】 %v groupID=%v replies=%v", rule.Name, nowStr, groupID, replies)
@@ -283,11 +283,11 @@ func (r *QQRobot) manualTriggerUpdateNotify(triggerRule *Rule) (replies *message
 		// 发送给配置的目标群组
 		nowStr := r.currentTime()
 		for _, groupID := range rule.NotifyGroups {
-			rspID := r.cqBot.SendGroupMessage(groupID, updateMessages)
+			rspID, err := r.cqBot.SendGroupMessage(groupID, updateMessages)
 			// 广播消息间强行间隔一秒
 			time.Sleep(time.Second)
 			if rspID == -1 {
-				logger.Errorf("【%v Failed】 %v groupID=%v updateMessages=%v err=%v", rule.Name, nowStr, groupID, updateMessages, rspID)
+				logger.Errorf("【%v Failed】 %v groupID=%v updateMessages=%v rspID=%v err=%v", rule.Name, nowStr, groupID, updateMessages, rspID, err)
 				continue
 			}
 			logger.Infof("【%v】 %v groupID=%v updateMessages=%v", rule.Name, nowStr, groupID, updateMessages)

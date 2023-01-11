@@ -132,9 +132,9 @@ func (r *QQRobot) notify(cfg NotifyConfig) {
 			// 不在该群里，跳过
 			continue
 		}
-		retCode := r.cqBot.SendGroupMessage(groupID, msg)
+		retCode, err := r.cqBot.SendGroupMessage(groupID, msg)
 		if retCode == -1 {
-			logger.Errorf("【%v Failed】 %v groupID=%v message=%v err=%v", cfg.Name, nowStr, groupID, p(msg), retCode)
+			logger.Errorf("【%v Failed】 %v groupID=%v message=%v retCode=%v err=%v", cfg.Name, nowStr, groupID, p(msg), retCode, err)
 			return
 		}
 		logger.Infof("【%v】 %v groupID=%v message=%v", cfg.Name, nowStr, groupID, p(msg))
@@ -582,11 +582,11 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 				}
 
 				for _, repeatToGroup := range config.RepeatToGroups {
-					forwardRspID := r.cqBot.SendGroupMessage(repeatToGroup, repeatMessages)
+					forwardRspID, err := r.cqBot.SendGroupMessage(repeatToGroup, repeatMessages)
 					// 广播消息间强行间隔一秒
 					time.Sleep(time.Second)
 					if forwardRspID == -1 {
-						logger.Error(fmt.Sprintf("【RepeatToGroup(%v) Failed】", repeatToGroup), nowStr, config.Name, p(repeatMessages), forwardRspID)
+						logger.Error(fmt.Sprintf("【RepeatToGroup(%v) Failed】", repeatToGroup), nowStr, config.Name, p(repeatMessages), forwardRspID, err)
 						continue
 					}
 					logger.Info(fmt.Sprintf("【RepeatToGroup(%v)】", repeatToGroup), nowStr, config.Name, p(repeatMessages), forwardRspID)
@@ -644,7 +644,7 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 		// 补充reply信息
 		replies.Elements = append([]message.IMessageElement{message.NewReply(m)}, replies.Elements...)
 
-		rspID := r.cqBot.SendGroupMessage(groupID, replies)
+		rspID, err := r.cqBot.SendGroupMessage(groupID, replies)
 		if rspID == -1 {
 			logger.Error("【ReplyFail】", nowStr, config.Name, keyWord, p(m), p(replies), rspID)
 			return err
@@ -685,9 +685,9 @@ func (r *QQRobot) applyGroupRule(m *message.GroupMessage, rule *Rule) error {
 				logger.Info(fmt.Sprintf("【ForwardToQQ(%v)】", forwardToQQ), nowStr, config.Name, p(forwardMessages), forwardRspID)
 			}
 			for _, forwardToGroup := range config.ForwardToGroups {
-				forwardRspID := r.cqBot.SendGroupMessage(forwardToGroup, forwardMessages)
+				forwardRspID, err := r.cqBot.SendGroupMessage(forwardToGroup, forwardMessages)
 				if forwardRspID == -1 {
-					logger.Error(fmt.Sprintf("【ForwardToGroup(%v) Failed】", forwardToGroup), nowStr, config.Name, p(forwardMessages), forwardRspID)
+					logger.Error(fmt.Sprintf("【ForwardToGroup(%v) Failed】", forwardToGroup), nowStr, config.Name, p(forwardMessages), forwardRspID, err)
 					continue
 				}
 				logger.Info(fmt.Sprintf("【ForwardToGroup(%v)】", forwardToGroup), nowStr, config.Name, p(forwardMessages), forwardRspID)
@@ -890,10 +890,10 @@ func (r *QQRobot) onMemberJoin(m *client.MemberJoinGroupEvent, rule *Rule) error
 	}
 
 	if len(replies.Elements) != 0 {
-		rspID := r.cqBot.SendGroupMessage(groupID, replies)
+		rspID, err := r.cqBot.SendGroupMessage(groupID, replies)
 		if rspID == -1 {
 			logger.Error("【ReplyFail】", nowStr, p(m), rspID)
-			return errors.Errorf("reply fail, rspID=%v", rspID)
+			return errors.Errorf("reply fail, rspID=%v err=%v", rspID, err)
 		}
 		logger.Info("【OK】", nowStr, p(m.Group), 0, p(replies), rspID)
 	}

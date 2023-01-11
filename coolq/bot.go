@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"runtime/debug"
+	"strings"
 	"sync"
 	"time"
 
@@ -22,6 +23,7 @@ import (
 	"github.com/Mrs4s/go-cqhttp/db"
 	"github.com/Mrs4s/go-cqhttp/global"
 	"github.com/Mrs4s/go-cqhttp/internal/base"
+	"github.com/Mrs4s/go-cqhttp/internal/mime"
 )
 
 // CQBot CQBot结构体,存储Bot实例相关配置
@@ -38,9 +40,8 @@ type CQBot struct {
 
 // Event 事件
 type Event struct {
-	RawMsg global.MSG
-
 	once   sync.Once
+	Raw    *event
 	buffer *bytes.Buffer
 }
 
@@ -48,7 +49,7 @@ func (e *Event) marshal() {
 	if e.buffer == nil {
 		e.buffer = global.NewBuffer()
 	}
-	_ = json.NewEncoder(e.buffer).Encode(e.RawMsg)
+	_ = json.NewEncoder(e.buffer).Encode(e.Raw)
 }
 
 // JSONBytes return byes of json by lazy marshalling.
@@ -110,13 +111,9 @@ func NewQQBot(cli *client.QQClient) *CQBot {
 		t := time.NewTicker(base.HeartbeatInterval)
 		for {
 			<-t.C
-			bot.dispatchEventMessage(global.MSG{
-				"time":            time.Now().Unix(),
-				"self_id":         bot.Client.Uin,
-				"post_type":       "meta_event",
-				"meta_event_type": "heartbeat",
-				"status":          bot.CQGetStatus()["data"],
-				"interval":        base.HeartbeatInterval.Milliseconds(),
+			bot.dispatchEvent("meta_event/heartbeat", global.MSG{
+				"status":   bot.CQGetStatus()["data"],
+				"interval": base.HeartbeatInterval.Milliseconds(),
 			})
 		}
 	}()
@@ -162,10 +159,9 @@ func (bot *CQBot) uploadLocalImage(target message.Source, img *LocalImageElement
 		defer func() { _ = f.Close() }()
 		img.Stream = f
 	}
-	if lawful, mime := base.IsLawfulImage(img.Stream); !lawful {
-		return nil, errors.New("image type error: " + mime)
+	if mt, ok := mime.CheckImage(img.Stream); !ok {
+		return nil, errors.New("image type error: " + mt)
 	}
-	// todo: enable multi-thread upload, now got error code 81
 	i, err := bot.Client.UploadImage(target, img.Stream, 4)
 	if err != nil {
 		return nil, err
@@ -258,7 +254,7 @@ func (bot *CQBot) uploadMedia(target message.Source, elements []message.IMessage
 }
 
 // SendGroupMessage 发送群消息
-func (bot *CQBot) SendGroupMessage(groupID int64, m *message.SendingMessage) int32 {
+func (bot *CQBot) SendGroupMessage(groupID int64, m *message.SendingMessage) (int32, error) {
 	newElem := make([]message.IMessageElement, 0, len(m.Elements))
 	group := bot.Client.FindGroup(groupID)
 	source := message.Source{
@@ -274,14 +270,14 @@ func (bot *CQBot) SendGroupMessage(groupID int64, m *message.SendingMessage) int
 					mem.Poke()
 				}
 			}
-			return 0
+			return 0, nil
 		case *message.MusicShareElement:
 			ret, err := bot.Client.SendGroupMusicShare(groupID, i)
 			if err != nil {
 				log.Warnf("警告: 群 %v 富文本消息发送失败: %v", groupID, err)
-				return -1
+				return -1, errors.Wrap(err, "send group music share error")
 			}
-			return bot.InsertGroupMessage(ret)
+			return bot.InsertGroupMessage(ret), nil
 		case *message.AtElement:
 			if i.Target == 0 && group.SelfPermission() == client.Member {
 				e = message.NewText("@全体成员")
@@ -291,7 +287,7 @@ func (bot *CQBot) SendGroupMessage(groupID int64, m *message.SendingMessage) int
 	}
 	if len(newElem) == 0 {
 		log.Warnf("群消息发送失败: 消息为空.")
-		return -1
+		return -1, errors.New("empty message")
 	}
 	m.Elements = newElem
 	bot.checkMedia(newElem, groupID)
@@ -324,9 +320,9 @@ func (bot *CQBot) SendGroupMessage(groupID int64, m *message.SendingMessage) int
 			"（如果消息发送很慢，同时 ctrl+c 退出也很慢，也有可能是DNS问题，推荐改成 101.6.6.6, 223.6.6.6, 114.114.114.114 这三个一起）"+
 			"\ngroupID= %v 消息内容= %v",
 			groupID, message.ToReadableString(m.Elements))
-		return -1
+		return -1, errors.New("send group message failed: blocked by server")
 	}
-	return bot.InsertGroupMessage(ret)
+	return bot.InsertGroupMessage(ret), nil
 }
 
 // SendPrivateMessage 发送私聊消息
@@ -601,20 +597,40 @@ func (bot *CQBot) InsertGuildChannelMessage(m *message.GuildChannelMessage) stri
 	return msg.ID
 }
 
-func (bot *CQBot) dispatchEventMessage(m global.MSG) {
+func (bot *CQBot) event(typ string, others global.MSG) *event {
+	ev := new(event)
+	post, detail, ok := strings.Cut(typ, "/")
+	ev.PostType = post
+	ev.DetailType = detail
+	if ok {
+		detail, sub, _ := strings.Cut(detail, "/")
+		ev.DetailType = detail
+		ev.SubType = sub
+	}
+	ev.Time = time.Now().Unix()
+	ev.SelfID = bot.Client.Uin
+	ev.Others = others
+	return ev
+}
+
+func (bot *CQBot) dispatchEvent(typ string, others global.MSG) {
+	bot.dispatch(bot.event(typ, others))
+}
+
+func (bot *CQBot) dispatch(ev *event) {
 	bot.lock.RLock()
 	defer bot.lock.RUnlock()
 
-	event := &Event{RawMsg: m}
+	event := &Event{Raw: ev}
 	wg := sync.WaitGroup{}
 	wg.Add(len(bot.events))
 	for _, f := range bot.events {
 		go func(fn func(*Event)) {
 			defer func() {
-				wg.Done()
 				if pan := recover(); pan != nil {
-					log.Warnf("处理事件 %v 时出现错误: %v \n%s", m, pan, debug.Stack())
+					log.Warnf("处理事件 %v 时出现错误: %v \n%s", event.JSONString(), pan, debug.Stack())
 				}
+				wg.Done()
 			}()
 
 			start := time.Now()
@@ -662,13 +678,13 @@ func encodeGuildMessageID(primaryID, subID, seq uint64, source message.SourceTyp
 	}))
 }
 
-func decodeGuildMessageID(id string) (source *message.Source, seq uint64) {
+func decodeGuildMessageID(id string) (source message.Source, seq uint64) {
 	b, _ := base64.StdEncoding.DecodeString(id)
 	if len(b) < 25 {
 		return
 	}
 	r := binary.NewReader(b)
-	source = &message.Source{
+	source = message.Source{
 		SourceType:  message.SourceType(r.ReadByte()),
 		PrimaryID:   r.ReadInt64(),
 		SecondaryID: r.ReadInt64(),

@@ -16,3 +16,10 @@ resource.syso
 internal/btree/temp.*.db
 internal/btree/*.lock
 internal/btree/*.db
+
+
+# binary builds
+go-cqhttp
+
+# macos
+.DS_Store

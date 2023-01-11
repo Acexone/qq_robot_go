@@ -356,22 +356,23 @@ func (c *HTTPClient) onBotPushEvent(e *coolq.Event) {
 	for i := uint64(0); i <= c.MaxRetries; i++ {
 		// see https://stackoverflow.com/questions/31337891/net-http-http-contentlength-222-with-body-length-0
 		// we should create a new request for every single post trial
-		req, err = http.NewRequest("POST", c.addr, bytes.NewReader(e.JSONBytes()))
+		req, err = http.NewRequest(http.MethodPost, c.addr, bytes.NewReader(e.JSONBytes()))
 		if err != nil {
 			log.Warnf("上报 Event 数据到 %v 时创建请求失败: %v", c.addr, err)
 			return
 		}
 		req.Header = header
-		res, err = c.client.Do(req)
-		if err != nil {
-			if i < c.MaxRetries {
-				log.Warnf("上报 Event 数据到 %v 失败: %v 将进行第 %d 次重试", c.addr, err, i+1)
-			} else {
-				log.Warnf("上报 Event 数据 %s 到 %v 失败: %v 停止上报：已达重试上限", e.JSONBytes(), c.addr, err)
-				return
-			}
-			time.Sleep(time.Millisecond * time.Duration(c.RetriesInterval))
+		res, err = c.client.Do(req) // nolint:bodyclose
+		if err == nil {
+			break
 		}
+		if i < c.MaxRetries {
+			log.Warnf("上报 Event 数据到 %v 失败: %v 将进行第 %d 次重试", c.addr, err, i+1)
+		} else {
+			log.Warnf("上报 Event 数据 %s 到 %v 失败: %v 停止上报：已达重试上限", e.JSONBytes(), c.addr, err)
+			return
+		}
+		time.Sleep(time.Millisecond * time.Duration(c.RetriesInterval))
 	}
 	defer res.Body.Close()
 

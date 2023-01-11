@@ -3,6 +3,7 @@ package gocq
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"image"
 	"image/png"
 	"os"
@@ -10,11 +11,14 @@ import (
 	"time"
 
 	"github.com/Mrs4s/MiraiGo/client"
+	"github.com/Mrs4s/MiraiGo/utils"
 	"github.com/mattn/go-colorable"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	"gopkg.ilharper.com/x/isatty"
 
 	"github.com/Mrs4s/go-cqhttp/global"
+	"github.com/Mrs4s/go-cqhttp/internal/download"
 )
 
 var console = bufio.NewReader(os.Stdin)
@@ -39,6 +43,14 @@ func readLineTimeout(t time.Duration, de string) (str string) {
 	case <-time.After(t):
 	}
 	return
+}
+
+func readIfTTY(de string) (str string) {
+	if isatty.Isatty(os.Stdin.Fd()) {
+		return readLine()
+	}
+	log.Warnf("未检测到输入终端，自动选择%s.", de)
+	return de
 }
 
 var cli *client.QQClient
@@ -142,7 +154,19 @@ func loginResponseProcessor(res *client.LoginResponse) error {
 		var text string
 		switch res.Error {
 		case client.SliderNeededError:
-			log.Warnf("登录需要滑条验证码, 请使用手机QQ扫描二维码以继续登录.")
+			log.Warnf("登录需要滑条验证码, 请选择验证方式: ")
+			log.Warnf("1. 使用浏览器抓取滑条并登录")
+			log.Warnf("2. 使用手机QQ扫码验证 (需要手Q和gocq在同一网络下).")
+			log.Warn("请输入(1 - 2)：")
+			text = readIfTTY("1")
+			if strings.Contains(text, "1") {
+				ticket := getTicket(res.VerifyUrl)
+				if ticket == "" {
+					os.Exit(0)
+				}
+				res, err = cli.SubmitTicket(ticket)
+				continue
+			}
 			cli.Disconnect()
 			cli.Release()
 			cli = client.NewClientEmpty()
@@ -170,8 +194,8 @@ func loginResponseProcessor(res *client.LoginResponse) error {
 			log.Warnf("账号已开启设备锁，请选择验证方式:")
 			log.Warnf("1. 向手机 %v 发送短信验证码", res.SMSPhone)
 			log.Warnf("2. 使用手机QQ扫码验证.")
-			log.Warn("请输入(1 - 2) (将在10秒后自动选择2)：")
-			text = readLineTimeout(time.Second*10, "2")
+			log.Warn("请输入(1 - 2)：")
+			text = readIfTTY("2")
 			if strings.Contains(text, "1") {
 				if !cli.RequestSMS() {
 					log.Warnf("发送验证码失败，可能是请求过于频繁.")
@@ -192,8 +216,7 @@ func loginResponseProcessor(res *client.LoginResponse) error {
 			msg := res.ErrorMessage
 			if strings.Contains(msg, "版本") {
 				msg = "密码错误或账号被冻结"
-			}
-			if strings.Contains(msg, "冻结") {
+			} else if strings.Contains(msg, "冻结") {
 				log.Fatalf("账号被冻结")
 			}
 			log.Warnf("登录失败: %v", msg)
@@ -202,4 +225,40 @@ func loginResponseProcessor(res *client.LoginResponse) error {
 			os.Exit(0)
 		}
 	}
+}
+
+func getTicket(u string) (str string) {
+	id := utils.RandomString(8)
+	log.Warnf("请前往该地址验证 -> %v <- 或输入手动抓取的 ticket：（Enter 提交）", strings.ReplaceAll(u, "https://ssl.captcha.qq.com/template/wireless_mqq_captcha.html?", fmt.Sprintf("https://captcha.go-cqhttp.org/captcha?id=%v&", id)))
+	manual := make(chan string, 1)
+	go func() {
+		manual <- readLine()
+	}()
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+	for count := 120; count > 0; count-- {
+		select {
+		case <-ticker.C:
+			str = fetchCaptcha(id)
+			if str != "" {
+				return
+			}
+		case str = <-manual:
+			return
+		}
+	}
+	log.Warnf("验证超时")
+	return ""
+}
+
+func fetchCaptcha(id string) string {
+	g, err := download.Request{URL: "https://captcha.go-cqhttp.org/captcha/ticket?id=" + id}.JSON()
+	if err != nil {
+		log.Warnf("获取 Ticket 时出现错误: %v", err)
+		return ""
+	}
+	if g.Get("ticket").Exists() {
+		return g.Get("ticket").String()
+	}
+	return ""
 }

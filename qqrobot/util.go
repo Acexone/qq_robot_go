@@ -12,6 +12,7 @@ import (
 
 	"github.com/Mrs4s/MiraiGo/client"
 	"github.com/Mrs4s/MiraiGo/message"
+	"github.com/Mrs4s/go-cqhttp/internal/download"
 	"github.com/gookit/color"
 	logger "github.com/sirupsen/logrus"
 
@@ -44,9 +45,13 @@ func (r *QQRobot) _makeLocalImage(imageURL string) (message.IMessageElement, err
 	if exist {
 		goto hasCacheFile
 	}
-	if err := global.DownloadFileMultiThreading(imageURL, cacheFile, maxSize, runtime.NumCPU(), nil); err != nil {
-		return nil, err
+	{
+		req := download.Request{URL: imageURL, Limit: maxSize}
+		if err := req.WriteToFileMultiThreading(cacheFile, runtime.NumCPU()); err != nil {
+			return nil, err
+		}
 	}
+
 hasCacheFile:
 	return &coolq.LocalImageElement{File: cacheFile}, nil
 }
