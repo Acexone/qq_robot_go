@@ -313,7 +313,7 @@ func (bot *CQBot) SendGroupMessage(groupID int64, m *message.SendingMessage) (in
 
 	// 魔改一下，兼容过长的消息，使得青龙面板那边可以发送很多个账号的统计信息
 	// 禁用 UseHighwayMessage，否则很多消息发不出去，提示 Protocol -> sendPacket msg error: 46
-	bot.Client.UseHighwayMessage = false
+	// bot.Client.UseHighwayMessage = false
 	msgLen := message.EstimateLength(m.Elements)
 	if msgLen <= MaxMessageSize {
 		ret = bot.Client.SendGroupMessage(groupID, m)

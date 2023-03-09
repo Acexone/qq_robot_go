@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Mrs4s/go-cqhttp/internal/msg"
 	"github.com/pkg/errors"
 
-	"github.com/Mrs4s/go-cqhttp/coolq"
 	"github.com/Mrs4s/go-cqhttp/qqrobot/qinglong"
 
 	"github.com/Mrs4s/MiraiGo/message"
@@ -18,7 +18,7 @@ import (
 )
 
 // 2021/10/02 5:25 by fzls
-func (r *QQRobot) processCommand(commandStr string, m *message.GroupMessage) (msg string, extraReplies []message.IMessageElement, err error) {
+func (r *QQRobot) processCommand(commandStr string, m *message.GroupMessage) (rspMsg string, extraReplies []message.IMessageElement, err error) {
 	var match []string
 	if match = commandregexAddwhitelist.FindStringSubmatch(commandStr); len(match) == len(commandregexAddwhitelist.SubexpNames()) {
 		// full_match|ruleName|qq
@@ -31,10 +31,10 @@ func (r *QQRobot) processCommand(commandStr string, m *message.GroupMessage) (ms
 			rule.Config.ExcludeQQs = append(rule.Config.ExcludeQQs, qq)
 			logger.Info("【Command】", commandStr)
 
-			if len(msg) != 0 {
-				msg += " | "
+			if len(rspMsg) != 0 {
+				rspMsg += " | "
 			}
-			msg += fmt.Sprintf("已将【%v】加入到规则【%v】的白名单", qq, ruleName)
+			rspMsg += fmt.Sprintf("已将【%v】加入到规则【%v】的白名单", qq, ruleName)
 		}
 	} else if match = commandregexRulenamelist.FindStringSubmatch(commandStr); len(match) == len(commandregexRulenamelist.SubexpNames()) {
 		for _, rule := range r.Rules {
@@ -42,10 +42,10 @@ func (r *QQRobot) processCommand(commandStr string, m *message.GroupMessage) (ms
 				continue
 			}
 
-			if len(msg) == 0 {
-				msg += "规则集合："
+			if len(rspMsg) == 0 {
+				rspMsg += "规则集合："
 			}
-			msg += ", " + rule.Config.Name
+			rspMsg += ", " + rule.Config.Name
 		}
 	} else if match = commandregexBuycard.FindStringSubmatch(commandStr); len(match) == len(commandregexBuycard.SubexpNames()) {
 		now := time.Now()
@@ -70,12 +70,12 @@ func (r *QQRobot) processCommand(commandStr string, m *message.GroupMessage) (ms
 			return "", nil, err
 		}
 
-		err = json.Unmarshal(out, &msg)
+		err = json.Unmarshal(out, &rspMsg)
 		if err != nil {
 			return "", nil, err
 		}
 
-		if strings.Contains(msg, "成功发送以下卡片") {
+		if strings.Contains(rspMsg, "成功发送以下卡片") {
 			image, err := r._makeLocalImage("https://z3.ax1x.com/2020/12/16/r1yWZT.png")
 			if err == nil {
 				extraReplies = append(extraReplies, image)
@@ -94,7 +94,7 @@ func (r *QQRobot) processCommand(commandStr string, m *message.GroupMessage) (ms
 			return "", nil, err
 		}
 
-		err = json.Unmarshal(out, &msg)
+		err = json.Unmarshal(out, &rspMsg)
 		if err != nil {
 			return "", nil, err
 		}
@@ -107,7 +107,7 @@ func (r *QQRobot) processCommand(commandStr string, m *message.GroupMessage) (ms
 			return fmt.Sprintf("没有找到歌曲：%v", musicName), nil, nil
 		}
 
-		msg = fmt.Sprintf("请欣赏歌曲：%v", musicName)
+		rspMsg = fmt.Sprintf("请欣赏歌曲：%v", musicName)
 		extraReplies = append(extraReplies, musicElem)
 	} else if match = commandRegexQinglongChart.FindStringSubmatch(commandStr); len(match) == len(commandRegexQinglongChart.SubexpNames()) {
 		// full_match|参数
@@ -119,7 +119,7 @@ func (r *QQRobot) processCommand(commandStr string, m *message.GroupMessage) (ms
 		}
 
 		chartPath := qinglong.QueryChartPath(cookieInfo)
-		extraReplies = append(extraReplies, &coolq.LocalImageElement{File: chartPath})
+		extraReplies = append(extraReplies, &msg.LocalImage{File: chartPath})
 		extraReplies = append(extraReplies, message.NewText(cookieInfo.ToChatMessage()))
 	} else if match = commandRegexQinglongSummary.FindStringSubmatch(commandStr); len(match) == len(commandRegexQinglongSummary.SubexpNames()) {
 		// full_match|参数
@@ -149,5 +149,5 @@ func (r *QQRobot) processCommand(commandStr string, m *message.GroupMessage) (ms
 		return "", nil, errors.Errorf("没有找到该指令哦")
 	}
 
-	return msg, extraReplies, nil
+	return rspMsg, extraReplies, nil
 }

@@ -13,10 +13,10 @@ import (
 	"github.com/Mrs4s/MiraiGo/client"
 	"github.com/Mrs4s/MiraiGo/message"
 	"github.com/Mrs4s/go-cqhttp/internal/download"
+	"github.com/Mrs4s/go-cqhttp/internal/msg"
 	"github.com/gookit/color"
 	logger "github.com/sirupsen/logrus"
 
-	"github.com/Mrs4s/go-cqhttp/coolq"
 	"github.com/Mrs4s/go-cqhttp/global"
 )
 
@@ -53,7 +53,7 @@ func (r *QQRobot) _makeLocalImage(imageURL string) (message.IMessageElement, err
 	}
 
 hasCacheFile:
-	return &coolq.LocalImageElement{File: cacheFile}, nil
+	return &msg.LocalImage{File: cacheFile}, nil
 }
 
 func (r *QQRobot) ocr(groupImageElement *message.GroupImageElement) (ocrResultString string) {
