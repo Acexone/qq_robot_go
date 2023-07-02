@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 )
@@ -28,12 +27,11 @@ func update(url string, sum []byte) error {
 		return errors.New("文件已损坏")
 	}
 	reader, _ := zip.NewReader(bytes.NewReader(rsp), resp.ContentLength)
-	file, err := reader.Open("go-cqhttp.exe")
+	file, err := reader.Open("qq_robot_go.exe")
 	if err != nil {
 		return err
 	}
 	err, _ = fromStream(file)
-	fmt.Println()
 	if err != nil {
 		return err
 	}

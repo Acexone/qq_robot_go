@@ -3,7 +3,27 @@ vendor/
 .vscode
 config.hjson
 config.yml
+config.toml
 session.token
 device.json
 data/
 logs/
+
+*.exe
+resource.syso
+!modules/config/default_config.yml
+!qqrobot/config.toml
+internal/btree/temp.*.db
+internal/btree/*.lock
+internal/btree/*.db
+
+
+# binary builds
+go-cqhttp
+*.exe
+
+# macos
+.DS_Store
+
+# windwos rc
+*.syso

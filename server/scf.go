@@ -17,6 +17,7 @@ import (
 
 	"github.com/Mrs4s/go-cqhttp/coolq"
 	"github.com/Mrs4s/go-cqhttp/global"
+	api2 "github.com/Mrs4s/go-cqhttp/modules/api"
 	"github.com/Mrs4s/go-cqhttp/modules/config"
 )
 
@@ -53,7 +54,7 @@ func (l *lambdaResponseWriter) flush() error {
 	buffer := global.NewBuffer()
 	defer global.PutBuffer(buffer)
 	body := utils.B2S(l.buf.Bytes())
-	header := make(map[string]string)
+	header := make(map[string]string, len(l.header))
 	for k, v := range l.header {
 		header[k] = v[0]
 	}
@@ -64,7 +65,7 @@ func (l *lambdaResponseWriter) flush() error {
 		Body:            body,
 	})
 
-	r, _ := http.NewRequest("POST", cli.responseURL, buffer)
+	r, _ := http.NewRequest(http.MethodPost, cli.responseURL, buffer)
 	do, err := cli.client.Do(r)
 	if err != nil {
 		return err
@@ -80,7 +81,7 @@ var cli *lambdaClient
 
 // runLambda  type: [scf,aws]
 func runLambda(bot *coolq.CQBot, node yaml.Node) {
-	var conf config.LambdaServer
+	var conf LambdaServer
 	switch err := node.Decode(&conf); {
 	case err != nil:
 		log.Warn("读取lambda配置失败 :", err)
@@ -115,9 +116,9 @@ func runLambda(bot *coolq.CQBot, node yaml.Node) {
 		log.Fatal("unknown lambda type:", conf.Type)
 	}
 
-	api := newAPICaller(bot)
+	api := api2.NewCaller(bot)
 	if conf.RateLimit.Enabled {
-		api.use(rateLimit(conf.RateLimit.Frequency, conf.RateLimit.Bucket))
+		api.Use(rateLimit(conf.RateLimit.Frequency, conf.RateLimit.Bucket))
 	}
 	server := &httpServer{
 		api:         api,
@@ -154,6 +155,28 @@ type lambdaInvoke struct {
 	} `json:"requestContext"`
 }
 
+const lambdaDefault = `  # LambdaServer 配置
+  - lambda:
+      type: scf # scf: 腾讯云函数 aws: aws Lambda
+      middlewares:
+        <<: *default # 引用默认中间件
+`
+
+// LambdaServer 云函数配置
+type LambdaServer struct {
+	Disabled bool   `yaml:"disabled"`
+	Type     string `yaml:"type"`
+
+	MiddleWares `yaml:"middlewares"`
+}
+
+func init() {
+	config.AddServer(&config.Server{
+		Brief:   "云函数服务",
+		Default: lambdaDefault,
+	})
+}
+
 func (c *lambdaClient) next() *http.Request {
 	r, err := http.NewRequest(http.MethodGet, c.nextURL, nil)
 	if err != nil {
@@ -167,9 +190,9 @@ func (c *lambdaClient) next() *http.Request {
 	if resp.StatusCode != http.StatusOK {
 		return nil
 	}
-	req := new(http.Request)
-	invoke := new(lambdaInvoke)
-	_ = json.NewDecoder(resp.Body).Decode(invoke)
+	var req http.Request
+	var invoke lambdaInvoke
+	_ = json.NewDecoder(resp.Body).Decode(&invoke)
 	if invoke.HTTPMethod == "" { // 不是 api 网关
 		return nil
 	}
@@ -188,5 +211,5 @@ func (c *lambdaClient) next() *http.Request {
 		query[k] = []string{v}
 	}
 	req.URL.RawQuery = query.Encode()
-	return req
+	return &req
 }

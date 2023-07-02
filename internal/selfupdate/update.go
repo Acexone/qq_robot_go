@@ -3,22 +3,22 @@ package selfupdate
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/hex"
 	"fmt"
 	"hash"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 
-	"github.com/dustin/go-humanize"
-	"github.com/kardianos/osext"
 	"github.com/sirupsen/logrus"
-	"github.com/tidwall/gjson"
 
 	"github.com/Mrs4s/go-cqhttp/global"
 	"github.com/Mrs4s/go-cqhttp/internal/base"
+	"github.com/Mrs4s/go-cqhttp/internal/download"
 )
 
 func readLine() (str string) {
@@ -29,11 +29,11 @@ func readLine() (str string) {
 }
 
 func lastVersion() (string, error) {
-	r, err := global.GetBytes("https://api.github.com/repos/Mrs4s/go-cqhttp/releases/latest")
+	r, err := download.Request{URL: "https://api.github.com/repos/Mrs4s/go-cqhttp/releases/latest"}.JSON()
 	if err != nil {
 		return "", err
 	}
-	return gjson.GetBytes(r, "tag_name").Str, nil
+	return r.Get("tag_name").Str, nil
 }
 
 // CheckUpdate 检查更新
@@ -70,12 +70,12 @@ func binaryName() string {
 
 func checksum(github, version string) []byte {
 	sumURL := fmt.Sprintf("%v/Mrs4s/go-cqhttp/releases/download/%v/go-cqhttp_checksums.txt", github, version)
-	closer, err := global.HTTPGetReadCloser(sumURL)
+	sum, err := download.Request{URL: sumURL}.Bytes()
 	if err != nil {
 		return nil
 	}
 
-	rd := bufio.NewReader(closer)
+	rd := bufio.NewReader(bytes.NewReader(sum))
 	for {
 		str, err := rd.ReadString('\n')
 		if err != nil {
@@ -147,13 +147,33 @@ func (wc *writeSumCounter) Write(p []byte) (int, error) {
 	wc.total += uint64(n)
 	wc.hash.Write(p)
 	fmt.Printf("\r                                    ")
-	fmt.Printf("\rDownloading... %s complete", humanize.Bytes(wc.total))
+	fmt.Printf("\rDownloading... %s complete", humanBytes(wc.total))
 	return n, nil
+}
+
+func logn(n, b float64) float64 {
+	return math.Log(n) / math.Log(b)
+}
+
+func humanBytes(s uint64) string {
+	sizes := []string{"B", "kB", "MB", "GB"} // GB对于go-cqhttp来说已经够用了
+	if s < 10 {
+		return fmt.Sprintf("%d B", s)
+	}
+	e := math.Floor(logn(float64(s), 1000))
+	suffix := sizes[int(e)]
+	val := math.Floor(float64(s)/math.Pow(1000, e)*10+0.5) / 10
+	f := "%.0f %s"
+	if val < 10 {
+		f = "%.1f %s"
+	}
+	return fmt.Sprintf(f, val, suffix)
 }
 
 // FromStream copy form getlantern/go-update
 func fromStream(updateWith io.Reader) (err error, errRecover error) {
-	updatePath, err := osext.Executable()
+	updatePath, err := os.Executable()
+	updatePath = filepath.Clean(updatePath)
 	if err != nil {
 		return
 	}
@@ -169,7 +189,7 @@ func fromStream(updateWith io.Reader) (err error, errRecover error) {
 	}
 	// We won't log this error, because it's always going to happen.
 	defer func() { _ = fp.Close() }()
-	if _, err = io.Copy(fp, bufio.NewReader(updateWith)); err != nil {
+	if _, err = bufio.NewReader(updateWith).WriteTo(fp); err != nil {
 		logrus.Errorf("Unable to copy data: %v\n", err)
 	}
 

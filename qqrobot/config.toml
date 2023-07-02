@@ -1,0 +1,117 @@
+### ------------机器人配置------------------
+[robot]
+# http请求超时
+timeout = 15
+# 调试模式
+debug = false
+# 单条消息处理失败后，最多重试次数
+# 先设置一次，避免出现异常多次发放消息，做个保底
+max_retry_times = 0
+# 最大允许的连续空行数目，为0则不限制
+max_continue_empty_lines = 10000
+# 腾讯ai开放平台的应用ID
+tencent_ai_app_id = ""
+# 腾讯ai开放平台的应用秘钥
+tencent_ai_app_key = ""
+# 聊天结果未找到时的提示语
+chat_answer_not_found_message = "我还小，听不懂你这些骚话(〃'▽'〃)"
+# 不支持私聊时的提示语
+personal_message_not_supported_message = ""
+# 不支持私聊时的图片
+personal_message_not_supported_image = ""
+
+# 机器人上线时的操作
+[robot.on_start]
+# 操作名称
+name = "机器人上线"
+# 通知的群
+notify_groups = [123456]
+# 通知的消息
+message = """你们的小可爱我开始上岗啦●ヽ(ﾟ∀ﾟ)ﾉ● """
+
+# 机器人下线时的操作
+[robot.on_stop]
+# 操作名称
+name = "机器人下线"
+# 通知的群
+notify_groups = [123456]
+# 通知的消息，参数：$work_time$=本次工作时长
+message = """又是辛勤工作的一天呢，今天一共工作了$work_time$，累坏啦o(╥﹏╥)o 下班回家睡觉觉去啦(｡◕ˇ∀ˇ◕)，大家不要太想我哦｡◕ᴗ◕｡"""
+
+[misc]
+
+### ------------规则类型配置------------------
+[[rule_types]]
+# 规则类别
+type = "自动回复"
+# 同一条消息最多应用该类型的规则的数目，-1表示不限制
+type_max_apply_count = 1
+
+[[rule_types]]
+# 规则类别
+type = "机器人指令"
+# 同一条消息最多应用该类型的规则的数目，-1表示不限制
+type_max_apply_count = -1
+
+[[rule_types]]
+# 规则类别
+type = "AT某人"
+# 同一条消息最多应用该类型的规则的数目，-1表示不限制
+type_max_apply_count = -1
+
+[[rule_types]]
+# 规则类别
+type = "深夜美食"
+# 同一条消息最多应用该类型的规则的数目，-1表示不限制
+type_max_apply_count = 1
+
+[[rule_types]]
+# 规则类别
+type = "重要通知"
+# 同一条消息最多应用该类型的规则的数目，-1表示不限制
+type_max_apply_count = -1
+
+[[rule_types]]
+# 规则类别
+type = "测试"
+# 同一条消息最多应用该类型的规则的数目，-1表示不限制
+type_max_apply_count = -1
+
+### ------------规则类型配置------------------
+[[rule_type_configs]]
+# 群类别
+type = "小号"
+# 归属该类别的群组id列表
+group_ids = [123456, 789101]
+
+
+[[rules]]
+# 规则名称
+name = "测试规则"
+# 规则类别
+type = "自动回复"
+# 适用的QQ群ID列表
+group_ids = [123456]
+# 适用的QQ群类别，将于QQ群ID列表合并组成最终生效QQ群列表
+group_types = ["小号"]
+# 适用的关键词列表
+keywords = []
+# 排除的一些关键词列表
+exclude_keywords = []
+# 排除的QQ列表
+exclude_qqs = []
+# 动作
+action = "guide"
+# 内容
+guide_content = """测试回复消息
+"""
+# 图片URL，若有，则会额外附加图片
+image_url = ""
+# 是否撤回该条消息
+revoke_message = true
+# 禁言时间，为0则表示不禁言(单位为秒)
+mute_time = 600
+# TriggerRuleDuration内触发的规则数目是否超过该数目
+trigger_rule_count = 5
+# 判定恶意触发机器人规则的时间周期（秒）
+trigger_rule_duration = 60

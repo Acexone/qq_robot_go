@@ -22,35 +22,24 @@ linters:
   fast: false
   enable:
     - bodyclose
-    - deadcode
-    - depguard
-    - dogsled
-    - dupl
+    - durationcheck
+    - gofmt
+    - goimports
     - errcheck
     - exportloopref
     - exhaustive
-    #- funlen
-    #- goconst
+    - bidichk
     - gocritic
-    #- gocyclo
-    - gofmt
-    - goimports
-    - goprintffuncname
-    #- gosec
     - gosimple
     - govet
     - ineffassign
-    #- misspell
-    - nolintlint
-    - rowserrcheck
+    #- nolintlint
     - staticcheck
-    - structcheck
     - stylecheck
-    - typecheck
     - unconvert
+    - usestdlibvars
     - unparam
     - unused
-    - varcheck
     - whitespace
     - prealloc
     - predeclared
@@ -58,27 +47,17 @@ linters:
     - revive
     - forbidigo
     - makezero
-    #- interfacer
-
-  # don't enable:
-  # - scopelint
-  # - gochecknoglobals
-  # - gocognit
-  # - godot
-  # - godox
-  # - goerr113
-  # - interfacer
-  # - maligned
-  # - nestif
-  # - testpackage
-  # - wsl
 
 run:
   # default concurrency is a available CPU number.
   # concurrency: 4 # explicitly omit this value to fully utilize available resources.
   deadline: 5m
   issues-exit-code: 1
-  tests: false
+  skip-dirs:
+    - db
+    - cmd/api-generator
+    - internal/encryption
+  tests: true
 
 # output configuration options
 output:
@@ -92,4 +71,4 @@ issues:
   fix: true
   exclude-use-default: false
   exclude:
-    - "Error return value of .((os.)?std(out|err)..*|.*Close|.*Flush|os.Remove(All)?|.*print(f|ln)?|os.(Un)?Setenv). is not check"
+    - "Error return value of .((os.)?std(out|err)..*|.*Close|.*Seek|.*Flush|os.Remove(All)?|.*print(f|ln)?|os.(Un)?Setenv). is not check"

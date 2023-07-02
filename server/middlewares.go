@@ -3,106 +3,89 @@ package server
 import (
 	"container/list"
 	"context"
-	"os"
 	"sync"
 	"time"
 
 	"github.com/Mrs4s/go-cqhttp/coolq"
 	"github.com/Mrs4s/go-cqhttp/global"
+	"github.com/Mrs4s/go-cqhttp/modules/api"
+	"github.com/Mrs4s/go-cqhttp/pkg/onebot"
 
-	log "github.com/sirupsen/logrus"
-	"github.com/tidwall/gjson"
 	"golang.org/x/time/rate"
 )
 
-var (
-	filters     = make(map[string]global.Filter)
-	filterMutex sync.RWMutex
-)
+// MiddleWares 通信中间件
+type MiddleWares struct {
+	AccessToken string `yaml:"access-token"`
+	Filter      string `yaml:"filter"`
+	RateLimit   struct {
+		Enabled   bool    `yaml:"enabled"`
+		Frequency float64 `yaml:"frequency"`
+		Bucket    int     `yaml:"bucket"`
+	} `yaml:"rate-limit"`
+}
 
-func rateLimit(frequency float64, bucketSize int) handler {
+func rateLimit(frequency float64, bucketSize int) api.Handler {
 	limiter := rate.NewLimiter(rate.Limit(frequency), bucketSize)
-	return func(_ string, _ resultGetter) global.MSG {
+	return func(_ string, _ *onebot.Spec, _ api.Getter) global.MSG {
 		_ = limiter.Wait(context.Background())
 		return nil
 	}
 }
 
-func addFilter(file string) {
-	if file == "" {
-		return
-	}
-	bs, err := os.ReadFile(file)
-	if err != nil {
-		log.Error("init filter error: ", err)
-		return
-	}
-	defer func() {
-		if err := recover(); err != nil {
-			log.Error("init filter error: ", err)
-		}
-	}()
-	filter := global.Generate("and", gjson.ParseBytes(bs))
-	filterMutex.Lock()
-	filters[file] = filter
-	filterMutex.Unlock()
-}
-
-func findFilter(file string) global.Filter {
-	if file == "" {
-		return nil
-	}
-	filterMutex.RLock()
-	defer filterMutex.RUnlock()
-	return filters[file]
-}
-
-func longPolling(bot *coolq.CQBot, maxSize int) handler {
+func longPolling(bot *coolq.CQBot, maxSize int) api.Handler {
 	var mutex sync.Mutex
 	cond := sync.NewCond(&mutex)
 	queue := list.New()
 	bot.OnEventPush(func(event *coolq.Event) {
 		mutex.Lock()
 		defer mutex.Unlock()
-		queue.PushBack(event.RawMsg)
+		queue.PushBack(event.Raw)
 		for maxSize != 0 && queue.Len() > maxSize {
 			queue.Remove(queue.Front())
 		}
 		cond.Signal()
 	})
-	return func(action string, p resultGetter) global.MSG {
-		if action != "get_updates" {
+	return func(action string, spec *onebot.Spec, p api.Getter) global.MSG {
+		switch {
+		case spec.Version == 11 && action == "get_updates": // ok
+		case spec.Version == 12 && action == "get_latest_events": // ok
+		default:
 			return nil
 		}
 		var (
-			once    sync.Once
-			ch      = make(chan []interface{}, 1)
+			ch      = make(chan []any)
 			timeout = time.Duration(p.Get("timeout").Int()) * time.Second
 		)
-		defer close(ch)
 		go func() {
 			mutex.Lock()
 			defer mutex.Unlock()
-			if queue.Len() == 0 {
+			for queue.Len() == 0 {
 				cond.Wait()
 			}
-			once.Do(func() {
-				limit := int(p.Get("limit").Int())
-				if limit <= 0 || queue.Len() < limit {
-					limit = queue.Len()
+			limit := int(p.Get("limit").Int())
+			if limit <= 0 || queue.Len() < limit {
+				limit = queue.Len()
+			}
+			ret := make([]any, limit)
+			elem := queue.Front()
+			for i := 0; i < limit; i++ {
+				ret[i] = elem.Value
+				elem = elem.Next()
+			}
+			select {
+			case ch <- ret:
+				for i := 0; i < limit; i++ { // remove sent msg
+					queue.Remove(queue.Front())
 				}
-				ret := make([]interface{}, limit)
-				for i := 0; i < limit; i++ {
-					ret[i] = queue.Remove(queue.Front())
-				}
-				ch <- ret
-			})
+			default:
+				// don't block if parent already return due to timeout
+			}
 		}()
 		if timeout != 0 {
 			select {
 			case <-time.After(timeout):
-				once.Do(func() {})
-				return coolq.OK([]interface{}{})
+				return coolq.OK([]any{})
 			case ret := <-ch:
 				return coolq.OK(ret)
 			}

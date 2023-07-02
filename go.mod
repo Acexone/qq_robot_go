@@ -1,55 +1,87 @@
 module github.com/Mrs4s/go-cqhttp
 
-go 1.17
+go 1.20
 
-replace github.com/willf/bitset v1.2.0 => github.com/bits-and-blooms/bitset v1.2.0
+replace github.com/Mrs4s/go-cqhttp => github.com/fzls/qq_robot_go v1.0.0-beta8
 
+// 魔改后需要额外引入的依赖项，单独列出，避免后面又冲突
+// note: 合并upstream的方法：
+//  1. 打开github desktop，点击左侧的 History
+//  2. 在 选择分支的输入框（提示有 Select branch to compare），选择 upstream/dev
+//  3. 点击 左下方的合并按钮（Create a merge commit）
 require (
-	github.com/Baozisoftware/qrcode-terminal-go v0.0.0-20170407111555-c0650d8dff0f
-	github.com/Microsoft/go-winio v0.5.0
-	github.com/Mrs4s/MiraiGo v0.0.0-20211011130217-a3eacd706b29
-	github.com/dustin/go-humanize v1.0.0
+	github.com/BurntSushi/toml v1.1.0
+	github.com/fzls/logger v1.1.1
+	github.com/gookit/color v1.5.0
+	github.com/hashicorp/golang-lru v0.5.4
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.290
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tbp v1.0.290
+)
+
+require github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778 // indirect
+
+// 以下为go-cqhttp原本的依赖
+require (
+	github.com/FloatTech/sqlite v1.5.7
+	github.com/Microsoft/go-winio v0.6.0
+	github.com/Mrs4s/MiraiGo v0.0.0-20230627090859-19e3d172596e
+	github.com/RomiChan/syncx v0.0.0-20221202055724-5f842c53020e
+	github.com/RomiChan/websocket v1.4.3-0.20220123145318-307a86b127bc
+	github.com/fumiama/go-base16384 v1.6.1
 	github.com/fumiama/go-hide-param v0.1.4
-	github.com/gabriel-vasile/mimetype v1.3.1
-	github.com/gorilla/websocket v1.4.2
-	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
-	github.com/mattn/go-colorable v0.1.8
+	github.com/mattn/go-colorable v0.1.13
 	github.com/pkg/errors v0.9.1
-	github.com/segmentio/asm v1.0.0
-	github.com/sirupsen/logrus v1.8.1
-	github.com/stretchr/testify v1.7.0
-	github.com/syndtr/goleveldb v1.0.0
-	github.com/tidwall/gjson v1.8.1
-	github.com/tuotoo/qrcode v0.0.0-20190222102259-ac9c44189bf2
+	github.com/segmentio/asm v1.2.0
+	github.com/sirupsen/logrus v1.9.0
+	github.com/stretchr/testify v1.8.1
+	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
+	github.com/tidwall/gjson v1.14.4
 	github.com/wdvxdr1123/go-silk v0.0.0-20210316130616-d47b553def60
-	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
-	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b
-	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+	go.mongodb.org/mongo-driver v1.11.0
+	golang.org/x/crypto v0.3.0
+	golang.org/x/image v0.5.0
+	golang.org/x/sys v0.2.0
+	golang.org/x/term v0.2.0
+	golang.org/x/time v0.2.0
+	gopkg.ilharper.com/x/isatty v1.1.1
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
+	github.com/FloatTech/ttl v0.0.0-20220715042055-15612be72f5b // indirect
+	github.com/RomiChan/protobuf v0.1.1-0.20230204044148-2ed269a2e54d // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
-	github.com/google/uuid v1.1.1 // indirect
-	github.com/jonboulle/clockwork v0.2.2 // indirect
-	github.com/klauspost/cpuid/v2 v2.0.6 // indirect
-	github.com/lestrrat-go/strftime v1.0.5 // indirect
-	github.com/maruel/rs v0.0.0-20150922171536-2c81c4312fe4 // indirect
-	github.com/mattn/go-isatty v0.0.12 // indirect
+	github.com/fumiama/imgsz v0.0.2 // indirect
+	github.com/golang/snappy v0.0.4 // indirect
+	github.com/google/uuid v1.3.0 // indirect
+	github.com/jonboulle/clockwork v0.3.0 // indirect
+	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
+	github.com/klauspost/compress v1.13.6 // indirect
+	github.com/lestrrat-go/strftime v1.0.6 // indirect
+	github.com/mattn/go-isatty v0.0.16 // indirect
+	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
+	github.com/pierrec/lz4/v4 v4.1.15 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
-	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e // indirect
-	github.com/tidwall/match v1.0.3 // indirect
-	github.com/tidwall/pretty v1.1.0 // indirect
-	github.com/willf/bitset v1.2.0 // indirect
-	golang.org/x/net v0.0.0-20210505024714-0287a6fb4125 // indirect
-	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 // indirect
-	google.golang.org/protobuf v1.27.1 // indirect
-	gopkg.in/yaml.v2 v2.2.8 // indirect
-	modernc.org/libc v1.8.1 // indirect
-	modernc.org/mathutil v1.2.2 // indirect
-	modernc.org/memory v1.0.4 // indirect
+	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.0 // indirect
+	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
+	github.com/xdg-go/scram v1.1.1 // indirect
+	github.com/xdg-go/stringprep v1.0.3 // indirect
+	github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
+	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
+	golang.org/x/sync v0.0.0-20220819030929-7fc1605a5dde // indirect
+	golang.org/x/text v0.7.0 // indirect
+	golang.org/x/tools v0.1.12 // indirect
+	lukechampine.com/uint128 v1.2.0 // indirect
+	modernc.org/cc/v3 v3.40.0 // indirect
+	modernc.org/ccgo/v3 v3.16.13 // indirect
+	modernc.org/libc v1.21.5 // indirect
+	modernc.org/mathutil v1.5.0 // indirect
+	modernc.org/memory v1.4.0 // indirect
+	modernc.org/opt v0.1.3 // indirect
+	modernc.org/sqlite v1.20.0 // indirect
+	modernc.org/strutil v1.1.3 // indirect
+	modernc.org/token v1.0.1 // indirect
 )

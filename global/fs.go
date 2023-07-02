@@ -5,42 +5,38 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"errors"
-	"net"
+	"net/netip"
 	"net/url"
 	"os"
 	"path"
 	"runtime"
-	"strconv"
 	"strings"
 
 	"github.com/Mrs4s/MiraiGo/utils"
+	b14 "github.com/fumiama/go-base16384"
+	"github.com/segmentio/asm/base64"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/Mrs4s/go-cqhttp/internal/param"
+	"github.com/Mrs4s/go-cqhttp/internal/download"
 )
 
 const (
 	// ImagePath go-cqhttp使用的图片缓存目录
 	ImagePath = "data/images"
-	// ImagePathOld 兼容旧版go-cqhttp使用的图片缓存目录
-	ImagePathOld = "data/image"
 	// VoicePath go-cqhttp使用的语音缓存目录
 	VoicePath = "data/voices"
-	// VoicePathOld 兼容旧版go-cqhttp使用的语音缓存目录
-	VoicePathOld = "data/record"
 	// VideoPath go-cqhttp使用的视频缓存目录
 	VideoPath = "data/videos"
+	// VersionsPath go-cqhttp使用的版本信息目录
+	VersionsPath = "data/versions"
 	// CachePath go-cqhttp使用的缓存目录
 	CachePath = "data/cache"
-)
-
-var (
-	// ErrSyntax Path语法错误时返回的错误
-	ErrSyntax = errors.New("syntax error")
+	// DumpsPath go-cqhttp使用错误转储目录
+	DumpsPath = "dumps"
 	// HeaderAmr AMR文件头
-	HeaderAmr = []byte("#!AMR")
+	HeaderAmr = "#!AMR"
 	// HeaderSilk Silkv3文件头
-	HeaderSilk = []byte("\x02#!SILK_V3")
+	HeaderSilk = "\x02#!SILK_V3"
 )
 
 // PathExists 判断给定path是否存在
@@ -76,33 +72,36 @@ func Check(err error, deleteSession bool) {
 
 // IsAMRorSILK 判断给定文件是否为Amr或Silk格式
 func IsAMRorSILK(b []byte) bool {
-	return bytes.HasPrefix(b, HeaderAmr) || bytes.HasPrefix(b, HeaderSilk)
+	return bytes.HasPrefix(b, []byte(HeaderAmr)) || bytes.HasPrefix(b, []byte(HeaderSilk))
 }
 
 // FindFile 从给定的File寻找文件，并返回文件byte数组。File是一个合法的URL。p为文件寻找位置。
 // 对于HTTP/HTTPS形式的URL，Cache为"1"或空时表示启用缓存
 func FindFile(file, cache, p string) (data []byte, err error) {
-	data, err = nil, ErrSyntax
+	data, err = nil, os.ErrNotExist
 	switch {
 	case strings.HasPrefix(file, "http"): // https also has prefix http
-		if cache == "" {
-			cache = "1"
-		}
 		hash := md5.Sum([]byte(file))
 		cacheFile := path.Join(CachePath, hex.EncodeToString(hash[:])+".cache")
-		if PathExists(cacheFile) && cache == "1" {
+		if (cache == "" || cache == "1") && PathExists(cacheFile) {
 			return os.ReadFile(cacheFile)
 		}
-		data, err = GetBytes(file)
-		_ = os.WriteFile(cacheFile, data, 0o644)
+		err = download.Request{URL: file}.WriteToFile(cacheFile)
 		if err != nil {
 			return nil, err
 		}
+		return os.ReadFile(cacheFile)
 	case strings.HasPrefix(file, "base64"):
-		data, err = param.Base64DecodeString(strings.TrimPrefix(file, "base64://"))
+		data, err = base64.StdEncoding.DecodeString(strings.TrimPrefix(file, "base64://"))
 		if err != nil {
 			return nil, err
 		}
+	case strings.HasPrefix(file, "base16384"):
+		data, err = b14.UTF82UTF16BE(utils.S2B(strings.TrimPrefix(file, "base16384://")))
+		if err != nil {
+			return nil, err
+		}
+		data = b14.Decode(data)
 	case strings.HasPrefix(file, "file"):
 		var fu *url.URL
 		fu, err = url.Parse(file)
@@ -139,19 +138,18 @@ func DelFile(path string) bool {
 }
 
 // ReadAddrFile 从给定path中读取合法的IP地址与端口,每个IP地址以换行符"\n"作为分隔
-func ReadAddrFile(path string) []*net.TCPAddr {
+func ReadAddrFile(path string) []netip.AddrPort {
 	d, err := os.ReadFile(path)
 	if err != nil {
 		return nil
 	}
 	str := string(d)
 	lines := strings.Split(str, "\n")
-	var ret []*net.TCPAddr
+	var ret []netip.AddrPort
 	for _, l := range lines {
-		ip := strings.Split(strings.TrimSpace(l), ":")
-		if len(ip) == 2 {
-			port, _ := strconv.Atoi(ip[1])
-			ret = append(ret, &net.TCPAddr{IP: net.ParseIP(ip[0]), Port: port})
+		addr, err := netip.ParseAddrPort(l)
+		if err == nil {
+			ret = append(ret, addr)
 		}
 	}
 	return ret

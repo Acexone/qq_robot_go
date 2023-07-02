@@ -1,5 +1,4 @@
 //go:build !windows
-// +build !windows
 
 package selfupdate
 
@@ -9,7 +8,6 @@ import (
 	"compress/gzip"
 	"crypto/sha256"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 )
@@ -41,9 +39,8 @@ func update(url string, sum []byte) error {
 		if err != nil {
 			return err
 		}
-		if header.Name == "go-cqhttp" {
+		if header.Name == "qq_robot_go" {
 			err, _ := fromStream(tr)
-			fmt.Println()
 			if err != nil {
 				return err
 			}
